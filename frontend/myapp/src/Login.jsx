@@ -5,11 +5,8 @@ import URL from "./api";
 
 function Login() {
   const navigate = useNavigate();
-
-  const [data, setData] = useState({
-    email: "",
-    password: "",
-  });
+  const [data, setData] = useState({ email: "", password: "" });
+  const [loading, setLoading] = useState(false);
 
   function handleChange(e) {
     setData({ ...data, [e.target.name]: e.target.value });
@@ -17,93 +14,197 @@ function Login() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    setLoading(true);
     try {
       const res = await axios.post(`${URL}/users/login`, data);
-
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
-
-      if (res.data.user.role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/user");
-      }
+      if (res.data.user.role === "superadmin") navigate("/superadmin");
+      else if (res.data.user.role === "admin")  navigate("/admin");
+      else                                       navigate("/user");
     } catch (error) {
-       alert(error.response?.data?.message)
+      alert(error.response?.data?.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
     <div
       style={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0f172a 100%)",
         display: "flex",
-        justifyContent: "center",
         alignItems: "center",
-        height: "90vh",
+        justifyContent: "center",
+        fontFamily: "'Segoe UI', sans-serif",
+        padding: "20px",
       }}
     >
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "20px",
-          width: "300px",
-          padding: "30px",
-          border: "1px solid gray",
-          borderRadius: "10px",
-          boxShadow: "0px 0px 10px lightgray",
-        }}
-      >
-        <h1 style={{ textAlign: "center" }}>Login</h1>
+      <div style={{ width: "100%", maxWidth: "420px" }}>
 
-        <input
-          type="email"
-          name="email"
-          placeholder="Enter Email"
-          onChange={handleChange}
-          style={{ padding: "10px" }}
-        />
+        {/* Logo */}
+        <div style={{ textAlign: "center", marginBottom: "36px" }}>
+          <div style={{ fontSize: "48px", marginBottom: "8px" }}>🏨</div>
+          <h1 style={{ color: "#fff", margin: "0 0 6px", fontSize: "28px", fontWeight: 800 }}>
+            HotelHub
+          </h1>
+          <p style={{ color: "#94a3b8", margin: 0, fontSize: "14px" }}>
+            Hotel Management Platform
+          </p>
+        </div>
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Enter Password"
-          onChange={handleChange}
-          style={{ padding: "10px" }}
-        />
-
-        <button
-          type="submit"
+        {/* Login Card */}
+        <div
           style={{
-            padding: "10px",
-            backgroundColor: "black",
-            color: "white",
-            border: "none",
-            cursor: "pointer",
+            background: "rgba(255,255,255,0.07)",
+            backdropFilter: "blur(20px)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            borderRadius: "20px",
+            padding: "36px 32px",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
           }}
         >
-          Login
-        </button>
+          <h2 style={{ color: "#fff", margin: "0 0 24px", fontSize: "20px", fontWeight: 700 }}>
+            Sign In
+          </h2>
 
-        <Link
-          to="/forgotpassword"
-          style={{
-            textAlign: "center",
-            color: "red",
-            textDecoration: "none",
-          }}
-        >
-          Forgot Password?
-        </Link>
-        <p>
-          {" "}
-          Don't have an account ?
-          <Link style={{ color: "blue" }} to="/">
-            Signup
-          </Link>
-        </p>
-      </form>
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div>
+              <label style={{ display: "block", color: "#cbd5e1", fontSize: "13px", fontWeight: 600, marginBottom: "6px" }}>
+                Email Address
+              </label>
+              <input
+                id="login-email"
+                type="email"
+                name="email"
+                placeholder="you@example.com"
+                onChange={handleChange}
+                required
+                style={{
+                  width: "100%",
+                  padding: "12px 14px",
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: "10px",
+                  color: "#fff",
+                  fontSize: "14px",
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: "block", color: "#cbd5e1", fontSize: "13px", fontWeight: 600, marginBottom: "6px" }}>
+                Password
+              </label>
+              <input
+                id="login-password"
+                type="password"
+                name="password"
+                placeholder="Enter your password"
+                onChange={handleChange}
+                required
+                style={{
+                  width: "100%",
+                  padding: "12px 14px",
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: "10px",
+                  color: "#fff",
+                  fontSize: "14px",
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <Link
+              to="/forgotpassword"
+              style={{
+                color: "#60a5fa",
+                textDecoration: "none",
+                fontSize: "13px",
+                textAlign: "right",
+                marginTop: "-8px",
+              }}
+            >
+              Forgot Password?
+            </Link>
+
+            <button
+              id="login-submit"
+              type="submit"
+              disabled={loading}
+              style={{
+                width: "100%",
+                padding: "13px",
+                background: loading ? "#1d4ed8" : "linear-gradient(135deg, #2563eb, #3b82f6)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "12px",
+                fontSize: "15px",
+                fontWeight: 700,
+                cursor: loading ? "not-allowed" : "pointer",
+                marginTop: "4px",
+                transition: "opacity 0.2s",
+                opacity: loading ? 0.8 : 1,
+              }}
+            >
+              {loading ? "⏳ Signing in..." : "Sign In →"}
+            </button>
+          </form>
+
+          <p style={{ color: "#94a3b8", textAlign: "center", fontSize: "13px", margin: "20px 0 0" }}>
+            Don't have an account?{" "}
+            <Link to="/" style={{ color: "#60a5fa", textDecoration: "none", fontWeight: 600 }}>
+              Sign Up
+            </Link>
+          </p>
+
+          {/* ── Hotel Owner CTA ── */}
+          <div
+            style={{
+              marginTop: "24px",
+              borderTop: "1px solid rgba(255,255,255,0.1)",
+              paddingTop: "24px",
+            }}
+          >
+            <p style={{ color: "#94a3b8", fontSize: "13px", textAlign: "center", margin: "0 0 14px" }}>
+              🏨 Are you a hotel owner?
+            </p>
+            <Link
+              id="list-hotel-link"
+              to="/list-hotel"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "10px",
+                padding: "13px",
+                background: "linear-gradient(135deg, #f59e0b, #d97706)",
+                color: "#fff",
+                textDecoration: "none",
+                borderRadius: "12px",
+                fontWeight: 700,
+                fontSize: "15px",
+                boxShadow: "0 4px 20px rgba(245,158,11,0.35)",
+                transition: "transform 0.2s, box-shadow 0.2s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 28px rgba(245,158,11,0.45)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)";    e.currentTarget.style.boxShadow = "0 4px 20px rgba(245,158,11,0.35)"; }}
+            >
+              <span style={{ fontSize: "20px" }}>🏨</span>
+              List Your Hotel — Apply Now
+              <span style={{ fontSize: "16px" }}>→</span>
+            </Link>
+            <p style={{ color: "#64748b", fontSize: "12px", textAlign: "center", margin: "10px 0 0" }}>
+              Submit your property details for review. Free to apply.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

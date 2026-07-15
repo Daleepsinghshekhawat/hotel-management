@@ -5,7 +5,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const app = express();
-app.use(express.json()); //it is used because express cant understand json directly
+app.use(express.json({ limit: "50mb" })); // 50 MB limit — needed for base64 image uploads to Cloudinary
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 app.use(cors()); //without it no request get called or approved from backend
 

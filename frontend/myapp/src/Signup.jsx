@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import  URL  from "./api";
+import URL from "./api";
 
 function Signup() {
   const navigate = useNavigate();
@@ -10,7 +10,7 @@ function Signup() {
     name: "",
     email: "",
     password: "",
-    role: "",
+    role: "superadmin",
   });
 
   function handleChange(e) {
@@ -75,8 +75,13 @@ function Signup() {
           style={{ padding: "10px" }}
         />
 
-        <select name="role" onChange={handleChange} style={{ padding: "10px" }}>
-          <option>Select Role</option>
+        <select
+          name="role"
+          value={data.role}
+          onChange={handleChange}
+          style={{ padding: "10px" }}
+        >
+          <option value="superadmin">superadmin</option>
           <option value="admin">admin</option>
           <option value="user">user</option>
         </select>
