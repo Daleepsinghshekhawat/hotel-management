@@ -12,11 +12,9 @@ const District = () => {
   // Modal state
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showViewModal, setShowViewModal] = useState(false);
   const [newDistrictName, setNewDistrictName] = useState("");
   const [newDistrictState, setNewDistrictState] = useState("");
   const [editingDistrict, setEditingDistrict] = useState(null);
-  const [viewingDistrict, setViewingDistrict] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -117,23 +115,6 @@ const District = () => {
     setShowEditModal(true);
   };
 
-  const openViewModal = (item) => {
-    setViewingDistrict(item);
-    setShowViewModal(true);
-  };
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "N/A";
-    const d = new Date(dateStr);
-    return d.toLocaleString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   const updateDistrict = async (e) => {
     e.preventDefault();
     if (!newDistrictName || !newDistrictState) {
@@ -194,7 +175,7 @@ const District = () => {
         }}
       >
         <div>
-          <h2 style={{ margin: 0 }}>District Master</h2>
+          <h2 style={{ margin: 0 }}>District</h2>
           <p style={{ margin: "6px 0 0", color: "#64748b" }}>
             Manage district records from one place.
           </p>
@@ -225,11 +206,12 @@ const District = () => {
           style={{ padding: "10px", width: "220px", borderRadius: "8px" }}
         >
           {states.map((state) => (
-            <option key={state._id} value={state._id}>
+            <option key={state._id} value={state._id}>  
               {state.Statename}
             </option>
           ))}
         </select>
+       
       </div>
 
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
@@ -311,21 +293,6 @@ const District = () => {
                     {tab === "active" ? (
                       <>
                         <button
-                          onClick={() => openViewModal(item)}
-                          style={{
-                            border: "none",
-                            padding: "6px 12px",
-                            borderRadius: "6px",
-                            background: "#0ea5e9",
-                            color: "#fff",
-                            cursor: "pointer",
-                            fontWeight: "600",
-                            marginRight: "6px",
-                          }}
-                        >
-                          👁 View
-                        </button>
-                        <button
                           onClick={() => openEditModal(item)}
                           style={{
                             border: "none",
@@ -355,21 +322,6 @@ const District = () => {
                       </>
                     ) : (
                       <>
-                        <button
-                          onClick={() => openViewModal(item)}
-                          style={{
-                            border: "none",
-                            padding: "6px 12px",
-                            borderRadius: "6px",
-                            background: "#0ea5e9",
-                            color: "#fff",
-                            cursor: "pointer",
-                            fontWeight: "600",
-                            marginRight: "6px",
-                          }}
-                        >
-                          👁 View
-                        </button>
                         <button
                           onClick={() => restoreDistrict(item._id)}
                           style={{
@@ -404,74 +356,6 @@ const District = () => {
           )}
         </tbody>
       </table>
-
-      {/* View District Modal */}
-      {showViewModal && viewingDistrict && (
-        <div style={modalOverlayStyle}>
-          <div style={{ ...modalBoxStyle, width: "380px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-              <h3 style={{ margin: 0, fontSize: "18px", color: "#0f172a" }}>🏙️ District Details</h3>
-              <button
-                onClick={() => { setShowViewModal(false); setViewingDistrict(null); }}
-                style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#64748b", lineHeight: 1 }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-              {/* District Name */}
-              <div style={{ background: "#f8fafc", borderRadius: "8px", padding: "12px 14px" }}>
-                <div style={{ fontSize: "11px", color: "#94a3b8", textTransform: "uppercase", fontWeight: "600", marginBottom: "4px", letterSpacing: "0.05em" }}>District Name</div>
-                <div style={{ fontSize: "15px", fontWeight: "600", color: "#0f172a" }}>{viewingDistrict.districtname || "—"}</div>
-              </div>
-
-              {/* State */}
-              <div style={{ background: "#f8fafc", borderRadius: "8px", padding: "12px 14px" }}>
-                <div style={{ fontSize: "11px", color: "#94a3b8", textTransform: "uppercase", fontWeight: "600", marginBottom: "4px", letterSpacing: "0.05em" }}>State</div>
-                <div style={{ fontSize: "15px", fontWeight: "600", color: "#0f172a" }}>
-                  {viewingDistrict.stateId?.Statename || states.find((s) => s._id === selectedState)?.Statename || "—"}
-                </div>
-              </div>
-
-              {/* Status */}
-              <div style={{ background: "#f8fafc", borderRadius: "8px", padding: "12px 14px" }}>
-                <div style={{ fontSize: "11px", color: "#94a3b8", textTransform: "uppercase", fontWeight: "600", marginBottom: "4px", letterSpacing: "0.05em" }}>Status</div>
-                <span style={{
-                  display: "inline-block",
-                  padding: "3px 12px",
-                  borderRadius: "999px",
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  background: viewingDistrict.status === "active" ? "#dcfce7" : "#fee2e2",
-                  color: viewingDistrict.status === "active" ? "#16a34a" : "#dc2626",
-                }}>
-                  {viewingDistrict.status === "active" ? "✅ Active" : "🚫 Inactive"}
-                </span>
-              </div>
-
-              {/* Created At */}
-              <div style={{ background: "#f8fafc", borderRadius: "8px", padding: "12px 14px" }}>
-                <div style={{ fontSize: "11px", color: "#94a3b8", textTransform: "uppercase", fontWeight: "600", marginBottom: "4px", letterSpacing: "0.05em" }}>Created At</div>
-                <div style={{ fontSize: "14px", color: "#334155" }}>📅 {formatDate(viewingDistrict.createdAt)}</div>
-              </div>
-
-              {/* Last Updated */}
-              <div style={{ background: "#f8fafc", borderRadius: "8px", padding: "12px 14px" }}>
-                <div style={{ fontSize: "11px", color: "#94a3b8", textTransform: "uppercase", fontWeight: "600", marginBottom: "4px", letterSpacing: "0.05em" }}>Last Updated</div>
-                <div style={{ fontSize: "14px", color: "#334155" }}>🕒 {formatDate(viewingDistrict.updatedAt)}</div>
-              </div>
-            </div>
-
-            <button
-              onClick={() => { setShowViewModal(false); setViewingDistrict(null); }}
-              style={{ marginTop: "20px", width: "100%", padding: "10px", background: "#0ea5e9", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "600", fontSize: "14px" }}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Add District Modal */}
       {showAddModal && (

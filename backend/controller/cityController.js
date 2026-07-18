@@ -2,27 +2,49 @@ const cityModel = require("../model/citymodel");
 
 exports.createCity = async (req, res) => {
   try {
-    const { cityname, district } = req.body;
-    if (!cityname || !district) {
-      return res.status(400).json({ message: "cityname and district are required" });
+    console.log(req.body);
+
+    const { cityname, state, district } = req.body;
+
+    if (!cityname || !state || !district) {
+      return res.status(400).json({
+        message: "cityname, state and district are required",
+      });
     }
-    const result = await cityModel.create({ cityname, district });
+
+    const result = await cityModel.create({
+      cityname,
+      state,
+      district,
+    });
+
+    console.log(result);
+
     return res.status(200).json({ result });
   } catch (err) {
-    return res.status(500).json({ message: "server error occured" });
+    console.log(err);
+    return res.status(500).json({
+      message: "Server error occurred",
+    });
   }
 };
 
 exports.getAllCity = async (req, res) => {
-  try {
-    const result = await cityModel
-      .find({ status: "active" })
-      .populate({ path: "district", populate: { path: "stateId" } });
-    if (!result) return res.status(404).json({ message: "cities not found" });
-    return res.status(200).json({ result });
-  } catch (err) {
-    return res.status(500).json({ message: "server error occured" });
-  }
+    try {
+        const { stateId } = req.params;
+
+         console.log("State Id:", stateId);
+
+        const result = await cityModel.find({
+            state: stateId,
+            status: "active"
+        });
+
+        res.status(200).json({ result });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 };
 
 exports.getCityByDistrict = async (req, res) => {

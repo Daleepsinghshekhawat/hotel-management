@@ -182,3 +182,143 @@
     border-right-color: var(--border);
   }
 }
+
+/* css for adminreqpage */
+
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #f5f7fb;
+  font-family: "Poppins", sans-serif;
+}
+
+/* ================= NAVBAR ================= */
+
+.navbar-brand {
+  letter-spacing: 1px;
+}
+
+.navbar .btn {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* ================= HERO ================= */
+
+section h1 {
+  font-weight: 700;
+}
+
+section p {
+  opacity: .95;
+  line-height: 1.8;
+}
+
+/* ================= CARD ================= */
+
+.card {
+  border-radius: 18px;
+  transition: .3s;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+}
+
+/* ================= LABEL ================= */
+
+.form-label {
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+/* ================= INPUT ================= */
+
+.form-control {
+  border-radius: 10px;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  transition: .3s;
+}
+
+.form-control:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 10px rgba(37, 99, 235, .25);
+}
+
+/* ================= TEXTAREA ================= */
+
+textarea.form-control {
+  resize: none;
+}
+
+/* ================= CHECKBOX ================= */
+
+.form-check {
+  transition: .3s;
+}
+
+.form-check:hover {
+  background: #eef4ff !important;
+}
+
+/* ================= INFO BOX ================= */
+
+.alert {
+  border-radius: 12px;
+}
+
+/* ================= BUTTON ================= */
+
+.btn-primary {
+  background: #2563eb;
+  border: none;
+  transition: .3s;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, .3);
+}
+
+/* ================= FOOTER ================= */
+
+footer h5 {
+  font-weight: bold;
+}
+
+footer p {
+  opacity: .8;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media(max-width:768px){
+
+section{
+    padding:70px 20px 120px !important;
+}
+
+section h1{
+    font-size:2rem;
+}
+
+.card{
+    margin-top:-50px !important;
+}
+
+.card-body{
+    padding:30px !important;
+}
+
+.navbar-brand{
+    font-size:22px !important;
+}
+
+.navbar .btn{
+    margin-top:10px;
+}
+
+}

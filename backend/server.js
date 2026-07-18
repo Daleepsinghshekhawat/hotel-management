@@ -1,36 +1,38 @@
 
-require("dotenv").config(); // it is used to acess .env file data  as config add all variabale in  process.env
+require("dotenv").config();
 
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const fileUpload = require("express-fileupload");
+const os=require("os");
+
 const app = express();
-app.use(express.json({ limit: "50mb" })); // 50 MB limit — needed for base64 image uploads to Cloudinary
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-app.use(cors()); //without it no request get called or approved from backend
+app.use(cors());
+app.use(express.json());
 
+app.use(fileUpload());
+app.use(express.urlencoded({ extended: true }));
 
-
-// const url = process.env.MONGODB_URL;
-
+// MongoDB Connection
 mongoose
   .connect(process.env.MONGODB_URL)
   .then(() => {
-    console.log("db connection sucessful ");
+    console.log("Database Connected");
   })
   .catch((err) => {
     console.log(err);
   });
 
 const PORT = process.env.PORT;
-const userRoutes = require("./routes/userRoutes")
+
+const userRoutes = require("./routes/userRoutes");
 const allRoutes = require("./routes/allroutes");
 
+app.use("/users", userRoutes);
 app.use("/api", allRoutes);
 
-app.use("/users",userRoutes);
-
 app.listen(PORT, () => {
-  console.log(`server run on this ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

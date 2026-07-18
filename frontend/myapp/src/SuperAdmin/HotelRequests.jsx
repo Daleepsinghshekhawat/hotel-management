@@ -5,37 +5,38 @@ import URL from "../api";
 const STATUS_TABS = ["all", "pending", "approved", "rejected"];
 
 const STATUS_CONFIG = {
-  pending:  { bg: "#fef9c3", color: "#854d0e", dot: "#eab308", label: "⏳ Pending"  },
-  approved: { bg: "#dcfce7", color: "#166534", dot: "#22c55e", label: "✅ Approved" },
-  rejected: { bg: "#fee2e2", color: "#991b1b", dot: "#ef4444", label: "❌ Rejected" },
+  pending: { bg: "#fef9c3", color: "#854d0e",  label: "⏳ Pending" },
+  approved: { bg: "#dcfce7", color: "#166534", label: "✅ Approved" },
+  rejected: { bg: "#fee2e2", color: "#991b1b",  label: "❌ Rejected" },
+};
+
+const formatLocation = (location) => {
+  if (!location) return "N/A";
+  if (typeof location === "string") return location;
+  const city = location.cityname || "";
+  const district = location.district?.districtname || "";
+  const state = location.state?.Statename || "";
+  return [city, district, state].filter(Boolean).join(", ") || "N/A";
 };
 
 export default function HotelRequests() {
-  const [requests, setRequests]           = useState([]);
-  const [tab, setTab]                     = useState("all");
-  const [search, setSearch]               = useState("");
-  const [loading, setLoading]             = useState(false);
+  const [requests, setRequests] = useState([]);
+  const [tab, setTab] = useState("all");
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(null); // id of item being acted on
 
 
   // Reject modal
-  const [showRejectModal, setShowRejectModal]   = useState(false);
-  const [rejectingId, setRejectingId]           = useState(null);
-  const [rejectionReason, setRejectionReason]   = useState("");
-  const [rejectLoading, setRejectLoading]       = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectingId, setRejectingId] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [rejectLoading, setRejectLoading] = useState(false);
 
   // View modal
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewingRequest, setViewingRequest] = useState(null);
-  const [imageIndex, setImageIndex]         = useState(0);
 
-  // Upload-images modal (for old requests with no images)
-  const [showUploadModal, setShowUploadModal]   = useState(false);
-  const [uploadingForId, setUploadingForId]     = useState(null);
-  const [uploadingForName, setUploadingForName] = useState("");
-  const [pendingFiles, setPendingFiles]         = useState([]);   // File objects
-  const [pendingPreviews, setPendingPreviews]   = useState([]);   // blob URLs
-  const [uploadSaving, setUploadSaving]         = useState(false);
 
   // ── Data ──────────────────────────────────────────────────────────────────
   const fetchRequests = async () => {
@@ -58,18 +59,10 @@ export default function HotelRequests() {
 
   useEffect(() => { fetchRequests(); }, [tab]);
 
-  // ── Convert File → base64 ─────────────────────────────────────────────────
-  const toBase64 = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload  = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
 
   // ── Actions ───────────────────────────────────────────────────────────────
   const handleApprove = async (id) => {
-    if (!window.confirm("Approve this hotel listing request? This will create an account and send login credentials to the owner.")) return;
+    if (!window.confirm("Approve this hotel listing request? The admin will be notified by email.")) return;
     setActionLoading(id);
     try {
       await axios.patch(`${URL}/api/approveHotelRequest/${id}`);
@@ -81,7 +74,7 @@ export default function HotelRequests() {
     }
   };
 
-  
+
 
   const openRejectModal = (id) => {
     setRejectingId(id);
@@ -124,49 +117,15 @@ export default function HotelRequests() {
 
   const openViewModal = (item) => {
     setViewingRequest(item);
-    setImageIndex(0);
     setShowViewModal(true);
   };
 
-  // ── Open the Upload-Images modal for a specific request ───────────────────
-  const openUploadModal = (item) => {
-    setUploadingForId(item._id);
-    setUploadingForName(item.hotelName);
-    setPendingFiles([]);
-    setPendingPreviews([]);
-    setShowUploadModal(true);
-  };
 
-  const handleFileSelect = (e) => {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
-    setPendingFiles((prev) => [...prev, ...files]);
-    setPendingPreviews((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
-  };
 
-  const removePreview = (idx) => {
-    setPendingFiles((prev)    => prev.filter((_, i) => i !== idx));
-    setPendingPreviews((prev) => prev.filter((_, i) => i !== idx));
-  };
 
-  const handleSaveImages = async () => {
-    if (!pendingFiles.length) { alert("Please select at least one image."); return; }
-    setUploadSaving(true);
-    try {
-      // Convert all files to base64
-      const base64List = await Promise.all(pendingFiles.map((f) => toBase64(f)));
-      const res = await axios.patch(`${URL}/api/updateHotelImages/${uploadingForId}`, {
-        images: base64List,
-      });
-      alert(res.data.message);
-      setShowUploadModal(false);
-      fetchRequests(); // refresh the grid
-    } catch (err) {
-      alert(err.response?.data?.message || "Upload failed. Check your Cloudinary credentials.");
-    } finally {
-      setUploadSaving(false);
-    }
-  };
+
+
+
 
   const formatDate = (d) =>
     d ? new Date(d).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "N/A";
@@ -175,12 +134,13 @@ export default function HotelRequests() {
     (r) =>
       (r.hotelName || "").toLowerCase().includes(search.toLowerCase()) ||
       (r.ownerName || "").toLowerCase().includes(search.toLowerCase()) ||
-      (r.place     || "").toLowerCase().includes(search.toLowerCase())
+      formatLocation(r.location).toLowerCase().includes(search.toLowerCase()) ||
+      (r.submittedBy || "").toLowerCase().includes(search.toLowerCase())
   );
 
   // ── Counts ────────────────────────────────────────────────────────────────
   const counts = {
-    pending:  requests.filter((r) => r.status === "pending").length,
+    pending: requests.filter((r) => r.status === "pending").length,
     approved: requests.filter((r) => r.status === "approved").length,
     rejected: requests.filter((r) => r.status === "rejected").length,
   };
@@ -201,9 +161,9 @@ export default function HotelRequests() {
       {/* ── Stats Row ── */}
       <div style={{ display: "flex", gap: "16px", marginBottom: "28px", flexWrap: "wrap" }}>
         {[
-          { label: "Pending Review", count: counts.pending,  bg: "#fef9c3", color: "#854d0e", icon: "⏳" },
-          { label: "Approved",       count: counts.approved, bg: "#dcfce7", color: "#166534", icon: "✅" },
-          { label: "Rejected",       count: counts.rejected, bg: "#fee2e2", color: "#991b1b", icon: "❌" },
+          { label: "Pending Review", count: counts.pending, bg: "#fef9c3", color: "#854d0e", icon: "⏳" },
+          { label: "Approved", count: counts.approved, bg: "#dcfce7", color: "#166534", icon: "✅" },
+          { label: "Rejected", count: counts.rejected, bg: "#fee2e2", color: "#991b1b", icon: "❌" },
         ].map((stat) => (
           <div
             key={stat.label}
@@ -313,7 +273,7 @@ export default function HotelRequests() {
           }}
         >
           {filtered.map((item) => {
-            const st  = STATUS_CONFIG[item.status] || STATUS_CONFIG.pending;
+            const st = STATUS_CONFIG[item.status] || STATUS_CONFIG.pending;
             const busy = actionLoading === item._id;
             return (
               <div
@@ -329,7 +289,7 @@ export default function HotelRequests() {
                   flexDirection: "column",
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.10)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)";    e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.05)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.05)"; }}
               >
                 {/* Hotel Image Banner */}
                 <div
@@ -340,38 +300,43 @@ export default function HotelRequests() {
                     overflow: "hidden",
                   }}
                 >
-                  {item.images && item.images.length > 0 ? (
+                  {item.image ? (
                     <img
-                      src={item.images[0]}
+                      src={item.image}
                       alt={item.hotelName}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
                     />
                   ) : (
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: "10px" }}>
-                      <span style={{ fontSize: "48px", opacity: 0.5 }}>🏨</span>
-                      {/* Orange button to fix old records with no images */}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); openUploadModal(item); }}
-                        style={{
-                          padding: "6px 16px",
-                          background: "#f97316",
-                          color: "#fff",
-                          border: "none",
-                          borderRadius: "8px",
-                          fontSize: "12px",
-                          fontWeight: 700,
-                          cursor: "pointer",
-                        }}
-                      >
-                        📷 Upload Images
-                      </button>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        height: "100%",
+                      }}
+                    >
+                      <span style={{ fontSize: "55px", opacity: 0.4 }}>
+                        🏨
+                      </span>
                     </div>
                   )}
 
-                  {/* Gradient overlay */}
-                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "60px", background: "linear-gradient(transparent, rgba(0,0,0,0.6))" }} />
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: "60px",
+                      background:
+                        "linear-gradient(transparent, rgba(0,0,0,.6))",
+                    }}
+                  />
 
-                  {/* Status badge on image */}
                   <div
                     style={{
                       position: "absolute",
@@ -383,71 +348,59 @@ export default function HotelRequests() {
                       fontWeight: 700,
                       padding: "4px 12px",
                       borderRadius: "999px",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
                     }}
                   >
                     {st.label}
                   </div>
-
-                  {/* Image count badge */}
-                  {item.images && item.images.length > 1 && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: "10px",
-                        right: "12px",
-                        background: "rgba(0,0,0,0.55)",
-                        color: "#fff",
-                        fontSize: "11px",
-                        padding: "2px 8px",
-                        borderRadius: "999px",
-                      }}
-                    >
-                      📷 {item.images.length} photos
-                    </div>
-                  )}
                 </div>
 
+
                 {/* Card Body */}
-                <div style={{ padding: "18px 20px", flex: 1, display: "flex", flexDirection: "column" }}>
-                  <h3 style={{ margin: "0 0 6px", fontSize: "17px", color: "#0f172a", fontWeight: 700 }}>
+                <div
+                  style={{
+                    padding: "18px 20px",
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  <h3
+                    style={{
+                      margin: "0 0 6px",
+                      fontSize: "17px",
+                      color: "#0f172a",
+                      fontWeight: 700,
+                    }}
+                  >
                     {item.hotelName}
                   </h3>
-                  <p style={{ margin: "0 0 4px", fontSize: "13px", color: "#64748b" }}>
-                    📍 {item.place}
-                  </p>
-                  <p style={{ margin: "0 0 8px", fontSize: "13px", color: "#64748b" }}>
-                    👤 {item.ownerName}&nbsp;·&nbsp;📧 {item.ownerEmail}
-                    {item.ownerPhone && ` · 📞 ${item.ownerPhone}`}
+
+                  <p
+                    style={{
+                      margin: "0 0 4px",
+                      fontSize: "13px",
+                      color: "#64748b",
+                    }}
+                  >
+                    📍 {formatLocation(item.location)}
                   </p>
 
-                  {/* Facilities */}
-                  {item.facilities && item.facilities.length > 0 && (
-                    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
-                      {item.facilities.slice(0, 4).map((f) => (
-                        <span
-                          key={f}
-                          style={{
-                            background: "#f1f5f9",
-                            color: "#475569",
-                            fontSize: "11px",
-                            padding: "2px 8px",
-                            borderRadius: "6px",
-                            fontWeight: 500,
-                          }}
-                        >
-                          {f}
-                        </span>
-                      ))}
-                      {item.facilities.length > 4 && (
-                        <span style={{ fontSize: "11px", color: "#94a3b8", alignSelf: "center" }}>
-                          +{item.facilities.length - 4} more
-                        </span>
-                      )}
-                    </div>
+                  <p
+                    style={{
+                      margin: "0 0 10px",
+                      fontSize: "13px",
+                      color: "#64748b",
+                    }}
+                  >
+                    👤 {item.ownerName} &nbsp;·&nbsp; 📧 {item.email}
+                  </p>
+
+                  {item.submittedBy && (
+                    <p style={{ margin: "0 0 10px", fontSize: "12px", color: "#64748b" }}>
+                      Submitted by admin: {item.submittedBy}
+                    </p>
                   )}
 
-                  {/* Rejection reason */}
                   {item.status === "rejected" && item.rejectionReason && (
                     <div
                       style={{
@@ -460,19 +413,31 @@ export default function HotelRequests() {
                         marginBottom: "10px",
                       }}
                     >
-                      <strong>Rejection Reason:</strong> {item.rejectionReason}
+                      <strong>Rejection Reason:</strong>{" "}
+                      {item.rejectionReason}
                     </div>
                   )}
 
-                  <p style={{ margin: "auto 0 0", fontSize: "11px", color: "#94a3b8", paddingTop: "8px" }}>
+                  <p
+                    style={{
+                      margin: "auto 0 0",
+                      fontSize: "11px",
+                      color: "#94a3b8",
+                      paddingTop: "8px",
+                    }}
+                  >
                     Submitted: {formatDate(item.createdAt)}
                   </p>
 
-                  {/* ── Action Buttons ── */}
-                  <div style={{ display: "flex", gap: "8px", marginTop: "14px" }}>
-                    {/* View button always shown */}
+                  {/* Action Buttons */}
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      marginTop: "14px",
+                    }}
+                  >
                     <button
-                      id={`view-${item._id}`}
                       onClick={() => openViewModal(item)}
                       style={{
                         flex: 1,
@@ -484,83 +449,64 @@ export default function HotelRequests() {
                         cursor: "pointer",
                         fontWeight: 600,
                         fontSize: "13px",
-                        transition: "all 0.15s",
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "#0ea5e9"; e.currentTarget.style.color = "#fff"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#0ea5e9"; }}
                     >
                       👁 View
                     </button>
 
-                    {/* Approve button — shown when pending or rejected */}
-                    {(item.status === "pending" || item.status === "rejected") && (
-                      <button
-                        id={`approve-${item._id}`}
-                        onClick={() => handleApprove(item._id)}
-                        disabled={busy}
-                        style={{
-                          flex: 1,
-                          padding: "9px 0",
-                          borderRadius: "9px",
-                          border: "none",
-                          background: busy ? "#86efac" : "#16a34a",
-                          color: "#fff",
-                          cursor: busy ? "not-allowed" : "pointer",
-                          fontWeight: 600,
-                          fontSize: "13px",
-                          transition: "background 0.15s",
-                        }}
-                      >
-                        {busy ? "..." : "✅ Approve"}
-                      </button>
-                    )}
+                    {(item.status === "pending" ||
+                      item.status === "rejected") && (
+                        <button
+                          onClick={() => handleApprove(item._id)}
+                          disabled={busy}
+                          style={{
+                            flex: 1,
+                            padding: "9px 0",
+                            borderRadius: "9px",
+                            border: "none",
+                            background: "#16a34a",
+                            color: "#fff",
+                            cursor: "pointer",
+                            fontWeight: 600,
+                            fontSize: "13px",
+                          }}
+                        >
+                          ✅ Approve
+                        </button>
+                      )}
 
-                    {/* Reject button — shown when pending or approved */}
-                    {(item.status === "pending" || item.status === "approved") && (
-                      <button
-                        id={`reject-${item._id}`}
-                        onClick={() => openRejectModal(item._id)}
-                        disabled={busy}
-                        style={{
-                          flex: 1,
-                          padding: "9px 0",
-                          borderRadius: "9px",
-                          border: "none",
-                          background: busy ? "#fca5a5" : "#dc2626",
-                          color: "#fff",
-                          cursor: busy ? "not-allowed" : "pointer",
-                          fontWeight: 600,
-                          fontSize: "13px",
-                          transition: "background 0.15s",
-                        }}
-                      >
-                        {busy ? "..." : "❌ Reject"}
-                      </button>
-                    )}
+                    {(item.status === "pending" ||
+                      item.status === "approved") && (
+                        <button
+                          onClick={() => openRejectModal(item._id)}
+                          style={{
+                            flex: 1,
+                            padding: "9px 0",
+                            borderRadius: "9px",
+                            border: "none",
+                            background: "#dc2626",
+                            color: "#fff",
+                            cursor: "pointer",
+                            fontWeight: 600,
+                            fontSize: "13px",
+                          }}
+                        >
+                          ❌ Reject
+                        </button>
+                      )}
 
-                    {/* Delete button — always shown, icon only */}
                     <button
-                      id={`delete-${item._id}`}
-                      title="Delete this request permanently"
-                      onClick={() => handleDelete(item._id, item.hotelName)}
-                      disabled={busy}
+                      onClick={() =>
+                        handleDelete(item._id, item.hotelName)
+                      }
                       style={{
-                        width: "36px",
-                        flexShrink: 0,
-                        padding: "9px 0",
+                        width: "38px",
                         borderRadius: "9px",
-                        border: "1.5px solid #dc2626",
+                        border: "1px solid #dc2626",
                         background: "transparent",
                         color: "#dc2626",
-                        cursor: busy ? "not-allowed" : "pointer",
-                        fontSize: "15px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        transition: "all 0.15s",
+                        cursor: "pointer",
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "#dc2626"; e.currentTarget.style.color = "#fff"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#dc2626"; }}
                     >
                       🗑️
                     </button>
@@ -670,6 +616,7 @@ export default function HotelRequests() {
       )}
 
       {/* ══════════════════════ View Details Modal ══════════════════════ */}
+     
       {showViewModal && viewingRequest && (
         <div
           style={{
@@ -696,300 +643,211 @@ export default function HotelRequests() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header with image */}
-            <div style={{ position: "relative", height: "220px", background: "#0f172a", borderRadius: "20px 20px 0 0", overflow: "hidden" }}>
-              {viewingRequest.images && viewingRequest.images.length > 0 ? (
+            {/* Image */}
+            <div
+              style={{
+                position: "relative",
+                height: "250px",
+                background: "#0f172a",
+                borderRadius: "20px 20px 0 0",
+                overflow: "hidden",
+              }}
+            >
+              {viewingRequest.image ? (
                 <img
-                  src={viewingRequest.images[imageIndex]}
-                  alt="hotel"
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  src={viewingRequest.image}
+                  alt={viewingRequest.hotelName}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
                 />
               ) : (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-                  <span style={{ fontSize: "64px", opacity: 0.4 }}>🏨</span>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "100%",
+                  }}
+                >
+                  <span style={{ fontSize: "70px", opacity: 0.4 }}>
+                    🏨
+                  </span>
                 </div>
               )}
 
-              {/* Navigation arrows */}
-              {viewingRequest.images && viewingRequest.images.length > 1 && (
-                <>
-                  <button
-                    onClick={() => setImageIndex((i) => (i - 1 + viewingRequest.images.length) % viewingRequest.images.length)}
-                    style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.55)", border: "none", color: "#fff", borderRadius: "50%", width: "36px", height: "36px", cursor: "pointer", fontSize: "20px" }}
-                  >‹</button>
-                  <button
-                    onClick={() => setImageIndex((i) => (i + 1) % viewingRequest.images.length)}
-                    style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.55)", border: "none", color: "#fff", borderRadius: "50%", width: "36px", height: "36px", cursor: "pointer", fontSize: "20px" }}
-                  >›</button>
-                  <span style={{ position: "absolute", bottom: "10px", right: "14px", background: "rgba(0,0,0,0.55)", color: "#fff", fontSize: "12px", padding: "2px 10px", borderRadius: "999px" }}>
-                    {imageIndex + 1} / {viewingRequest.images.length}
-                  </span>
-                </>
-              )}
-
-              {/* Close button */}
               <button
                 onClick={() => setShowViewModal(false)}
-                style={{ position: "absolute", top: "12px", right: "12px", background: "rgba(0,0,0,0.55)", border: "none", color: "#fff", borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", fontSize: "18px" }}
-              >✕</button>
+                style={{
+                  position: "absolute",
+                  top: "12px",
+                  right: "12px",
+                  width: "36px",
+                  height: "36px",
+                  border: "none",
+                  borderRadius: "50%",
+                  background: "rgba(0,0,0,.6)",
+                  color: "#fff",
+                  cursor: "pointer",
+                  fontSize: "18px",
+                }}
+              >
+                ✕
+              </button>
 
-              {/* Status overlay badge */}
               <div
                 style={{
                   position: "absolute",
                   bottom: "12px",
-                  left: "14px",
-                  background: STATUS_CONFIG[viewingRequest.status]?.bg || "#fef9c3",
-                  color: STATUS_CONFIG[viewingRequest.status]?.color || "#854d0e",
-                  fontSize: "13px",
-                  fontWeight: 700,
-                  padding: "4px 14px",
+                  left: "12px",
+                  background:
+                    STATUS_CONFIG[viewingRequest.status]?.bg,
+                  color:
+                    STATUS_CONFIG[viewingRequest.status]?.color,
+                  padding: "5px 14px",
                   borderRadius: "999px",
+                  fontWeight: 700,
+                  fontSize: "13px",
                 }}
               >
                 {STATUS_CONFIG[viewingRequest.status]?.label}
               </div>
             </div>
 
-            {/* Thumbnails */}
-            {viewingRequest.images && viewingRequest.images.length > 1 && (
-              <div style={{ display: "flex", gap: "8px", padding: "12px 20px 0", overflowX: "auto" }}>
-                {viewingRequest.images.map((img, i) => (
-                  <img
-                    key={i}
-                    src={img}
-                    onClick={() => setImageIndex(i)}
-                    alt=""
-                    style={{
-                      width: "60px",
-                      height: "60px",
-                      objectFit: "cover",
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                      flexShrink: 0,
-                      border: i === imageIndex ? "2.5px solid #2563eb" : "2.5px solid transparent",
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-
             {/* Details */}
-            <div style={{ padding: "20px 24px 28px" }}>
-              <h3 style={{ margin: "0 0 16px", fontSize: "20px", color: "#0f172a" }}>
+            <div style={{ padding: "24px" }}>
+              <h2
+                style={{
+                  margin: "0 0 20px",
+                  color: "#0f172a",
+                }}
+              >
                 🏨 {viewingRequest.hotelName}
-              </h3>
+              </h2>
 
-              {[
-                { label: "Owner Name",  value: viewingRequest.ownerName },
-                { label: "Owner Email", value: viewingRequest.ownerEmail },
-                { label: "Phone",       value: viewingRequest.ownerPhone || "—" },
-                { label: "Location",    value: viewingRequest.place },
-                { label: "Description", value: viewingRequest.description || "—" },
-                { label: "Submitted",   value: formatDate(viewingRequest.createdAt) },
-              ].map((row) => (
-                <div
-                  key={row.label}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: "12px",
-                    padding: "10px 14px",
-                    background: "#f8fafc",
-                    borderRadius: "8px",
-                    marginBottom: "8px",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <span style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600, textTransform: "uppercase" }}>{row.label}</span>
-                  <span style={{ fontSize: "14px", color: "#0f172a", fontWeight: 500, textAlign: "right" }}>{row.value}</span>
+              <div
+                style={{
+                  display: "grid",
+                  gap: "12px",
+                }}
+              >
+                <div>
+                  <strong>Owner Name:</strong>{" "}
+                  {viewingRequest.ownerName}
                 </div>
-              ))}
 
-              {/* Facilities */}
-              {viewingRequest.facilities && viewingRequest.facilities.length > 0 && (
-                <div style={{ marginTop: "14px" }}>
-                  <p style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", marginBottom: "8px" }}>
-                    Facilities
-                  </p>
-                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                    {viewingRequest.facilities.map((f) => (
-                      <span key={f} style={{ background: "#e0f2fe", color: "#0369a1", fontSize: "12px", padding: "4px 10px", borderRadius: "6px", fontWeight: 600 }}>
-                        {f}
-                      </span>
-                    ))}
-                  </div>
+                <div>
+                  <strong>Owner Email:</strong>{" "}
+                  {viewingRequest.email}
                 </div>
-              )}
 
-              {/* Rejection reason */}
-              {viewingRequest.status === "rejected" && viewingRequest.rejectionReason && (
-                <div style={{ marginTop: "16px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", padding: "14px 16px" }}>
-                  <p style={{ margin: "0 0 4px", fontSize: "12px", color: "#991b1b", fontWeight: 700, textTransform: "uppercase" }}>Rejection Reason</p>
-                  <p style={{ margin: 0, fontSize: "14px", color: "#7f1d1d" }}>{viewingRequest.rejectionReason}</p>
+                <div>
+                  <strong>Submitted By:</strong>{" "}
+                  {viewingRequest.submittedBy || "N/A"}
                 </div>
-              )}
 
-              {/* Action buttons in modal */}
-              <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
-                {(viewingRequest.status === "pending" || viewingRequest.status === "rejected") && (
-                  <button
-                    onClick={() => { setShowViewModal(false); handleApprove(viewingRequest._id); }}
-                    style={{ flex: 1, padding: "11px", background: "#16a34a", color: "#fff", border: "none", borderRadius: "10px", cursor: "pointer", fontWeight: 700, fontSize: "14px" }}
-                  >
-                    ✅ Approve &amp; Send Credentials
-                  </button>
-                )}
-                {(viewingRequest.status === "pending" || viewingRequest.status === "approved") && (
-                  <button
-                    onClick={() => { setShowViewModal(false); openRejectModal(viewingRequest._id); }}
-                    style={{ flex: 1, padding: "11px", background: "#dc2626", color: "#fff", border: "none", borderRadius: "10px", cursor: "pointer", fontWeight: 700, fontSize: "14px" }}
-                  >
-                    ❌ Reject
-                  </button>
-                )}
+                <div>
+                  <strong>Location:</strong>{" "}
+                  {formatLocation(viewingRequest.location)}
+                </div>
+
+                <div>
+                  <strong>Description:</strong>
+                  <br />
+                  {viewingRequest.description}
+                </div>
+
+                <div>
+                  <strong>Submitted:</strong>{" "}
+                  {formatDate(viewingRequest.createdAt)}
+                </div>
+
+                {viewingRequest.status === "rejected" &&
+                  viewingRequest.rejectionReason && (
+                    <div
+                      style={{
+                        background: "#fef2f2",
+                        border: "1px solid #fecaca",
+                        padding: "12px",
+                        borderRadius: "8px",
+                        color: "#991b1b",
+                      }}
+                    >
+                      <strong>Rejection Reason:</strong>
+                      <br />
+                      {viewingRequest.rejectionReason}
+                    </div>
+                  )}
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: "10px",
+                  marginTop: "24px",
+                }}
+              >
+                {(viewingRequest.status === "pending" ||
+                  viewingRequest.status === "rejected") && (
+                    <button
+                      onClick={() => {
+                        setShowViewModal(false);
+                        handleApprove(viewingRequest._id);
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: "12px",
+                        background: "#16a34a",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "10px",
+                        cursor: "pointer",
+                        fontWeight: 700,
+                      }}
+                    >
+                      ✅ Approve
+                    </button>
+                  )}
+
+                {(viewingRequest.status === "pending" ||
+                  viewingRequest.status === "approved") && (
+                    <button
+                      onClick={() => {
+                        setShowViewModal(false);
+                        openRejectModal(viewingRequest._id);
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: "12px",
+                        background: "#dc2626",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "10px",
+                        cursor: "pointer",
+                        fontWeight: 700,
+                      }}
+                    >
+                      ❌ Reject
+                    </button>
+                  )}
+
                 <button
                   onClick={() => setShowViewModal(false)}
-                  style={{ flex: 1, padding: "11px", background: "#f1f5f9", color: "#475569", border: "none", borderRadius: "10px", cursor: "pointer", fontWeight: 600, fontSize: "14px" }}
+                  style={{
+                    flex: 1,
+                    padding: "12px",
+                    background: "#e2e8f0",
+                    border: "none",
+                    borderRadius: "10px",
+                    cursor: "pointer",
+                    fontWeight: 700,
+                  }}
                 >
                   Close
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ══════════════════════ Upload Images Modal ══════════════════════ */}
-      {showUploadModal && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.6)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-            padding: "20px",
-          }}
-          onClick={() => { if (!uploadSaving) setShowUploadModal(false); }}
-        >
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: "20px",
-              padding: "32px",
-              width: "100%",
-              maxWidth: "520px",
-              boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
-              <span style={{ fontSize: "26px" }}>📷</span>
-              <h3 style={{ margin: 0, color: "#0f172a", fontSize: "18px" }}>Upload Images</h3>
-            </div>
-            <p style={{ margin: "0 0 20px", color: "#64748b", fontSize: "13px" }}>
-              Uploading images for: <strong>{uploadingForName}</strong>
-            </p>
-
-            {/* Previews */}
-            {pendingPreviews.length > 0 && (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))",
-                  gap: "10px",
-                  marginBottom: "16px",
-                }}
-              >
-                {pendingPreviews.map((src, i) => (
-                  <div key={i} style={{ position: "relative", aspectRatio: "1", borderRadius: "10px", overflow: "hidden", border: "2px solid #e2e8f0" }}>
-                    <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    <button
-                      onClick={() => removePreview(i)}
-                      style={{
-                        position: "absolute", top: "3px", right: "3px",
-                        background: "rgba(0,0,0,0.65)", border: "none",
-                        color: "#fff", borderRadius: "50%",
-                        width: "20px", height: "20px",
-                        fontSize: "13px", cursor: "pointer",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                      }}
-                    >×</button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* File picker */}
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                border: "2px dashed #cbd5e1",
-                borderRadius: "12px",
-                padding: "20px",
-                cursor: "pointer",
-                background: "#f8fafc",
-                color: "#475569",
-                fontWeight: 600,
-                fontSize: "14px",
-                marginBottom: "20px",
-              }}
-            >
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                style={{ display: "none" }}
-                onChange={handleFileSelect}
-                disabled={uploadSaving}
-              />
-              ➕ {pendingPreviews.length > 0 ? "Add More Photos" : "Select Hotel Photos"}
-            </label>
-
-            {/* Action buttons */}
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button
-                onClick={handleSaveImages}
-                disabled={uploadSaving || pendingFiles.length === 0}
-                style={{
-                  flex: 1,
-                  padding: "12px",
-                  background: uploadSaving || pendingFiles.length === 0 ? "#94a3b8" : "#f97316",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "10px",
-                  cursor: uploadSaving || pendingFiles.length === 0 ? "not-allowed" : "pointer",
-                  fontWeight: 700,
-                  fontSize: "14px",
-                }}
-              >
-                {uploadSaving
-                  ? "⏳ Uploading to Cloudinary..."
-                  : `☁️ Upload ${pendingFiles.length > 0 ? pendingFiles.length + " " : ""}Image${pendingFiles.length !== 1 ? "s" : ""} to Cloudinary`}
-              </button>
-              <button
-                onClick={() => setShowUploadModal(false)}
-                disabled={uploadSaving}
-                style={{
-                  padding: "12px 20px",
-                  background: "#f1f5f9",
-                  border: "none",
-                  borderRadius: "10px",
-                  cursor: uploadSaving ? "not-allowed" : "pointer",
-                  fontWeight: 600,
-                  fontSize: "14px",
-                  color: "#475569",
-                }}
-              >
-                Cancel
-              </button>
             </div>
           </div>
         </div>

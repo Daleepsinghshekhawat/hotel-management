@@ -5,6 +5,7 @@ const menuItems = [
   { to: "/superadmin/district", label: "🏙️ District" },
   { to: "/superadmin/city", label: "🌆 City" },
   { to: "/superadmin/hotel-requests", label: "🏨 Hotel Requests" },
+  { to: "/superadmin/admin-requests", label: "👤 Admin Requests" },
 ];
 
 function Sidebar() {

@@ -5,7 +5,9 @@ import URL from "./api";
 
 function Login() {
   const navigate = useNavigate();
-  const [data, setData] = useState({ email: "", password: "" });
+  const [data, setData] = useState({ 
+    email: "", 
+    password: "" });
   const [loading, setLoading] = useState(false);
 
   function handleChange(e) {
@@ -20,7 +22,7 @@ function Login() {
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       if (res.data.user.role === "superadmin") navigate("/superadmin");
-      else if (res.data.user.role === "admin")  navigate("/admin");
+      else if (res.data.user.role === "admin")  navigate("/adminpage");
       else                                       navigate("/user");
     } catch (error) {
       alert(error.response?.data?.message || "Login failed");
@@ -28,6 +30,7 @@ function Login() {
       setLoading(false);
     }
   }
+
 
   return (
     <div
@@ -162,50 +165,13 @@ function Login() {
               Sign Up
             </Link>
           </p>
-
-          {/* ── Hotel Owner CTA ── */}
-          <div
-            style={{
-              marginTop: "24px",
-              borderTop: "1px solid rgba(255,255,255,0.1)",
-              paddingTop: "24px",
-            }}
-          >
-            <p style={{ color: "#94a3b8", fontSize: "13px", textAlign: "center", margin: "0 0 14px" }}>
-              🏨 Are you a hotel owner?
-            </p>
-            <Link
-              id="list-hotel-link"
-              to="/list-hotel"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "10px",
-                padding: "13px",
-                background: "linear-gradient(135deg, #f59e0b, #d97706)",
-                color: "#fff",
-                textDecoration: "none",
-                borderRadius: "12px",
-                fontWeight: 700,
-                fontSize: "15px",
-                boxShadow: "0 4px 20px rgba(245,158,11,0.35)",
-                transition: "transform 0.2s, box-shadow 0.2s",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 28px rgba(245,158,11,0.45)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)";    e.currentTarget.style.boxShadow = "0 4px 20px rgba(245,158,11,0.35)"; }}
-            >
-              <span style={{ fontSize: "20px" }}>🏨</span>
-              List Your Hotel — Apply Now
-              <span style={{ fontSize: "16px" }}>→</span>
-            </Link>
+            <Link to="/become-admin">Become Admin</Link>
             <p style={{ color: "#64748b", fontSize: "12px", textAlign: "center", margin: "10px 0 0" }}>
-              Submit your property details for review. Free to apply.
+              Become an admin . Free to apply.
             </p>
           </div>
         </div>
       </div>
-    </div>
   );
 }
 

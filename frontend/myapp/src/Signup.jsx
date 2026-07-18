@@ -10,7 +10,7 @@ function Signup() {
     name: "",
     email: "",
     password: "",
-    role: "superadmin",
+    role: "user",
   });
 
   function handleChange(e) {
@@ -75,17 +75,7 @@ function Signup() {
           style={{ padding: "10px" }}
         />
 
-        <select
-          name="role"
-          value={data.role}
-          onChange={handleChange}
-          style={{ padding: "10px" }}
-        >
-          <option value="superadmin">superadmin</option>
-          <option value="admin">admin</option>
-          <option value="user">user</option>
-        </select>
-
+      
         <button
           type="submit"
           style={{

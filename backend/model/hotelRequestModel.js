@@ -2,43 +2,64 @@ const mongoose = require("mongoose");
 
 const hotelRequestSchema = new mongoose.Schema(
   {
-    ownerName: {
-      type: String,
-      required: true,
-    },
-    ownerEmail: {
-      type: String,
-      required: true,
-    },
-    ownerPhone: {
-      type: String,
-    },
     hotelName: {
       type: String,
       required: true,
+      trim: true,
     },
+
+    ownerName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    email: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    location: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "cities",
+      required: true,
+    },
+
+    submittedBy: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     description: {
       type: String,
+      required: true,
+      trim: true,
     },
-    place: {
+
+    image: {
       type: String,
       required: true,
     },
-    images: [
-      {
-        type: String, // Cloudinary URLs
-      },
-    ],
-    facilities: [
-      {
-        type: String, // e.g. "WiFi", "Pool", "Parking"
-      },
-    ],
+
+    registrationId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],
       default: "pending",
     },
+
+    review: {
+      type: String,
+      default: "",
+    },
+
     rejectionReason: {
       type: String,
       default: "",
@@ -50,4 +71,4 @@ const hotelRequestSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("hotelrequests", hotelRequestSchema);
+module.exports = mongoose.model("hotelrequest", hotelRequestSchema);

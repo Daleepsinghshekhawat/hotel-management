@@ -2,30 +2,49 @@ const cloudinary = require("cloudinary").v2;
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 /**
- * Ping Cloudinary to verify that the credentials in .env are correct.
- * @returns {Promise<object>} - Cloudinary ping response
+ * Upload a single image to Cloudinary
+ * @param {string} filePath
+ * @param {string} folder
+ * @returns {Promise<string>}
  */
-const pingCloudinary = async () => {
-  return await cloudinary.api.ping();
+exports.uploadImage = async (files) => {
+  console.log(`>>>>>>files`, files);
+  console.log("inside uploadImage");
+
+  const fileArray = Object.values(files); // Convert files object to an array
+  const results = []; // This will store the result of each upload
+
+  // Upload each file one by one
+  
+  for (const file of fileArray) {
+    try {
+      const result = await new Promise((resolve, reject) => {
+        // Upload the file to Cloudinary
+        cloudinary.uploader
+          .upload_stream((error, result) => {
+            console.log(`>>>>>>>>>>>error, result`, error, result);
+
+            if (error) {
+              reject(error); // Reject if there's an error
+            } else {
+              resolve(result); // Resolve with the result if upload is successful
+            }
+          })
+          .end(file.data); // Start uploading the file
+      });
+
+      results.push(result); // Store the result of the upload
+    } catch (error) {
+      console.error("Error uploading file:", error); // Log the error if upload fails
+    }
+  }
+
+  return results;
+ 
 };
 
-/**
- * Upload a base64 image string to Cloudinary
- * @param {string} base64String  - "data:image/jpeg;base64,/9j/4AAQ..."
- * @param {string} folder        - Cloudinary folder name
- * @returns {Promise<string>}    - secure URL of the uploaded image
- */
-const uploadImage = async (base64String, folder = "hotel_listings") => {
-  const result = await cloudinary.uploader.upload(base64String, {
-    folder,
-    resource_type: "image",
-  });
-  return result.secure_url;
-};
-
-module.exports = { cloudinary, uploadImage, pingCloudinary };

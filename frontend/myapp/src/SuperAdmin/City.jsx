@@ -118,6 +118,7 @@ const City = () => {
     try {
       await axios.post(`${URL}/api/createCity`, {
         cityname: newCityName.trim(),
+          state: selectedState,
         district: newCityDistrict,
       });
       setNewCityName("");
