@@ -1,11 +1,12 @@
 const usermodel = require("../model/usermodel");
+const hotelOwnerModel = require("../model/hotelOwnerModel");
 
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const secretKey = "mySecretkey";
 
 const { sendEmail } = require("../utils/helper"); //it is use as to send  email 
- const {generateOTP} = require("../utils/helper");
+const { generateOTP } = require("../utils/helper");
 
 
 exports.signup = async (req, res) => {
@@ -32,14 +33,14 @@ exports.signup = async (req, res) => {
       password: hashPassword, // here we place securepassword
       role,
     });
-    
+
 
     try {
       await sendEmail({
         //here  we use this sendmail function to send email on signup
-         to:email,
+        to: email,
         subject: "🎉 Welcome to Our Platform!",
-         html: `
+        html: `
       <div style="max-width:600px;margin:auto;font-family:Arial,sans-serif;background:#f4f4f4;padding:30px;">
         
         <div style="background:#2563eb;padding:20px;text-align:center;border-radius:10px 10px 0 0;">
@@ -90,13 +91,13 @@ exports.signup = async (req, res) => {
 
       </div>
     `,
-    });
+      });
     } catch (err) {
       console.log("email failed:", err.message);
     }
 
 
-      return res.status(200).json({ message: "signup sucessfull", result });
+    return res.status(200).json({ message: "signup sucessfull", result });
 
 
   } catch (err) {
@@ -111,7 +112,10 @@ exports.login = async (req, res) => {
       return res.status(404).json({ message: "alll field are required" });
     }
 
-    const user = await usermodel.findOne({ email });
+    let user = await usermodel.findOne({ email });
+    if (!user) {
+      user = await hotelOwnerModel.findOne({ email });
+    }
     if (!user) {
       return res.status(404).json({ message: "user must signup first" });
     }
@@ -142,6 +146,7 @@ exports.login = async (req, res) => {
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
+    console.log(email);
 
     const user = await usermodel.findOne({ email });
 
@@ -152,27 +157,27 @@ exports.forgotPassword = async (req, res) => {
     }
 
     const otp = generateOTP(6);
-    console.log("otp:",otp);
+    console.log("otp:", otp);
 
     user.otp = otp;
-    user.otpExpiry =new Date( Date.now() + 5 * 60 * 1000);
+    user.otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
 
     await user.save();
 
-    await sendEmail(
-      user.email,
-      "Password Reset OTP",
-      `Your OTP is ${otp}. It will expire in 5 minutes`,
-    );
+    await sendEmail({
+      to:email,
+      subject:"Password Reset OTP",
+      html:`Your OTP is ${otp}. It will expire in 5 minutes`
+    });
 
-    res.status(200).json({
-      message: "OTP sent successfully",
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
-  }
+  res.status(200).json({
+    message: "OTP sent successfully",
+  });
+} catch (error) {
+  res.status(500).json({
+    message: error.message,
+  });
+}
 };
 
 

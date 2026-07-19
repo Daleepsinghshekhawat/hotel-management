@@ -25,6 +25,7 @@ const hotelSchema = new mongoose.Schema(
       ref: "cities",
       required: true,
     },
+    
 
     description: {
       type: String,

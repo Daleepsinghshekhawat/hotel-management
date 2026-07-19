@@ -1,13 +1,12 @@
 import { NavLink, useNavigate } from "react-router-dom";
 
 const menuItems = [
-  { to: "/adminpage", label: "📊 Dashboard", end: true },
-  { to: "/adminpage/add-hotel", label: "➕ Add Hotel" },
-  { to: "/adminpage/hotels", label: "🏨 My Hotels" },
-  { to: "/adminpage/users-owners", label: "👥 Accounts" },
+  { to: "/hotel", label: "📊 Dashboard", end: true },
+  { to: "/hotel/add-hotel", label: "➕ Add Hotel" },
+  { to: "/hotel/hotels", label: "🏨 My Hotels" },
 ];
 
-function AdminSidebar() {
+function HotelSidebar() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
@@ -22,7 +21,7 @@ function AdminSidebar() {
       style={{
         width: "240px",
         minHeight: "100vh",
-        background: "#1e293b",
+        background: "#0f172a",
         color: "#f8fafc",
         padding: "24px 18px",
         boxShadow: "2px 0 10px rgba(0,0,0,0.16)",
@@ -30,7 +29,7 @@ function AdminSidebar() {
         flexDirection: "column",
       }}
     >
-      <h2 style={{ margin: "0 0 8px", fontSize: "22px" }}>Admin Panel</h2>
+      <h2 style={{ margin: "0 0 4px", fontSize: "22px" }}>Hotel Panel</h2>
       <p
         style={{
           margin: "0 0 8px",
@@ -40,7 +39,7 @@ function AdminSidebar() {
           letterSpacing: "1px",
         }}
       >
-        Hotel Management
+        Owner Workspace
       </p>
       <p
         style={{
@@ -48,9 +47,10 @@ function AdminSidebar() {
           color: "#cbd5e1",
           fontSize: "13px",
           wordBreak: "break-word",
+          fontWeight: 500,
         }}
       >
-        {user.name || "Admin"}
+        👤 {user.name || "Owner"} ({user.role})
       </p>
 
       <div style={{ flex: 1 }}>
@@ -94,4 +94,4 @@ function AdminSidebar() {
   );
 }
 
-export default AdminSidebar;
+export default HotelSidebar;

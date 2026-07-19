@@ -8,6 +8,130 @@ const cityController = require("../controller/cityController");
 const adminController = require("../controller/adminRegisterController");
 
 const adminReqController = require("../controller/adminReqController");
+const roomController = require("../controller/roomController");
+const hotelController = require("../controller/hotelController");
+const hotelRequestController = require("../controller/hotelRequestController");
+const superAdminController = require("../controller/superAdminController");
+
+
+
+
+router.post(
+    "/submitHotelRequest",
+    hotelRequestController.submitHotelRequest
+);
+router.get(
+    "/getAllHotelRequests",
+    hotelRequestController.getAllHotelRequests
+);
+
+router.get(
+    "/getRequestsByStatus",
+    hotelRequestController.getRequestsByStatus
+);
+
+
+router.get(
+    "/getRequestsByAdmin/:email",
+    hotelRequestController.getRequestsByAdmin
+);
+
+router.get(
+    "/getHotelRequestsByAdmin/:email",
+    hotelRequestController.getRequestsByAdmin
+);
+
+router.patch(
+    "/approveHotelRequest/:id",
+    hotelRequestController.approveRequest
+);
+
+router.patch(
+    "/rejectHotelRequest/:id",
+    hotelRequestController.rejectRequest
+);
+
+router.delete(
+    "/deleteHotelRequest/:id",
+    hotelRequestController.deleteRequest
+);
+
+router.post(
+    "/addHotelDirect",
+    hotelRequestController.addHotelDirect
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+router.get(
+    "/getAllHotels",
+    hotelController.getAllHotels
+);
+
+router.get(
+    "/getHotelsByAdmin/:email",
+    hotelController.getHotelsByAdmin
+);
+
+
+router.get(
+    "/getHotelById/:id",
+    hotelController.getHotelById
+);
+
+router.get(
+  "/getHotelsByStatus/:status",
+  hotelController.getHotelsByStatus
+);
+
+router.patch(
+  "/softDeleteHotel/:id",
+  hotelController.softDeleteHotel
+);
+
+
+
+
+
+// rooms route
+router.post("/addRoom", roomController.addRoom);
+router.get(
+    "/getRoomsByHotel/:hotelId",
+    roomController.getRoomsByHotel
+);
+router.get(
+"/getRoom/:id",
+roomController.getSingleRoom
+);
+router.patch(
+"/deleteRoom/:id",
+roomController.deleteRoom
+);
+router.patch(
+"/updateRoom/:id",
+roomController.updateRoom
+);
+
+
+
 
 
 
@@ -53,6 +177,10 @@ router.get("/getAdminRequestsByStatus/:status",adminReqController.getAdminReques
 router.patch("/approveAdminRequest/:id",adminReqController.approveAdminRequest)
 router.patch("/rejectAdminRequest/:id",adminReqController.rejectAdminRequest)
 router.delete("/deleteAdminRequest/:id",adminReqController.deleteAdminRequest)
+
+// User management routes for SuperAdmin
+router.get("/getUsersByRole/:role", superAdminController.getUsersByRole);
+router.delete("/deleteUser/:id", superAdminController.deleteUser);
 
 
 router.get("/test", (req, res) => {

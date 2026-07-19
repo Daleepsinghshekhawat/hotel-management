@@ -22,7 +22,8 @@ function Login() {
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       if (res.data.user.role === "superadmin") navigate("/superadmin");
-      else if (res.data.user.role === "admin")  navigate("/adminpage");
+      else if (res.data.user.role === "admin") navigate("/adminpage");
+      else if (res.data.user.role === "hotelOwner") navigate("/hotel");
       else                                       navigate("/user");
     } catch (error) {
       alert(error.response?.data?.message || "Login failed");

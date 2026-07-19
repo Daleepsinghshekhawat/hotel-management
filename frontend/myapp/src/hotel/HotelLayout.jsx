@@ -1,24 +1,25 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
-import AdminSidebar from "./AdminSidebar";
 import useTheme from "../useTheme";
+import HotelSidebar from "./HotelSidebar";
 
-const Admin = () => {
+const HotelLayout = () => {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: theme === "dark" ? "#111827" : "#f8fafc" }}>
-      <AdminSidebar />
-      <div style={{ flex: 1, padding: "24px", color: theme === "dark" ? "#ffffff" : "#000000" }}>
+    <div style={{ display: "flex", minHeight: "100vh", background: theme === "dark" ? "#0f172a" : "#f8fafc" }}>
+      <HotelSidebar />
+      <div style={{ flex: 1, padding: "24px" }}>
         <div
           style={{
-            background: theme === "dark" ? "#1f2937" : "#ffffff",
+            background: theme === "dark" ? "#1e293b" : "#ffffff",
             borderRadius: "16px",
             padding: "24px",
             boxShadow: "0 6px 20px rgba(0,0,0,0.06)",
+            color: theme === "dark" ? "#f8fafc" : "#0f172a",
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px" }}>
             <button
               onClick={toggleTheme}
               style={{
@@ -27,7 +28,9 @@ const Admin = () => {
                 backgroundColor: theme === "dark" ? "#ffffff" : "#1e293b",
                 color: theme === "dark" ? "#000000" : "#ffffff",
                 border: "none",
-                borderRadius: "4px"
+                borderRadius: "8px",
+                fontWeight: 600,
+                fontSize: "13px",
               }}
             >
               Switch to {theme === "dark" ? "Light" : "Dark"} Mode
@@ -40,4 +43,4 @@ const Admin = () => {
   );
 };
 
-export default Admin;
+export default HotelLayout;

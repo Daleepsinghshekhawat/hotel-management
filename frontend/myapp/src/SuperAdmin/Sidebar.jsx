@@ -6,6 +6,8 @@ const menuItems = [
   { to: "/superadmin/city", label: "🌆 City" },
   { to: "/superadmin/hotel-requests", label: "🏨 Hotel Requests" },
   { to: "/superadmin/admin-requests", label: "👤 Admin Requests" },
+  { to: "/superadmin/add-hotel", label: "➕ Add Hotel Directly" },
+  { to: "/superadmin/users-admins", label: "👥 Accounts" },
 ];
 
 function Sidebar() {
