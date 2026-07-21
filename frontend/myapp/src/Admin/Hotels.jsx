@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import URL from "../api";
 
-const STATUS_TABS = ["all", "pending", "approved", "rejected", "inactive"];
+const STATUS_TABS = ["all", "pending", "approved", "rejected"];
 
 const STATUS_CONFIG = {
   pending: { bg: "#fef9c3", color: "#854d0e", label: "Pending" },
   approved: { bg: "#dcfce7", color: "#166534", label: "Approved" },
   rejected: { bg: "#fee2e2", color: "#991b1b", label: "Rejected" },
-  inactive: { bg: "#fee2e2", color: "#b91c1c", label: "Deleted" },
 };
 
 const formatLocation = (location) => {
@@ -22,7 +20,6 @@ const formatLocation = (location) => {
 };
 
 export default function Hotels() {
-  const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [hotels, setHotels] = useState([]);
   const [tab, setTab] = useState("all");
@@ -58,12 +55,13 @@ export default function Hotels() {
       formatLocation(h.location).toLowerCase().includes(search.toLowerCase())
   );
 
+
   const counts = {
     pending: hotels.filter((h) => h.status === "pending").length,
     approved: hotels.filter((h) => h.status === "approved").length,
     rejected: hotels.filter((h) => h.status === "rejected").length,
-    inactive: hotels.filter((h) => h.status === "inactive").length,
   };
+  
 
   const formatDate = (d) =>
     d
@@ -104,7 +102,7 @@ export default function Hotels() {
               textTransform: "capitalize",
             }}
           >
-            {t === "all" ? "All" : t === "inactive" ? "Deleted" : t}
+            {t === "all" ? "All" : t}
           </button>
         ))}
       </div>
@@ -233,78 +231,22 @@ export default function Hotels() {
                     Submitted: {formatDate(item.createdAt)}
                   </p>
 
-                  <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
-                    <button
-                      onClick={() => setViewingHotel(item)}
-                      style={{
-                        flex: 1,
-                        padding: "9px 0",
-                        borderRadius: "9px",
-                        border: "1px solid #64748b",
-                        background: "transparent",
-                        color: "#64748b",
-                        cursor: "pointer",
-                        fontWeight: 600,
-                        fontSize: "12px",
-                      }}
-                    >
-                      Details
-                    </button>
-
-                    {item.status === "approved" && (
-                      <>
-                        <button
-                          onClick={() => navigate(`/adminpage/add-room?hotelId=${item._id}`)}
-                          style={{
-                            flex: 1,
-                            padding: "9px 0",
-                            borderRadius: "9px",
-                            border: "none",
-                            background: "#2563eb",
-                            color: "#fff",
-                            cursor: "pointer",
-                            fontWeight: 600,
-                            fontSize: "12px",
-                          }}
-                        >
-                          Add Room
-                        </button>
-                        <button
-                          onClick={async () => {
-                            if (window.confirm(`Are you sure you want to delete ${item.hotelName}?`)) {
-                              try {
-                                const response = await axios.get(`${URL}/api/getHotelsByAdmin/${user.email}`);
-                                const matchingHotel = (response.data.result || []).find(h => h.registrationId === item.registrationId || h.requestId === item._id);
-                                if (matchingHotel) {
-                                  await axios.patch(`${URL}/api/softDeleteHotel/${matchingHotel._id}`);
-                                  alert("Hotel soft deleted successfully");
-                                  fetchHotels();
-                                } else {
-                                  alert("Could not find approved hotel details to soft delete.");
-                                }
-                              } catch (err) {
-                                console.error(err);
-                                alert("Failed to soft delete hotel");
-                              }
-                            }
-                          }}
-                          style={{
-                            flex: 1,
-                            padding: "9px 0",
-                            borderRadius: "9px",
-                            border: "none",
-                            background: "#dc2626",
-                            color: "#fff",
-                            cursor: "pointer",
-                            fontWeight: 600,
-                            fontSize: "12px",
-                          }}
-                        >
-                          Delete
-                        </button>
-                      </>
-                    )}
-                  </div>
+                  <button
+                    onClick={() => setViewingHotel(item)}
+                    style={{
+                      width: "100%",
+                      padding: "9px 0",
+                      borderRadius: "9px",
+                      border: "1px solid #2563eb",
+                      background: "transparent",
+                      color: "#2563eb",
+                      cursor: "pointer",
+                      fontWeight: 600,
+                      fontSize: "13px",
+                    }}
+                  >
+                    View Details
+                  </button>
                 </div>
               </div>
             );
