@@ -12,6 +12,33 @@ const roomController = require("../controller/roomController");
 const hotelController = require("../controller/hotelController");
 const hotelRequestController = require("../controller/hotelRequestController");
 const superAdminController = require("../controller/superAdminController");
+const bookingController = require("../controller/bookingController");
+
+const couponController = require("../controller/couponController");
+
+
+router.post("/createCoupon", couponController.createCoupon);
+
+router.get("/getCoupons", couponController.getAllCoupons);
+
+router.get("/getCoupon/:id", couponController.getCouponById);
+
+router.patch("/updateCoupon/:id", couponController.updateCoupon);
+
+router.patch("/changeCouponStatus/:id", couponController.changeCouponStatus);
+
+router.delete("/deleteCoupon/:id", couponController.deleteCoupon);
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -28,7 +55,7 @@ router.get(
 router.get(
     "/getRequestsByStatus",
     hotelRequestController.getRequestsByStatus
-);
+);  // Usage: GET /api/getRequestsByStatus?status=pending
 
 
 router.get(
@@ -107,6 +134,21 @@ router.patch(
   hotelController.softDeleteHotel
 );
 
+router.delete(
+  "/deleteHotel/:id",
+  hotelController.deleteHotel
+);
+
+router.delete(
+  "/deleteAllHotels",
+  hotelController.deleteAllHotels
+);
+
+router.patch(
+  "/updateHotel/:id",
+  hotelController.updateHotel
+);
+
 
 
 
@@ -177,11 +219,22 @@ router.get("/getAdminRequestsByStatus/:status",adminReqController.getAdminReques
 router.patch("/approveAdminRequest/:id",adminReqController.approveAdminRequest)
 router.patch("/rejectAdminRequest/:id",adminReqController.rejectAdminRequest)
 router.delete("/deleteAdminRequest/:id",adminReqController.deleteAdminRequest)
+router.post("/addAdminDirect", adminReqController.addAdminDirect)
 
 // User management routes for SuperAdmin
 router.get("/getUsersByRole/:role", superAdminController.getUsersByRole);
 router.delete("/deleteUser/:id", superAdminController.deleteUser);
 
+
+// ── Booking Routes ──────────────────────────────────────────
+router.post("/createBooking", bookingController.createBooking);
+router.get("/checkAvailability/:roomId", bookingController.checkAvailability);
+router.get("/getRoomBookingStatus/:roomId", bookingController.getRoomBookingStatus);
+router.get("/getBookingsByHotel/:hotelId", bookingController.getBookingsByHotel);
+router.get("/getAllBookings", bookingController.getAllBookings);
+router.get("/getBookingsByGuest/:email", bookingController.getBookingsByGuest);
+router.patch("/cancelBooking/:id", bookingController.cancelBooking);
+router.patch("/checkoutBooking/:id", bookingController.checkoutBooking);
 
 router.get("/test", (req, res) => {
   res.send("API is working");

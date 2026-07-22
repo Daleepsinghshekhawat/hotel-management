@@ -49,6 +49,10 @@ exports.submitHotelRequest = async (req, res) => {
       image: req.files.image,
     });
 
+    if (!uploadResult || uploadResult.length === 0) {
+      return res.status(500).json({ message: "Image upload failed. Please check Cloudinary configuration." });
+    }
+
     const imageUrl = uploadResult[0].secure_url;
     const registrationId = uuidv4();
 
@@ -99,7 +103,25 @@ exports.getAllHotelRequests = async (req, res) => {
       .populate(populateOptions)
       .sort({ createdAt: -1 });
 
-    return res.status(200).json({ result });
+    // Filter out approved requests where the hotel no longer exists in hotelModel
+    const activeRegistrationIds = new Set(
+      (await hotelModel.find({ status: "active" }).select("registrationId")).map(
+        (h) => h.registrationId
+      )
+    );
+
+    const filtered = result.filter((r) => {
+      // For approved requests, only show if hotel still exists and is active
+      if (r.status === "approved") {
+        return activeRegistrationIds.has(r.registrationId);
+      }
+      // For inactive requests, hide them
+      if (r.status === "inactive") return false;
+      // Show pending and rejected as normal
+      return true;
+    });
+
+    return res.status(200).json({ result: filtered });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Server Error" });
@@ -108,7 +130,10 @@ exports.getAllHotelRequests = async (req, res) => {
 
 exports.getRequestsByStatus = async (req, res) => {
   try {
-    const { status } = req.params;
+    const { status } = req.query;
+    if (!status) {
+      return res.status(400).json({ message: "Status query parameter is required" });
+    }
     const result = await hotelRequest
       .find({ status })
       .populate(populateOptions)
@@ -322,6 +347,14 @@ exports.deleteRequest = async (req, res) => {
       });
     }
 
+    // Also deactivate the linked hotel in hotelModel (if it exists)
+    if (deleted.registrationId) {
+      await hotelModel.findOneAndUpdate(
+        { registrationId: deleted.registrationId },
+        { status: "inactive" }
+      );
+    }
+
     return res.status(200).json({
       message: "Hotel request deleted successfully",
     });
@@ -354,6 +387,11 @@ exports.addHotelDirect = async (req, res) => {
     const uploadResult = await uploadImage({
       image: req.files.image,
     });
+
+    if (!uploadResult || uploadResult.length === 0) {
+      return res.status(500).json({ success: false, message: "Image upload failed. Please check Cloudinary configuration." });
+    }
+
     const imageUrl = uploadResult[0].secure_url;
     const registrationId = uuidv4();
 

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
+import apiurl from "../api";
 
-const API = "http://localhost:5000/api";
+const API = `${apiurl}/api`;
 
 const EditRoom = () => {
 
@@ -112,9 +113,9 @@ const EditRoom = () => {
 
     const getHotels = async () => {
         try {
-            const res = await axios.get(`${API}/getHotels`);
+            const res = await axios.get(`${API}/getAllHotels`);
 
-            if (res.data.success) {
+            if (res.data.result) {
                 setHotels(res.data.result);
             }
         } catch (error) {
@@ -123,7 +124,7 @@ const EditRoom = () => {
     };
     const getRoom = async () => {
     try {
-        const res = await axios.get(`${API}/getRoom/${id}`);
+         const res = await axios.get(`${API}/getRoom/${id}`);
 
         if (res.data.success) {
             setRoomData(res.data.result);
@@ -689,28 +690,7 @@ const EditRoom = () => {
                     onChange={handleImages}
                 />
 
-                <div
-                    style={{
-                        display: "flex",
-                        gap: 10,
-                        flexWrap: "wrap",
-                        marginTop: 20,
-                    }}
-                >
-                    {images.map((img, index) => (
-                        <img
-                            key={index}
-                            src={URL.createObjectURL(img)}
-                            alt=""
-                            width="120"
-                            height="120"
-                            style={{
-                                objectFit: "cover",
-                                borderRadius: 10,
-                            }}
-                        />
-                    ))}
-                </div>
+
 
                 <div
                     style={{

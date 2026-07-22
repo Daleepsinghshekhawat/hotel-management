@@ -4,6 +4,8 @@ const menuItems = [
   { to: "/adminpage", label: "📊 Dashboard", end: true },
   { to: "/adminpage/add-hotel", label: "➕ Add Hotel" },
   { to: "/adminpage/hotels", label: "🏨 My Hotels" },
+  { to: "/adminpage/bookings", label: "🛎️ Active Bookings" },
+  { to: "/adminpage/booking-history", label: "📋 Booking History" },
   { to: "/adminpage/users-owners", label: "👥 Accounts" },
 ];
 

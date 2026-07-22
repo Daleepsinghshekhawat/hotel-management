@@ -17,7 +17,7 @@ exports.signup = async (req, res) => {
       return res.status(404).json({ message: "all field are required" });
     }
 
-    const userexist = await usermodel.findOne({ email });
+    const userexist = (await usermodel.findOne({ email })) || (await hotelOwnerModel.findOne({ email }));
 
     if (userexist) {
       return res.status(409).json({ message: "user already exist " });
@@ -27,12 +27,22 @@ exports.signup = async (req, res) => {
     const salt = await bcrypt.genSalt(saltround);              //we use three lines to generate the secure hashpassword 
     const hashPassword = await bcrypt.hashSync(password, salt);
 
-    const result = await usermodel.create({
-      name,
-      email,
-      password: hashPassword, // here we place securepassword
-      role,
-    });
+    let result;
+    if (role === "hotelOwner") {
+      result = await hotelOwnerModel.create({
+        name,
+        email,
+        password: hashPassword,
+        role: "hotelOwner",
+      });
+    } else {
+      result = await usermodel.create({
+        name,
+        email,
+        password: hashPassword,
+        role,
+      });
+    }
 
 
     try {
@@ -117,6 +127,19 @@ exports.login = async (req, res) => {
       user = await hotelOwnerModel.findOne({ email });
     }
     if (!user) {
+      const AdminAccount = require("../model/adminAccountModel");
+      const adminAcc = await AdminAccount.findOne({ email, status: "approved" });
+      if (adminAcc) {
+        user = {
+          _id: adminAcc._id,
+          name: adminAcc.name,
+          email: adminAcc.email,
+          password: adminAcc.password,
+          role: "admin",
+        };
+      }
+    }
+    if (!user) {
       return res.status(404).json({ message: "user must signup first" });
     }
 
@@ -148,7 +171,14 @@ exports.forgotPassword = async (req, res) => {
     const { email } = req.body;
     console.log(email);
 
-    const user = await usermodel.findOne({ email });
+    let user = await usermodel.findOne({ email });
+    if (!user) {
+      user = await hotelOwnerModel.findOne({ email });
+    }
+    if (!user) {
+      const AdminAccount = require("../model/adminAccountModel");
+      user = await AdminAccount.findOne({ email, status: "approved" });
+    }
 
     if (!user) {
       return res.status(404).json({
@@ -188,7 +218,14 @@ exports.verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    const user = await usermodel.findOne({ email });
+    let user = await usermodel.findOne({ email });
+    if (!user) {
+      user = await hotelOwnerModel.findOne({ email });
+    }
+    if (!user) {
+      const AdminAccount = require("../model/adminAccountModel");
+      user = await AdminAccount.findOne({ email, status: "approved" });
+    }
 
     if (!user) {
       return res.status(404).json({
@@ -222,7 +259,14 @@ exports.resetPassword = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await usermodel.findOne({ email });
+    let user = await usermodel.findOne({ email });
+    if (!user) {
+      user = await hotelOwnerModel.findOne({ email });
+    }
+    if (!user) {
+      const AdminAccount = require("../model/adminAccountModel");
+      user = await AdminAccount.findOne({ email, status: "approved" });
+    }
 
     if (!user) {
       return res.status(404).json({
@@ -237,6 +281,11 @@ exports.resetPassword = async (req, res) => {
     user.otpExpiry = null;
 
     await user.save();
+
+    if (user.role === "admin") {
+      const AdminAccount = require("../model/adminAccountModel");
+      await AdminAccount.findOneAndUpdate({ email: user.email }, { password: hashPassword });
+    }
 
     res.status(200).json({
       message: "Password updated successfully",

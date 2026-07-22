@@ -135,21 +135,6 @@ export default function HotelDashboard() {
               ➕ Add New Hotel
             </Link>
             <Link
-              to="/hotel/add-room"
-              style={{
-                padding: "12px 20px",
-                background: "#0d6efd",
-                color: "#fff",
-                borderRadius: "10px",
-                textDecoration: "none",
-                fontWeight: 700,
-                fontSize: "14px",
-                boxShadow: "0 4px 12px rgba(13,110,253,0.15)",
-              }}
-            >
-              ➕ Add New Room
-            </Link>
-            <Link
               to="/hotel/hotels"
               style={{
                 padding: "12px 20px",
@@ -165,7 +150,7 @@ export default function HotelDashboard() {
             </Link>
           </div>
 
-          {/* Active Hotels List */}
+          
           <h3 style={{ margin: "0 0 20px", color: "#0f172a", fontWeight: 700 }}>
             🏨 Active Hotels & Room Inventory
           </h3>

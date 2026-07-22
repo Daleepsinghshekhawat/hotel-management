@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
+import URL from "../api";
 
-const API = "http://localhost:5000/api";
+const API = `${URL}/api`;
 
 const RoomDetails = () => {
   const { id } = useParams();

@@ -28,13 +28,7 @@ export default function AdminRequests() {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const url =
-        tab === "all"
-          ? `${URL}/api/getAllAdminRequests`
-          : `${URL}/api/getAdminRequestsByStatus/${tab}`;
-          
-
-      const res = await axios.get(url);
+      const res = await axios.get(`${URL}/api/getAllAdminRequests`);
       setRequests(res.data.result || []);
     } catch (err) {
       console.log(err);
@@ -46,7 +40,7 @@ export default function AdminRequests() {
 
   useEffect(() => {
     fetchRequests();
-  }, [tab]);
+  }, []);
 
   const handleApprove = async (id) => {
     if (
@@ -132,7 +126,10 @@ export default function AdminRequests() {
         })
       : "N/A";
 
-  const filtered = requests.filter(
+  const tabFiltered =
+    tab === "all" ? requests : requests.filter((r) => r.status === tab);
+
+  const filtered = tabFiltered.filter(
     (r) =>
       (r.name || "").toLowerCase().includes(search.toLowerCase()) ||
       (r.email || "").toLowerCase().includes(search.toLowerCase()) ||

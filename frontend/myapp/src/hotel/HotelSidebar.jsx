@@ -4,6 +4,8 @@ const menuItems = [
   { to: "/hotel", label: "📊 Dashboard", end: true },
   { to: "/hotel/add-hotel", label: "➕ Add Hotel" },
   { to: "/hotel/hotels", label: "🏨 My Hotels" },
+  { to: "/hotel/bookings", label: "🛎️ Active Bookings" },
+  { to: "/hotel/booking-history", label: "📋 Booking History" },
 ];
 
 function HotelSidebar() {

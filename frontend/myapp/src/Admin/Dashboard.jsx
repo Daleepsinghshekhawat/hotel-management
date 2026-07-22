@@ -18,6 +18,7 @@ export default function Dashboard() {
     approved: 0,
     rejected: 0,
     activeHotels: 0,
+    totalUsers: 0,
   });
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,18 +30,24 @@ export default function Dashboard() {
       if (!user.email) return;
       setLoading(true);
       try {
-        const [requestsRes, hotelsRes] = await Promise.all([
+        const [requestsRes, hotelsRes, usersRes] = await Promise.all([
           axios.get(`${URL}/api/getHotelRequestsByAdmin/${user.email}`),
           axios.get(`${URL}/api/getHotelsByAdmin/${user.email}`),
+          axios.get(`${URL}/api/getUsersByRole/all`),
         ]);
 
         const requests = requestsRes.data.result || [];
+        const allUsers = (usersRes.data.result || []).filter(
+          (u) => u.role !== "admin" && u.role !== "superadmin"
+        );
+
         setRecent(requests.slice(0, 5));
         setStats({
           pending: requests.filter((r) => r.status === "pending").length,
           approved: requests.filter((r) => r.status === "approved").length,
           rejected: requests.filter((r) => r.status === "rejected").length,
           activeHotels: (hotelsRes.data.result || []).length,
+          totalUsers: allUsers.length,
         });
       } catch (err) {
         console.log(err);
@@ -57,6 +64,7 @@ export default function Dashboard() {
     { label: "Approved", count: stats.approved, bg: "#dcfce7", color: "#166534", icon: "✅" },
     { label: "Rejected", count: stats.rejected, bg: "#fee2e2", color: "#991b1b", icon: "❌" },
     { label: "Live Hotels", count: stats.activeHotels, bg: "#dbeafe", color: "#1d4ed8", icon: "🏨" },
+    { label: "Total Users", count: stats.totalUsers, bg: "#f3e8ff", color: "#6b21a8", icon: "👥" },
   ];
 
   return (
@@ -117,20 +125,6 @@ export default function Dashboard() {
               ➕ Add New Hotel
             </Link>
              <Link
-              to="/adminpage/add-room"
-              style={{
-                padding: "12px 20px",
-                background: "#2563eb",
-                color: "#fff",
-                borderRadius: "10px",
-                textDecoration: "none",
-                fontWeight: 700,
-                fontSize: "14px",
-              }}
-            >
-              ➕ Add New room
-            </Link>
-            <Link
               to="/adminpage/hotels"
               style={{
                 padding: "12px 20px",

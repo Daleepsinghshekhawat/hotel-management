@@ -73,7 +73,6 @@ exports.approveAdminRequest = async (req, res) => {
     );
 
     let existingUser = await userModel.findOne({ email: request.email });
-
     if (!existingUser) {
       existingUser = await userModel.create({
         name: request.name,
@@ -202,6 +201,89 @@ exports.deleteAdminRequest = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Server Error",
+    });
+  }
+};
+
+exports.addAdminDirect = async (req, res) => {
+  try {
+    const { name, email, address, mobileNumber, occupation, criminalCase } = req.body;
+
+    if (!name || !email || !address || !mobileNumber || !occupation) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+
+    const adminExists = await AdminAccount.findOne({ email });
+    const userExists = await userModel.findOne({ email });
+
+    if (adminExists || userExists) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already registered.",
+      });
+    }
+
+    const tempPassword = uuidv4().replace(/-/g, "").slice(0, 10);
+    const hashPassword = await bcrypt.hash(tempPassword, 10);
+
+    // Create approved request
+    await AdminRequest.create({
+      name,
+      email,
+      address,
+      mobileNumber,
+      occupation,
+      criminalCase: criminalCase === "Yes",
+      status: "approved",
+      verified: true,
+      role: "admin",
+    });
+
+    // Create AdminAccount
+    await AdminAccount.create({
+      name,
+      email,
+      password: hashPassword,
+      role: "admin",
+      verified: true,
+      status: "approved",
+    });
+
+    await userModel.create({
+      name,
+      email,
+      password: hashPassword,
+      role: "admin",
+    });
+
+    try {
+      await sendEmail({
+        to: email,
+        subject: "Administrator Account Activated",
+        html: `
+          <h2>Welcome ${name}!</h2>
+          <p>Your administrator profile has been created directly by the Super Admin.</p>
+          <p>Here are your credentials to log in:</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Password:</strong> ${tempPassword}</p>
+          <p>Please change your password after logging in for security.</p>
+        `,
+      });
+    } catch (emailErr) {
+      console.log("Direct admin email failed:", emailErr.message);
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Admin created and approved successfully",
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Server Error",
     });
   }
 };

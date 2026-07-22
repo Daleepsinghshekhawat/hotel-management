@@ -59,6 +59,11 @@ const adminRequestSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
+    rejectionReason: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,

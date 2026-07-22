@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import URL from "../api";
+import apiurl from "../api";
 
 export default function AddHotel() {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ export default function AddHotel() {
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [image, setImage] = useState(null);
-  const [preview, setPreview] = useState("");
+
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
@@ -27,7 +27,7 @@ export default function AddHotel() {
   useEffect(() => {
     const fetchStates = async () => {
       try {
-        const res = await axios.get(`${URL}/api/getAllState`);
+        const res = await axios.get(`${apiurl}/api/getAllState`);
         const list = (res.data?.result || []).filter((s) => s.status === "active");
         setStates(list);
         if (list.length > 0) setSelectedState(list[0]._id);
@@ -42,7 +42,7 @@ export default function AddHotel() {
     if (!selectedState) return;
     const fetchDistricts = async () => {
       try {
-        const res = await axios.get(`${URL}/api/getDistrictByState/${selectedState}`);
+        const res = await axios.get(`${apiurl}/api/getDistrictByState/${selectedState}`);
         const list = (res.data?.result || []).filter((d) => d.status === "active");
         setDistricts(list);
         if (list.length > 0) {
@@ -63,7 +63,7 @@ export default function AddHotel() {
     if (!selectedDistrict) return;
     const fetchCities = async () => {
       try {
-        const res = await axios.get(`${URL}/api/getCityByDistrict/${selectedDistrict}`);
+        const res = await axios.get(`${apiurl}/api/getCityByDistrict/${selectedDistrict}`);
         const list = Array.isArray(res.data?.result) ? res.data.result : [];
         const active = list.filter((c) => c.status === "active");
         setCities(active);
@@ -84,7 +84,6 @@ export default function AddHotel() {
     const file = e.target.files?.[0];
     if (!file) return;
     setImage(file);
-    setPreview(window.URL.createObjectURL(file));
   };
 
   const handleSubmit = async (e) => {
@@ -110,9 +109,7 @@ export default function AddHotel() {
       formData.append("submittedBy", user.email);
       formData.append("image", image);
 
-      await axios.post(`${URL}/api/submitHotelRequest`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await axios.post(`${apiurl}/api/submitHotelRequest`, formData);
 
       alert("Hotel submitted successfully! Waiting for superadmin approval.");
       navigate("/adminpage/hotels");
@@ -252,20 +249,6 @@ export default function AddHotel() {
         <div>
           <label style={labelStyle}>Hotel Image *</label>
           <input type="file" accept="image/*" onChange={handleImageChange} required />
-          {preview && (
-            <img
-              src={preview}
-              alt="Preview"
-              style={{
-                marginTop: "12px",
-                width: "100%",
-                maxHeight: "220px",
-                objectFit: "cover",
-                borderRadius: "12px",
-                border: "1px solid #e2e8f0",
-              }}
-            />
-          )}
         </div>
 
         <button

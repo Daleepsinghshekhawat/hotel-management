@@ -10,7 +10,11 @@ exports.getUsersByRole = async (req, res) => {
       const hotelOwners = await hotelOwnerModel.find({}).select("-password");
       result = [...normalUsers, ...hotelOwners];
     } else if (role === "hotelOwner") {
-      result = await hotelOwnerModel.find({}).select("-password");
+      const ownersFromOwnersColl = await hotelOwnerModel.find({}).select("-password");
+      const ownersFromUsersColl = await userModel.find({ role: "hotelOwner" }).select("-password");
+      result = [...ownersFromOwnersColl, ...ownersFromUsersColl];
+    } else if (role === "admin") {
+      result = await userModel.find({ role: "admin" }).select("-password");
     } else {
       result = await userModel.find({ role }).select("-password");
     }
@@ -25,10 +29,28 @@ exports.getUsersByRole = async (req, res) => {
 exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
+    const user = await userModel.findById(id);
+    const email = user ? user.email : null;
+
     let deleted = await userModel.findByIdAndDelete(id);
+    if (deleted && email) {
+      const AdminAccount = require("../model/adminAccountModel");
+      await AdminAccount.findOneAndDelete({ email });
+    }
+    
     if (!deleted) {
       deleted = await hotelOwnerModel.findByIdAndDelete(id);
     }
+    
+    if (!deleted) {
+      const AdminAccount = require("../model/adminAccountModel");
+      const adminAcc = await AdminAccount.findById(id);
+      if (adminAcc) {
+        await userModel.findOneAndDelete({ email: adminAcc.email });
+        deleted = await AdminAccount.findByIdAndDelete(id);
+      }
+    }
+
     if (!deleted) {
       return res.status(404).json({ success: false, message: "User not found" });
     }

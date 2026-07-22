@@ -164,7 +164,7 @@ const RoomList = ({ hotelId }) => {
 
                 <button
                     style={styles.addButton}
-                    onClick={() => navigate(`${basePath}/add-room`)}
+                    onClick={() => navigate(`${basePath}/add-room?hotelId=${hotelId}`)}
                 >
                     + Add Room
                 </button>
@@ -204,7 +204,7 @@ const RoomList = ({ hotelId }) => {
 
                                     <button
                                         style={styles.addButton}
-                                        onClick={() => navigate(`${basePath}/add-room`)}
+                                        onClick={() => navigate(`${basePath}/add-room?hotelId=${hotelId}`)}
                                     >
 
                                         + Add Room

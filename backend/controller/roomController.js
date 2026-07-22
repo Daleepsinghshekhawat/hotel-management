@@ -1,7 +1,8 @@
+const mongoose = require("mongoose");
 const Room = require("../model/room");
 
 const Hotel = require("../model/hotelModel");
-const { uploadImage } = require("../utils/helper"); // <-- your helper
+const { uploadImage } = require("../utils/cloudinary");
 
 // =============================
 // Add Room
@@ -125,7 +126,13 @@ exports.addRoom = async (req, res) => {
     // Check Hotel Exists
     // ========================
 
-    const hotelExists = await Hotel.findById(hotel);
+    let hotelExists = null;
+    if (mongoose.Types.ObjectId.isValid(hotel)) {
+      hotelExists = await Hotel.findById(hotel);
+      if (!hotelExists) {
+        hotelExists = await Hotel.findOne({ requestId: hotel });
+      }
+    }
 
     if (!hotelExists) {
       return res.json({
@@ -134,12 +141,14 @@ exports.addRoom = async (req, res) => {
       });
     }
 
+    const actualHotelId = hotelExists._id;
+
     // ========================
     // Duplicate Room Number
     // ========================
 
     const roomExists = await Room.findOne({
-      hotel,
+      hotel: actualHotelId,
       roomNumber,
     });
 
@@ -175,7 +184,7 @@ exports.addRoom = async (req, res) => {
     // ========================
 
     const room = await Room.create({
-      hotel,
+      hotel: actualHotelId,
 
       roomName,
       roomNumber,
@@ -190,7 +199,7 @@ exports.addRoom = async (req, res) => {
       maxGuests,
 
       beds,
-      bedType,
+      bedType: bedType || undefined,
 
       price,
       discount,
@@ -237,7 +246,7 @@ exports.addRoom = async (req, res) => {
       hairDryer,
 
       balcony,
-      roomView,
+      roomView: roomView || undefined,
 
       breakfast,
       lunch,
@@ -301,8 +310,18 @@ exports.getRoomsByHotel = async (req, res) => {
   try {
     const { hotelId } = req.params;
 
+    let actualHotelId = hotelId;
+    if (mongoose.Types.ObjectId.isValid(hotelId)) {
+      const activeHotel = await Hotel.findOne({
+        $or: [{ _id: hotelId }, { requestId: hotelId }],
+      });
+      if (activeHotel) {
+        actualHotelId = activeHotel._id;
+      }
+    }
+
     const rooms = await Room.find({
-      hotel: hotelId,
+      hotel: actualHotelId,
       status: true,
     }).sort({
       createdAt: -1,

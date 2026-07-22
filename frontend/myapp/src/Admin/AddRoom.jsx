@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
+import apiurl from "../api";
 
-const API = "http://localhost:5000/api";
+const API = `${apiurl}/api`;
 
 const AddRoom = () => {
     const location = useLocation();
@@ -117,7 +118,7 @@ const AddRoom = () => {
         try {
             const res = await axios.get(`${API}/getAllHotels`);
 
-            if (res.data.success) {
+            if (res.data.result) {
                 setHotels(res.data.result);
             }
         } catch (error) {
@@ -276,28 +277,92 @@ const AddRoom = () => {
             style={styles.container}
             onSubmit={handleSubmit}
         >
+            <style>{`
+                h1 {
+                    font-size: 26px;
+                    font-weight: 800;
+                    color: #0f172a;
+                    margin-bottom: 24px;
+                    border-bottom: 2px solid #f1f5f9;
+                    padding-bottom: 12px;
+                    margin-top: 0;
+                }
+                h2 {
+                    font-size: 18px;
+                    font-weight: 700;
+                    color: #1e293b;
+                    margin-top: 36px;
+                    margin-bottom: 16px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+                h2::after {
+                    content: "";
+                    flex: 1;
+                    height: 1px;
+                    background: #e2e8f0;
+                }
+                label {
+                    font-size: 13.5px;
+                    font-weight: 600;
+                    color: #475569;
+                    display: block;
+                    margin-bottom: 6px;
+                }
+                input:focus, select:focus, textarea:focus {
+                    border-color: #2563eb !important;
+                    background-color: #ffffff !important;
+                    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+                }
+                .checkbox-grid label {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    margin: 0;
+                    font-weight: 500;
+                    color: #334155;
+                    cursor: pointer;
+                    padding: 10px 14px;
+                    background: #ffffff;
+                    border-radius: 8px;
+                    border: 1px solid #e2e8f0;
+                    transition: all 0.15s ease;
+                    user-select: none;
+                }
+                .checkbox-grid label:hover {
+                    border-color: #cbd5e1;
+                    background: #f8fafc;
+                    transform: translateY(-1px);
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+                }
+                .checkbox-grid input[type="checkbox"] {
+                    width: 17px;
+                    height: 17px;
+                    accent-color: #2563eb;
+                    cursor: pointer;
+                    margin: 0;
+                }
+                input[type="file"] {
+                    background: #f8fafc;
+                    border: 2px dashed #cbd5e1;
+                    padding: 24px;
+                    border-radius: 12px;
+                    width: 100%;
+                    cursor: pointer;
+                    box-sizing: border-box;
+                    transition: all 0.2s ease;
+                    color: #64748b;
+                    font-weight: 500;
+                }
+                input[type="file"]:hover {
+                    border-color: #2563eb;
+                    background: #f1f5f9;
+                }
+            `}</style>
             <h1>Add New Room</h1>
 
-            {/* HOTEL */}
 
-            <div style={styles.formGroup}>
-                <label>Select Hotel</label>
-
-                <select
-                    name="hotel"
-                    value={roomData.hotel}
-                    onChange={handleChange}
-                    style={styles.input}
-                >
-                    <option value="">Choose Hotel</option>
-
-                    {hotels.map((hotel) => (
-                        <option key={hotel._id} value={hotel._id}>
-                            {hotel.hotelName}
-                        </option>
-                    ))}
-                </select>
-            </div>
 
             {/* BASIC DETAILS */}
 
@@ -542,7 +607,7 @@ const AddRoom = () => {
 
                 <h2 style={{ marginTop: 40 }}>Amenities</h2>
 
-                <div style={styles.checkboxGrid}>
+                <div className="checkbox-grid" style={styles.checkboxGrid}>
 
                     <label><input type="checkbox" name="wifi" checked={roomData.wifi} onChange={handleCheckbox} /> WiFi</label>
 
@@ -582,7 +647,7 @@ const AddRoom = () => {
 
                 <h2 style={{ marginTop: 40 }}>Bathroom</h2>
 
-                <div style={styles.checkboxGrid}>
+                <div className="checkbox-grid" style={styles.checkboxGrid}>
 
                     <label><input type="checkbox" name="attachedBathroom" checked={roomData.attachedBathroom} onChange={handleCheckbox} /> Attached Bathroom</label>
 
@@ -600,7 +665,7 @@ const AddRoom = () => {
 
                 <h2 style={{ marginTop: 40 }}>Meals</h2>
 
-                <div style={styles.checkboxGrid}>
+                <div className="checkbox-grid" style={styles.checkboxGrid}>
 
                     <label><input type="checkbox" name="breakfast" checked={roomData.breakfast} onChange={handleCheckbox} /> Breakfast</label>
 
@@ -612,7 +677,7 @@ const AddRoom = () => {
 
                 <h2 style={{ marginTop: 40 }}>Services</h2>
 
-                <div style={styles.checkboxGrid}>
+                <div className="checkbox-grid" style={styles.checkboxGrid}>
 
                     <label><input type="checkbox" name="roomService" checked={roomData.roomService} onChange={handleCheckbox} /> Room Service</label>
 
@@ -628,7 +693,7 @@ const AddRoom = () => {
 
                 <h2 style={{ marginTop: 40 }}>Hotel Facilities</h2>
 
-                <div style={styles.checkboxGrid}>
+                <div className="checkbox-grid" style={styles.checkboxGrid}>
 
                     <label><input type="checkbox" name="parking" checked={roomData.parking} onChange={handleCheckbox} /> Parking</label>
 
@@ -646,7 +711,7 @@ const AddRoom = () => {
 
                 <h2 style={{ marginTop: 40 }}>Policies</h2>
 
-                <div style={styles.checkboxGrid}>
+                <div className="checkbox-grid" style={styles.checkboxGrid}>
 
                     <label><input type="checkbox" name="smoking" checked={roomData.smoking} onChange={handleCheckbox} /> Smoking Allowed</label>
 
@@ -683,28 +748,7 @@ const AddRoom = () => {
                     onChange={handleImages}
                 />
 
-                <div
-                    style={{
-                        display: "flex",
-                        gap: 10,
-                        flexWrap: "wrap",
-                        marginTop: 20,
-                    }}
-                >
-                    {images.map((img, index) => (
-                        <img
-                            key={index}
-                            src={URL.createObjectURL(img)}
-                            alt=""
-                            width="120"
-                            height="120"
-                            style={{
-                                objectFit: "cover",
-                                borderRadius: 10,
-                            }}
-                        />
-                    ))}
-                </div>
+
 
                 <div
                     style={{
@@ -736,46 +780,66 @@ const AddRoom = () => {
 
 const styles = {
     container: {
-        width: "90%",
-        maxWidth: "1200px",
-        margin: "30px auto",
-        padding: "25px",
-        background: "#fff",
-        borderRadius: "10px",
-        boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+        width: "100%",
+        maxWidth: "1000px",
+        margin: "20px auto",
+        padding: "40px",
+        background: "#ffffff",
+        borderRadius: "16px",
+        boxShadow: "0 10px 30px rgba(0, 0, 0, 0.04)",
+        border: "1px solid #e2e8f0",
+        fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+        boxSizing: "border-box",
     },
 
     checkboxGrid: {
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
-        gap: "12px",
+        gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+        gap: "14px",
         marginTop: "15px",
+        padding: "20px",
+        background: "#f8fafc",
+        borderRadius: "12px",
+        border: "1px solid #e2e8f0",
     },
 
     formGroup: {
-        marginBottom: "20px",
+        marginBottom: "24px",
     },
 
     grid: {
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))",
-        gap: "20px",
+        gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+        gap: "24px",
     },
 
     input: {
         width: "100%",
-        padding: "10px",
-        marginTop: "5px",
-        border: "1px solid #ccc",
-        borderRadius: "5px",
+        padding: "12px 16px",
+        marginTop: "6px",
+        border: "1px solid #cbd5e1",
+        borderRadius: "8px",
+        fontSize: "14px",
+        color: "#1e293b",
+        backgroundColor: "#f8fafc",
+        outline: "none",
+        transition: "all 0.2s ease-in-out",
+        boxSizing: "border-box",
     },
 
     textarea: {
         width: "100%",
-        padding: "10px",
-        marginTop: "5px",
-        borderRadius: "5px",
-        border: "1px solid #ccc",
+        padding: "12px 16px",
+        marginTop: "6px",
+        borderRadius: "8px",
+        border: "1px solid #cbd5e1",
+        fontSize: "14px",
+        color: "#1e293b",
+        backgroundColor: "#f8fafc",
+        outline: "none",
+        transition: "all 0.2s ease-in-out",
+        boxSizing: "border-box",
+        resize: "vertical",
     },
 };
 

@@ -42,12 +42,7 @@ export default function HotelRequests() {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const url =
-        tab === "all"
-          ? `${URL}/api/getAllHotelRequests`
-          : `${URL}/api/getHotelRequestsByStatus/${tab}`;
-
-      const res = await axios.get(url);
+      const res = await axios.get(`${URL}/api/getAllHotelRequests`);
       setRequests(res.data.result || []);
     } catch (err) {
       console.log(err);
@@ -57,7 +52,9 @@ export default function HotelRequests() {
     }
   };
 
-  useEffect(() => { fetchRequests(); }, [tab]);
+  useEffect(() => {
+    fetchRequests();
+  }, []);
 
 
   // ── Actions ───────────────────────────────────────────────────────────────
@@ -130,7 +127,11 @@ export default function HotelRequests() {
   const formatDate = (d) =>
     d ? new Date(d).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "N/A";
 
-  const filtered = requests.filter(
+  const activeRequests = requests.filter((r) => r.status !== "inactive");
+  const tabFiltered =
+    tab === "all" ? activeRequests : activeRequests.filter((r) => r.status === tab);
+
+  const filtered = tabFiltered.filter(
     (r) =>
       (r.hotelName || "").toLowerCase().includes(search.toLowerCase()) ||
       (r.ownerName || "").toLowerCase().includes(search.toLowerCase()) ||
@@ -140,9 +141,9 @@ export default function HotelRequests() {
 
   // ── Counts ────────────────────────────────────────────────────────────────
   const counts = {
-    pending: requests.filter((r) => r.status === "pending").length,
-    approved: requests.filter((r) => r.status === "approved").length,
-    rejected: requests.filter((r) => r.status === "rejected").length,
+    pending: activeRequests.filter((r) => r.status === "pending").length,
+    approved: activeRequests.filter((r) => r.status === "approved").length,
+    rejected: activeRequests.filter((r) => r.status === "rejected").length,
   };
 
   return (

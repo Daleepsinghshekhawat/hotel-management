@@ -1,20 +1,23 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import apiurl from "../api";
 
-export default function AddHotelDirect() {
+export default function EditHotel() {
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [states, setStates] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [cities, setCities] = useState([]);
+  
   const [selectedState, setSelectedState] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [image, setImage] = useState(null);
-
+  const [currentImage, setCurrentImage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
 
   const [form, setForm] = useState({
     hotelName: "",
@@ -23,20 +26,55 @@ export default function AddHotelDirect() {
     description: "",
   });
 
+  // Fetch all states
   useEffect(() => {
     const fetchStates = async () => {
       try {
         const res = await axios.get(`${apiurl}/api/getAllState`);
         const list = (res.data?.result || []).filter((s) => s.status === "active");
         setStates(list);
-        if (list.length > 0) setSelectedState(list[0]._id);
       } catch (err) {
-        console.log(err);
+        console.error(err);
       }
     };
     fetchStates();
   }, []);
 
+  // Fetch hotel details to pre-fill
+  useEffect(() => {
+    const fetchHotel = async () => {
+      setFetching(true);
+      try {
+        const res = await axios.get(`${apiurl}/api/getHotelById/${id}`);
+        if (res.data?.result) {
+          const hotel = res.data.result;
+          setForm({
+            hotelName: hotel.hotelName || "",
+            ownerName: hotel.ownerName || "",
+            email: hotel.email || "",
+            description: hotel.description || "",
+          });
+          setCurrentImage(hotel.image || "");
+
+          // Resolve location
+          if (hotel.location) {
+            const loc = hotel.location;
+            setSelectedState(loc.state?._id || loc.state || "");
+            setSelectedDistrict(loc.district?._id || loc.district || "");
+            setSelectedCity(loc._id || loc || "");
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Failed to load hotel details.");
+      } finally {
+        setFetching(false);
+      }
+    };
+    fetchHotel();
+  }, [id]);
+
+  // Fetch districts when state changes
   useEffect(() => {
     if (!selectedState) return;
     const fetchDistricts = async () => {
@@ -44,20 +82,14 @@ export default function AddHotelDirect() {
         const res = await axios.get(`${apiurl}/api/getDistrictByState/${selectedState}`);
         const list = (res.data?.result || []).filter((d) => d.status === "active");
         setDistricts(list);
-        if (list.length > 0) {
-          setSelectedDistrict(list[0]._id);
-        } else {
-          setSelectedDistrict("");
-          setSelectedCity("");
-          setCities([]);
-        }
       } catch (err) {
-        console.log(err);
+        console.error(err);
       }
     };
     fetchDistricts();
   }, [selectedState]);
 
+  // Fetch cities when district changes
   useEffect(() => {
     if (!selectedDistrict) return;
     const fetchCities = async () => {
@@ -66,10 +98,8 @@ export default function AddHotelDirect() {
         const list = Array.isArray(res.data?.result) ? res.data.result : [];
         const active = list.filter((c) => c.status === "active");
         setCities(active);
-        if (active.length > 0) setSelectedCity(active[0]._id);
-        else setSelectedCity("");
       } catch (err) {
-        console.log(err);
+        console.error(err);
       }
     };
     fetchCities();
@@ -92,10 +122,6 @@ export default function AddHotelDirect() {
       alert("Please select a city");
       return;
     }
-    if (!image) {
-      alert("Please upload a hotel image");
-      return;
-    }
 
     setLoading(true);
     try {
@@ -105,14 +131,18 @@ export default function AddHotelDirect() {
       formData.append("email", form.email.trim());
       formData.append("location", selectedCity);
       formData.append("description", form.description.trim());
-      formData.append("image", image);
+      if (image) {
+        formData.append("image", image);
+      }
 
-      await axios.post(`${apiurl}/api/addHotelDirect`, formData);
+      await axios.patch(`${apiurl}/api/updateHotel/${id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-      alert("Hotel registered successfully and approved!");
-      navigate("/superadmin/hotel-requests");
+      alert("Hotel updated successfully!");
+      navigate(-1); // Go back to the previous list
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to register hotel");
+      alert(err.response?.data?.message || "Failed to update hotel");
     } finally {
       setLoading(false);
     }
@@ -140,13 +170,21 @@ export default function AddHotelDirect() {
     letterSpacing: "0.5px",
   };
 
+  if (fetching) {
+    return (
+      <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8", fontFamily: "sans-serif" }}>
+        ⏳ Fetching hotel details...
+      </div>
+    );
+  }
+
   return (
     <div style={{ fontFamily: "'Segoe UI', sans-serif", maxWidth: "800px", margin: "20px auto" }}>
       {/* Header Section */}
       <div style={{ marginBottom: "32px", textAlign: "center" }}>
         <span style={{
-          background: "#dbeafe",
-          color: "#1d4ed8",
+          background: "#fef3c7",
+          color: "#d97706",
           padding: "6px 14px",
           borderRadius: "999px",
           fontSize: "11px",
@@ -156,13 +194,13 @@ export default function AddHotelDirect() {
           display: "inline-block",
           marginBottom: "12px"
         }}>
-          ⚡ Direct Registration
+          ✏️ Edit Details
         </span>
         <h2 style={{ margin: "0 0 8px", fontSize: "26px", color: "#0f172a", fontWeight: 800 }}>
-          Add Hotel Directly
+          Edit Hotel Information
         </h2>
         <p style={{ margin: 0, color: "#64748b", fontSize: "14px", maxWidth: "600px", margin: "0 auto", lineHeight: "1.5" }}>
-          Instantly register an active, pre-approved hotel on the platform. The system will automatically create the listing and configure the owner account.
+          Update the profile details, location parameters, and listing images of the hotel.
         </p>
       </div>
 
@@ -171,7 +209,7 @@ export default function AddHotelDirect() {
         borderRadius: "20px",
         padding: "40px",
         border: "1px solid #e2e8f0",
-        borderTop: "6px solid #2563eb",
+        borderTop: "6px solid #d97706",
         boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.04), 0 8px 20px -6px rgba(0, 0, 0, 0.04)",
       }}>
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
@@ -280,7 +318,16 @@ export default function AddHotelDirect() {
           </div>
 
           <div>
-            <label style={labelStyle}>Upload Hotel Banner Image *</label>
+            <label style={labelStyle}>Current Hotel Banner</label>
+            {currentImage && (
+              <img 
+                src={currentImage} 
+                alt="Current banner" 
+                style={{ width: "120px", height: "80px", objectFit: "cover", borderRadius: "8px", border: "1px solid #cbd5e1", marginBottom: "12px", display: "block" }} 
+              />
+            )}
+            
+            <label style={labelStyle}>Replace Banner Image (Optional)</label>
             <div style={{
               border: "2px dashed #cbd5e1",
               borderRadius: "12px",
@@ -291,14 +338,13 @@ export default function AddHotelDirect() {
               cursor: "pointer",
               transition: "border-color 0.2s",
             }}
-            onMouseEnter={(e) => e.currentTarget.style.borderColor = "#2563eb"}
+            onMouseEnter={(e) => e.currentTarget.style.borderColor = "#d97706"}
             onMouseLeave={(e) => e.currentTarget.style.borderColor = "#cbd5e1"}
             >
               <input 
                 type="file" 
                 accept="image/*" 
                 onChange={handleImageChange} 
-                required 
                 style={{
                   position: "absolute",
                   inset: 0,
@@ -310,10 +356,10 @@ export default function AddHotelDirect() {
               />
               <span style={{ fontSize: "28px", display: "block", marginBottom: "8px" }}>📸</span>
               <span style={{ fontSize: "14px", fontWeight: 600, color: "#475569" }}>
-                {image ? `Selected: ${image.name}` : "Click or drag to upload hotel image"}
+                {image ? `Selected: ${image.name}` : "Click or drag to select new banner image"}
               </span>
               <span style={{ fontSize: "11px", display: "block", color: "#94a3b8", marginTop: "4px" }}>
-                Supports JPEG, PNG, or GIF formats
+                Leave empty to retain current banner image
               </span>
             </div>
           </div>
@@ -323,7 +369,7 @@ export default function AddHotelDirect() {
             disabled={loading}
             style={{
               padding: "14px",
-              background: loading ? "#93c5fd" : "#2563eb",
+              background: loading ? "#fde68a" : "#d97706",
               color: "#fff",
               border: "none",
               borderRadius: "10px",
@@ -331,13 +377,13 @@ export default function AddHotelDirect() {
               fontSize: "15px",
               cursor: loading ? "not-allowed" : "pointer",
               transition: "all 0.2s ease-in-out",
-              boxShadow: "0 4px 10px rgba(37, 99, 235, 0.25)",
+              boxShadow: "0 4px 10px rgba(217, 119, 6, 0.25)",
               marginTop: "12px"
             }}
-            onMouseEnter={(e) => { if(!loading) e.currentTarget.style.background = "#1d4ed8"; }}
-            onMouseLeave={(e) => { if(!loading) e.currentTarget.style.background = "#2563eb"; }}
+            onMouseEnter={(e) => { if(!loading) e.currentTarget.style.background = "#b45309"; }}
+            onMouseLeave={(e) => { if(!loading) e.currentTarget.style.background = "#d97706"; }}
           >
-            {loading ? "Registering & Approving..." : "🚀 Register & Approve Hotel"}
+            {loading ? "Updating Hotel..." : "💾 Save Changes"}
           </button>
         </form>
       </div>

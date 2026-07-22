@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import URL from "../api";
 
-const STATUS_TABS = ["all", "pending", "approved", "rejected"];
+const STATUS_TABS = ["all", "pending", "approved", "rejected", "deleted"];
 
 const STATUS_CONFIG = {
   pending: { bg: "#fef9c3", color: "#854d0e", label: "Pending" },
   approved: { bg: "#dcfce7", color: "#166534", label: "Approved" },
   rejected: { bg: "#fee2e2", color: "#991b1b", label: "Rejected" },
+  inactive: { bg: "#f1f5f9", color: "#475569", label: "Deleted" },
 };
 
 const formatLocation = (location) => {
@@ -20,12 +22,35 @@ const formatLocation = (location) => {
 };
 
 export default function Hotels() {
+  const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [hotels, setHotels] = useState([]);
   const [tab, setTab] = useState("all");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [viewingHotel, setViewingHotel] = useState(null);
+  const [viewingHotelRooms, setViewingHotelRooms] = useState([]);
+  const [fetchingRooms, setFetchingRooms] = useState(false);
+
+  useEffect(() => {
+    if (!viewingHotel) {
+      setViewingHotelRooms([]);
+      return;
+    }
+    const fetchRooms = async () => {
+      setFetchingRooms(true);
+      try {
+        const res = await axios.get(`${URL}/api/getRoomsByHotel/${viewingHotel._id}`);
+        setViewingHotelRooms(res.data.result || []);
+      } catch (err) {
+        console.log(err);
+        setViewingHotelRooms([]);
+      } finally {
+        setFetchingRooms(false);
+      }
+    };
+    fetchRooms();
+  }, [viewingHotel]);
 
   const fetchHotels = async () => {
     if (!user.email) return;
@@ -46,7 +71,27 @@ export default function Hotels() {
   }, [user.email]);
 
   const tabFiltered =
-    tab === "all" ? hotels : hotels.filter((h) => h.status === tab);
+    tab === "all"
+      ? hotels.filter((h) => h.status !== "inactive")
+      : tab === "deleted"
+      ? hotels.filter((h) => h.status === "inactive")
+      : hotels.filter((h) => h.status === tab);
+
+  const handleDeleteHotel = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this hotel?")) return;
+    try {
+      const res = await axios.patch(`${URL}/api/softDeleteHotel/${id}`);
+      if (res.data.success) {
+        alert("Hotel deleted successfully");
+        fetchHotels();
+      } else {
+        alert(res.data.message || "Failed to delete hotel");
+      }
+    } catch (err) {
+      console.log(err);
+      alert("Error deleting hotel");
+    }
+  };
 
   const filtered = tabFiltered.filter(
     (h) =>
@@ -231,22 +276,104 @@ export default function Hotels() {
                     Submitted: {formatDate(item.createdAt)}
                   </p>
 
-                  <button
-                    onClick={() => setViewingHotel(item)}
-                    style={{
-                      width: "100%",
-                      padding: "9px 0",
-                      borderRadius: "9px",
-                      border: "1px solid #2563eb",
-                      background: "transparent",
-                      color: "#2563eb",
-                      cursor: "pointer",
-                      fontWeight: 600,
-                      fontSize: "13px",
-                    }}
-                  >
-                    View Details
-                  </button>
+                  <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+                    <button
+                      onClick={() => setViewingHotel(item)}
+                      style={{
+                        flex: 1,
+                        padding: "9px 0",
+                        borderRadius: "9px",
+                        border: "1px solid #2563eb",
+                        background: "transparent",
+                        color: "#2563eb",
+                        cursor: "pointer",
+                        fontWeight: 600,
+                        fontSize: "13px",
+                      }}
+                    >
+                      View Details
+                    </button>
+                    {item.status === "approved" ? (
+                      <button
+                        onClick={() => {
+                          const prefix = window.location.pathname.startsWith("/hotel") ? "/hotel" : "/adminpage";
+                          navigate(`${prefix}/add-room?hotelId=${item._id}`);
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: "9px 0",
+                          borderRadius: "9px",
+                          border: "none",
+                          background: "#2563eb",
+                          color: "#fff",
+                          cursor: "pointer",
+                          fontWeight: 600,
+                          fontSize: "13px",
+                        }}
+                      >
+                        Add Room
+                      </button>
+                    ) : (
+                      <button
+                        disabled
+                        style={{
+                          flex: 1,
+                          padding: "9px 0",
+                          borderRadius: "9px",
+                          border: "none",
+                          background: "#e2e8f0",
+                          color: "#94a3b8",
+                          cursor: "not-allowed",
+                          fontWeight: 600,
+                          fontSize: "13px",
+                        }}
+                        title="You can only add rooms to approved hotels"
+                      >
+                        Add Room
+                      </button>
+                    )}
+                  </div>
+                  {item.status !== "inactive" && (
+                    <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+                      <button
+                        onClick={() => {
+                          const prefix = window.location.pathname.startsWith("/hotel") ? "/hotel" : "/adminpage";
+                          navigate(`${prefix}/hotels/edit/${item._id}`);
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: "9px 0",
+                          borderRadius: "9px",
+                          border: "1px solid #d97706",
+                          background: "transparent",
+                          color: "#d97706",
+                          cursor: "pointer",
+                          fontWeight: 600,
+                          fontSize: "13px",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        ✏️ Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteHotel(item._id)}
+                        style={{
+                          flex: 1,
+                          padding: "9px 0",
+                          borderRadius: "9px",
+                          border: "none",
+                          background: "#fee2e2",
+                          color: "#dc2626",
+                          cursor: "pointer",
+                          fontWeight: 600,
+                          fontSize: "13px",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        🗑️ Delete
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -280,7 +407,10 @@ export default function Hotels() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 style={{ margin: "0 0 16px" }}>{viewingHotel.hotelName}</h2>
+            <h2 style={{ margin: "0 0 4px", fontSize: "22px", color: "#0f172a", fontWeight: 800 }}>{viewingHotel.hotelName}</h2>
+            <p style={{ margin: "0 0 16px", color: "#64748b", fontSize: "14px" }}>
+              📍 {formatLocation(viewingHotel.location)}
+            </p>
             {viewingHotel.image && (
               <img
                 src={viewingHotel.image}
@@ -290,19 +420,84 @@ export default function Hotels() {
                   maxHeight: "220px",
                   objectFit: "cover",
                   borderRadius: "12px",
-                  marginBottom: "16px",
+                  marginBottom: "20px",
                 }}
               />
             )}
-            <p><strong>Owner:</strong> {viewingHotel.ownerName}</p>
-            <p><strong>Email:</strong> {viewingHotel.email}</p>
-            <p><strong>Location:</strong> {formatLocation(viewingHotel.location)}</p>
-            <p><strong>Status:</strong> {viewingHotel.status}</p>
-            <p><strong>Registration ID:</strong> {viewingHotel.registrationId}</p>
-            <p><strong>Description:</strong> {viewingHotel.description}</p>
+            
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", marginBottom: "20px" }}>
+              <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                <span style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase", fontWeight: 600 }}>Owner Name</span>
+                <strong style={{ fontSize: "14px", color: "#1e293b", display: "block", marginTop: "2px" }}>{viewingHotel.ownerName}</strong>
+              </div>
+              <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                <span style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase", fontWeight: 600 }}>Contact Email</span>
+                <strong style={{ fontSize: "14px", color: "#1e293b", display: "block", marginTop: "2px", wordBreak: "break-all" }}>{viewingHotel.email}</strong>
+              </div>
+              <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                <span style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase", fontWeight: 600 }}>Registration ID</span>
+                <strong style={{ fontSize: "14px", color: "#1e293b", display: "block", marginTop: "2px" }}>{viewingHotel.registrationId}</strong>
+              </div>
+              <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                <span style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase", fontWeight: 600 }}>Verification Status</span>
+                <strong style={{ fontSize: "14px", color: "#1e293b", display: "block", marginTop: "2px", textTransform: "capitalize" }}>{viewingHotel.status}</strong>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: "20px" }}>
+              <span style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase", fontWeight: 600, display: "block", marginBottom: "6px" }}>Description</span>
+              <p style={{ margin: 0, fontSize: "14px", color: "#334155", lineHeight: "1.6", background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                {viewingHotel.description}
+              </p>
+            </div>
+
             {viewingHotel.rejectionReason && (
-              <p><strong>Rejection Reason:</strong> {viewingHotel.rejectionReason}</p>
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", padding: "12px 16px", color: "#dc2626", fontSize: "13px", marginBottom: "20px" }}>
+                <strong>Rejection Reason:</strong> {viewingHotel.rejectionReason}
+              </div>
             )}
+
+            {/* Rooms list */}
+            <div style={{ marginTop: "20px", paddingTop: "20px", borderTop: "1px solid #e2e8f0" }}>
+              <h3 style={{ margin: "0 0 12px", fontSize: "16px", color: "#0f172a", fontWeight: 700 }}>
+                Rooms ({viewingHotelRooms.length})
+              </h3>
+              {fetchingRooms ? (
+                <div style={{ color: "#64748b", fontSize: "14px" }}>Loading rooms...</div>
+              ) : viewingHotelRooms.length === 0 ? (
+                <div style={{ color: "#64748b", fontSize: "14px" }}>No rooms added yet.</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "250px", overflowY: "auto", paddingRight: "4px" }}>
+                  {viewingHotelRooms.map((room) => (
+                    <div 
+                      key={room._id} 
+                      style={{ 
+                        padding: "10px 14px", 
+                        background: "#f8fafc", 
+                        border: "1px solid #e2e8f0", 
+                        borderRadius: "10px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center"
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: "14px", color: "#1e293b" }}>
+                          Room {room.roomNumber} - {room.roomName}
+                        </div>
+                        <div style={{ fontSize: "12px", color: "#64748b", marginTop: "2px" }}>
+                          {room.roomType} · {room.bedType || "Standard"} Bed · {room.bookingStatus}
+                        </div>
+                      </div>
+                      <div style={{ fontWeight: 700, fontSize: "14px", color: "#2563eb" }}>
+                        ₹{room.price}/night
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <button
               onClick={() => setViewingHotel(null)}
               style={{

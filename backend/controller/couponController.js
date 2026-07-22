@@ -1,0 +1,214 @@
+const Coupon = require("../model/couponModel");
+const Hotel = require("../model/hotelModel");
+
+
+exports.createCoupon = async (req, res) => {
+  try {
+    const {
+      hotel,
+      couponCode,
+      discountType,
+      discount,
+      minimumBookingAmount,
+      maximumDiscount,
+      maxUsage,
+      expiryDate,
+    } = req.body;
+
+    // Check required fields
+    if (!hotel || !couponCode || !discount || !expiryDate) {
+      return res.status(400).json({
+        success: false,
+        message: "Please fill all required fields.",
+      });
+    }
+
+    // Check hotel exists
+    const hotelExists = await Hotel.findById(hotel);
+
+    if (!hotelExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Hotel not found.",
+      });
+    }
+
+    // Check duplicate coupon code
+    const existingCoupon = await Coupon.findOne({
+      couponCode: couponCode.toUpperCase(),
+    });
+
+    if (existingCoupon) {
+      return res.status(400).json({
+        success: false,
+        message: "Coupon code already exists.",
+      });
+    }
+
+  
+    const coupon = await Coupon.create({
+      hotel,
+      couponCode,
+      discountType,
+      discount,
+      minimumBookingAmount,
+      maximumDiscount,
+      maxUsage,
+      expiryDate,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Coupon created successfully.",
+      coupon,
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+exports.getAllCoupons = async (req, res) => {
+  try {
+    const coupons = await Coupon.find()
+      .populate("hotel", "hotelname ownerName")
+      .sort({ createdAt: -1 });
+
+    return res.json({
+      success: true,
+      coupons,
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+
+exports.getCouponById = async (req, res) => {
+  try {
+    const coupon = await Coupon.findById(req.params.id).populate(
+      "hotel",
+      "hotelname ownerName"
+    );
+
+    if (!coupon) {
+      return res.status(404).json({
+        success: false,
+        message: "Coupon not found.",
+      });
+    }
+
+    return res.json({
+      success: true,
+      coupon,
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+
+exports.updateCoupon = async (req, res) => {
+  try {
+    const coupon = await Coupon.findById(req.params.id);
+
+    if (!coupon) {
+      return res.status(404).json({
+        success: false,
+        message: "Coupon not found.",
+      });
+    }
+
+    const updatedCoupon = await Coupon.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+      }
+    );
+
+    return res.json({
+      success: true,
+      message: "Coupon updated successfully.",
+      coupon: updatedCoupon,
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+exports.deleteCoupon = async (req, res) => {
+  try {
+    const coupon = await Coupon.findById(req.params.id);
+
+    if (!coupon) {
+      return res.status(404).json({
+        success: false,
+        message: "Coupon not found.",
+      });
+    }
+
+    await Coupon.findByIdAndDelete(req.params.id);
+
+    return res.json({
+      success: true,
+      message: "Coupon deleted successfully.",
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+exports.changeCouponStatus = async (req, res) => {
+  try {
+    const coupon = await Coupon.findById(req.params.id);
+
+    if (!coupon) {
+      return res.status(404).json({
+        success: false,
+        message: "Coupon not found.",
+      });
+    }
+
+    coupon.status = req.body.status;
+
+    await coupon.save();
+
+    return res.json({
+      success: true,
+      message: "Coupon status updated successfully.",
+      coupon,
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
