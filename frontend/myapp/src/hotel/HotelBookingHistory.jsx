@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import URL from "../api";
 
 export default function HotelBookingHistory() {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -178,6 +180,7 @@ export default function HotelBookingHistory() {
                 <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600 }}>Check-Out</th>
                 <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600 }}>Amount</th>
                 <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600, textAlign: "center" }}>Status</th>
+                <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600, textAlign: "center" }}>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -199,6 +202,23 @@ export default function HotelBookingHistory() {
                     ₹{(b.totalAmount || 0).toLocaleString("en-IN")}
                   </td>
                   <td style={{ padding: "14px 16px", textAlign: "center" }}>{statusBadge(b.status)}</td>
+                  <td style={{ padding: "14px 16px", textAlign: "center" }}>
+                    <button
+                      onClick={() => navigate(`/hotel/room/${b.room?._id}`)}
+                      style={{
+                        padding: "6px 12px",
+                        borderRadius: "6px",
+                        background: "#3b82f6",
+                        color: "#fff",
+                        border: "none",
+                        fontWeight: 600,
+                        fontSize: "12px",
+                        cursor: "pointer"
+                      }}
+                    >
+                      View Room
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

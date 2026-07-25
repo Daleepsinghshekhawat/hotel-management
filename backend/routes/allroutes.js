@@ -229,11 +229,14 @@ router.delete("/deleteUser/:id", superAdminController.deleteUser);
 // ── Booking Routes ──────────────────────────────────────────
 router.post("/createBooking", bookingController.createBooking);
 router.get("/checkAvailability/:roomId", bookingController.checkAvailability);
+router.get("/room/:roomId/calendar", bookingController.getRoomCalendarAvailability);
+router.post("/room/:roomId/temp-lock", bookingController.acquireTempLock);
 router.get("/getRoomBookingStatus/:roomId", bookingController.getRoomBookingStatus);
 router.get("/getBookingsByHotel/:hotelId", bookingController.getBookingsByHotel);
 router.get("/getAllBookings", bookingController.getAllBookings);
 router.get("/getBookingsByGuest/:email", bookingController.getBookingsByGuest);
 router.patch("/cancelBooking/:id", bookingController.cancelBooking);
+router.patch("/checkInBooking/:id", bookingController.checkInBooking);
 router.patch("/checkoutBooking/:id", bookingController.checkoutBooking);
 
 router.get("/test", (req, res) => {

@@ -136,12 +136,14 @@ export default function HotelDetail() {
     : 0;
 
   const openBookModal = (room) => {
-    setSelectedRoom(room);
-    setForm({ name: "", email: "", phone: "", checkIn: "", checkOut: "", guests: 1 });
-    setBookingStep("form");
-    setAvailability(null);
-    setErrorMsg("");
-    setShowModal(true);
+    // Check if user is logged in before viewing room details
+    if (!user || !user._id) {
+      alert("Please login first to view room details and book.");
+      navigate("/login");
+      return;
+    }
+    // Navigate to new RoomDetail page
+    navigate(`/user/hotel/${id}/room/${room._id}`);
   };
 
   const handleSubmit = async (e) => {
@@ -695,25 +697,20 @@ function RoomCard({ room, status, onBook }) {
           {/* Book Button */}
           <div style={{ marginTop: "auto" }}>
             <button
-              onClick={() => !isUnavailable && onBook()}
-              disabled={isUnavailable}
+              onClick={() => onBook()}
               style={{
                 width: "100%", padding: "14px 20px", borderRadius: "12px", border: "none",
-                background: isBooked
-                  ? "linear-gradient(135deg,#ef4444,#dc2626)"
-                  : isMaintenance
-                  ? "linear-gradient(135deg,#f59e0b,#d97706)"
-                  : "linear-gradient(135deg,#6366f1,#8b5cf6)",
+                background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
                 color: "#fff", fontWeight: 800, fontSize: "15px",
-                cursor: isUnavailable ? "not-allowed" : "pointer",
-                boxShadow: isUnavailable ? "none" : "0 4px 15px rgba(99,102,241,0.35)",
-                transition: "opacity 0.2s", opacity: isUnavailable ? 0.85 : 1,
+                cursor: "pointer",
+                boxShadow: "0 4px 15px rgba(99,102,241,0.35)",
+                transition: "opacity 0.2s", opacity: 1,
                 display: "flex", alignItems: "center", justifyContent: "center", gap: "8px"
               }}
-              onMouseEnter={e => { if (!isUnavailable) e.currentTarget.style.opacity = "0.9"; }}
-              onMouseLeave={e => { if (!isUnavailable) e.currentTarget.style.opacity = "1"; }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = "0.9"; }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
             >
-              {isBooked ? "🔴 Currently Booked" : isMaintenance ? "🔧 Under Maintenance" : "🛎️ Book Now"}
+              👁️ View Room Availability
             </button>
           </div>
         </div>

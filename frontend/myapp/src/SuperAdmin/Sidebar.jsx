@@ -162,10 +162,6 @@ function Sidebar() {
           👥 Users
         </NavLink>
 
-        {/* Bookings Link */}
-        <NavLink to="/superadmin/bookings" style={({ isActive }) => navLinkStyle(isActive)}>
-          📅 Bookings
-        </NavLink>
 
         {/* Settings Link */}
         <NavLink to="/superadmin/settings" style={({ isActive }) => navLinkStyle(isActive)}>

@@ -122,9 +122,26 @@ export default function UserActiveBookings() {
                     <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", marginBottom: "4px" }}>Guests & Nights</div>
                     <div style={{ fontWeight: 600, color: "#334155", fontSize: "15px" }}>{b.guests || 1} Guests • {b.nights || 0} Nights</div>
                   </div>
-                  <div style={{ marginLeft: "auto", textAlign: "right" }}>
-                    <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", marginBottom: "4px" }}>Total Amount</div>
-                    <div style={{ fontWeight: 800, color: "#0f172a", fontSize: "20px" }}>₹{(b.totalAmount || 0).toLocaleString("en-IN")}</div>
+                  <div style={{ display: "flex", gap: "16px", marginLeft: "auto", textAlign: "right", alignItems: "center" }}>
+                    <div>
+                      <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", marginBottom: "4px" }}>Total Amount</div>
+                      <div style={{ fontWeight: 800, color: "#0f172a", fontSize: "20px" }}>₹{(b.totalAmount || 0).toLocaleString("en-IN")}</div>
+                    </div>
+                    <button
+                      onClick={() => navigate(`/user/hotel/${b.hotel?._id}`)}
+                      style={{
+                        padding: "8px 16px",
+                        borderRadius: "8px",
+                        background: "#6366f1",
+                        color: "#fff",
+                        border: "none",
+                        fontWeight: 600,
+                        fontSize: "14px",
+                        cursor: "pointer"
+                      }}
+                    >
+                      View Hotel
+                    </button>
                   </div>
                 </div>
               </div>

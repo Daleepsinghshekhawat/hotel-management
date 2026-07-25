@@ -40,6 +40,7 @@ import UsersAndAdmins from "./SuperAdmin/UsersAndAdmins";
 import AdminRequestForm from "./AdminRequestForm";
 import AllUsers from "./SuperAdmin/AllUsers";
 import AllAdmins from "./SuperAdmin/AllAdmins";
+import AddAdmin from "./SuperAdmin/AddAdmin";
 import Bookings from "./SuperAdmin/Bookings";
 import EditHotel from"./SuperAdmin/EditHotel";
 import Setting from "./SuperAdmin/Settings";
@@ -63,6 +64,10 @@ import UserLayout from "./User/UserLayout";
 import UserHome from "./User/UserHome";
 import HotelsListing from "./User/HotelsListing";
 import HotelDetail from "./User/HotelDetail";
+import UserAccountLayout from "./User/UserAccountLayout";
+import UserActiveBookings from "./User/UserActiveBookings";
+import UserBookingHistory from "./User/UserBookingHistory";
+import RoomDetail from "./User/RoomDetail";
 import EditOneHotel from"./SuperAdmin/EditHotel";
 
 
@@ -96,7 +101,7 @@ function App() {
           <Route path="edit-room/:id" element={<EditRoom />} />
           <Route path="room/:id" element={<RoomDetails />} />
           <Route path="hotelsidebar" element={<HotelSidebar />} />
-          <Route path="booking" element={<HotelActiveBooking />} />
+          <Route path="bookings" element={<HotelActiveBooking />} />
           <Route path="booking-history" element={<HotelBookingHistory />} />
           <Route path="edit/:id" from element={<EditOneHotel/>}/>
         </Route>
@@ -106,6 +111,11 @@ function App() {
           <Route index element={<UserHome />} />
           <Route path="hotels" element={<HotelsListing />} />
           <Route path="hotel/:id" element={<HotelDetail />} />
+          <Route path="hotel/:hotelId/room/:roomId" element={<RoomDetail />} />
+          <Route path="account" element={<UserAccountLayout />}>
+            <Route path="bookings" element={<UserActiveBookings />} />
+            <Route path="history" element={<UserBookingHistory />} />
+          </Route>
         </Route>
 
         <Route path="/forgotpassword" element={<ForgotPassword />} />
@@ -119,16 +129,19 @@ function App() {
           <Route path="district" element={<District />} />
           <Route path="city" element={<City />} />
           <Route path="hotel-requests" element={<HotelRequests />} />
-          <Route path="admin-requests" element={<AdminRequests />} />
+          <Route path="admins/requests" element={<AdminRequests />} />
           <Route path="approved" element={<ApprovedHotels/>}/>
           <Route path="add-hotel" element={<AddHotelDirect />} />
           <Route path="users-admins" element={<UsersAndAdmins />} />
           <Route path="all-admins" element={<AllAdmins/>}/>
+          <Route path="admins/add" element={<AddAdmin />} />
+          <Route path="admins/requests" element={<AdminRequests />} />
+          <Route path="admins/all" element={<AllAdmins />} />
           <Route path="users" element = {<AllUsers/>}/>
           <Route path="bookings" element = {<bookings/>}/>
           <Route path="edit-hotel" element={<EditHotel/>}/>
           <Route path="sidebar" element={<Sidebar/>}/>
-          <Route path="setting" element={<Setting/>}/>
+          <Route path="settings" element={<Setting/>}/>
         </Route>
 
         <Route path="/become-admin" element={<AdminRequestForm />} />

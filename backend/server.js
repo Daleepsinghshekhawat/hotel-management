@@ -33,6 +33,9 @@ const allRoutes = require("./routes/allroutes");
 app.use("/users", userRoutes);
 app.use("/api", allRoutes);
 
+// Initialize background cron jobs
+require("./utils/cronJobs");
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

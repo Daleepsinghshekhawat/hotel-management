@@ -1,11 +1,12 @@
 const Booking = require("../model/booking");
 const Room = require("../model/room");
 const Hotel = require("../model/hotelModel");
+const TempBooking = require("../model/tempBooking");
 
 // ─────────────────────────────────────────────
 // Helper: Check if room is booked for given dates
 // ─────────────────────────────────────────────
-const isRoomBooked = async (roomId, checkIn, checkOut, excludeBookingId = null) => {
+const isRoomBooked = async (roomId, checkIn, checkOut, excludeBookingId = null, userId = null) => {
   const query = {
     room: roomId,
     status: { $in: ["confirmed", "pending"] },
@@ -13,11 +14,25 @@ const isRoomBooked = async (roomId, checkIn, checkOut, excludeBookingId = null) 
     checkIn: { $lt: new Date(checkOut) },
     checkOut: { $gt: new Date(checkIn) },
   };
-  if (excludeBookingId) {
+  if (excludeBookingId) {śśśśśś
     query._id = { $ne: excludeBookingId };
   }
   const conflict = await Booking.findOne(query);
-  return !!conflict;
+  if (conflict) return true;
+
+  // Check temp bookings
+  const tempQuery = {
+    room: roomId,
+    checkIn: { $lt: new Date(checkOut) },
+    checkOut: { $gt: new Date(checkIn) },
+  };
+  
+  if (userId) {
+    tempQuery.user = { $ne: userId };
+  }
+
+  const tempConflict = await TempBooking.findOne(tempQuery);
+  return !!tempConflict;
 };
 
 // ─────────────────────────────────────────────
@@ -47,7 +62,7 @@ const autoCompleteExpiredBookings = async (roomId) => {
 // ─────────────────────────────────────────────
 exports.createBooking = async (req, res) => {
   try {
-    const { hotelId, roomId, guestName, guestEmail, guestPhone, guests, checkIn, checkOut } = req.body;
+    const { hotelId, roomId, guestName, guestEmail, guestPhone, guests, checkIn, checkOut, userId } = req.body;
 
     // Validate required fields
     if (!hotelId || !roomId || !guestName || !guestEmail || !guestPhone || !checkIn || !checkOut) {
@@ -77,12 +92,12 @@ exports.createBooking = async (req, res) => {
     await autoCompleteExpiredBookings(roomId);
 
     // Check for booking conflicts
-    const booked = await isRoomBooked(roomId, checkInDate, checkOutDate);
+    const booked = await isRoomBooked(roomId, checkInDate, checkOutDate, null, userId);
     if (booked) {
       return res.status(409).json({
         success: false,
         message: "This room is already booked for the selected dates. Please choose different dates.",
-      });
+      });śśśśśś
     }
 
     // Calculate nights & total
@@ -105,6 +120,10 @@ exports.createBooking = async (req, res) => {
       totalAmount,
       status: "confirmed",
     });
+
+    if (userId) {
+      await TempBooking.deleteMany({ room: roomId, user: userId });
+    }
 
     // Mark room as Booked
     await Room.findByIdAndUpdate(roomId, { bookingStatus: "Booked" });
@@ -139,8 +158,93 @@ exports.checkAvailability = async (req, res) => {
     // Auto-complete expired bookings
     await autoCompleteExpiredBookings(roomId);
 
-    const booked = await isRoomBooked(roomId, checkIn, checkOut);
+    const booked = await isRoomBooked(roomId, checkIn, checkOut, null, req.query.userId);
     return res.status(200).json({ success: true, available: !booked });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// ─────────────────────────────────────────────
+// GET ROOM CALENDAR AVAILABILITY
+// ─────────────────────────────────────────────
+exports.getRoomCalendarAvailability = async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    
+    // Auto-complete expired bookings first
+    await autoCompleteExpiredBookings(roomId);
+    
+    const bookings = await Booking.find({
+      room: roomId,
+      status: { $in: ["confirmed", "pending"] },
+    });
+    
+    const tempBookings = await TempBooking.find({
+      room: roomId,
+    });
+    
+    return res.status(200).json({
+      success: true,
+      bookings: bookings.map(b => ({
+        checkIn: b.checkIn,
+        checkOut: b.checkOut,
+        status: b.status,
+      })),
+      tempBookings: tempBookings.map(t => ({
+        checkIn: t.checkIn,
+        checkOut: t.checkOut,
+        user: t.user
+      })),
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// ─────────────────────────────────────────────
+// ACQUIRE TEMP LOCK
+// ─────────────────────────────────────────────
+exports.acquireTempLock = async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const { checkIn, checkOut, userId } = req.body;
+    
+    if (!checkIn || !checkOut || !userId) {
+      return res.status(400).json({ success: false, message: "checkIn, checkOut, and userId are required" });
+    }
+    
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    
+    // Auto-complete expired bookings
+    await autoCompleteExpiredBookings(roomId);
+
+    // If already locked by this user, just update the dates/time to reset TTL
+    const existingLock = await TempBooking.findOne({ room: roomId, user: userId });
+    if (existingLock) {
+       existingLock.checkIn = checkInDate;
+       existingLock.checkOut = checkOutDate;
+       existingLock.createdAt = new Date();
+       await existingLock.save();
+    } else {
+       // Check if someone else has booked or locked it
+       const booked = await isRoomBooked(roomId, checkInDate, checkOutDate, null, userId);
+       if (booked) {
+         return res.status(409).json({ success: false, message: "Room is already booked or locked for these dates by another user." });
+       }
+       
+       await TempBooking.create({
+         room: roomId,
+         user: userId,
+         checkIn: checkInDate,
+         checkOut: checkOutDate,
+       });
+    }
+    
+    return res.status(200).json({ success: true, message: "Temporary lock acquired successfully" });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ success: false, message: "Server error" });
@@ -287,6 +391,25 @@ exports.checkoutBooking = async (req, res) => {
     }
 
     return res.status(200).json({ success: true, message: "Checked out successfully" });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// ─────────────────────────────────────────────
+// CHECK-IN BOOKING
+// ─────────────────────────────────────────────
+exports.checkInBooking = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const booking = await Booking.findById(id);
+    if (!booking) return res.status(404).json({ success: false, message: "Booking not found" });
+
+    booking.status = "checked_in";
+    await booking.save();
+
+    return res.status(200).json({ success: true, message: "Checked in successfully" });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ success: false, message: "Server error" });
