@@ -3,18 +3,15 @@ const Room = require("../model/room");
 const Hotel = require("../model/hotelModel");
 const TempBooking = require("../model/tempBooking");
 
-// ─────────────────────────────────────────────
-// Helper: Check if room is booked for given dates
-// ─────────────────────────────────────────────
+
 const isRoomBooked = async (roomId, checkIn, checkOut, excludeBookingId = null, userId = null) => {
   const query = {
     room: roomId,
     status: { $in: ["confirmed", "pending"] },
-    // Overlap check: existing booking overlaps with requested dates
     checkIn: { $lt: new Date(checkOut) },
     checkOut: { $gt: new Date(checkIn) },
   };
-  if (excludeBookingId) {śśśśśś
+  if (excludeBookingId) {
     query._id = { $ne: excludeBookingId };
   }
   const conflict = await Booking.findOne(query);
@@ -26,7 +23,8 @@ const isRoomBooked = async (roomId, checkIn, checkOut, excludeBookingId = null, 
     checkIn: { $lt: new Date(checkOut) },
     checkOut: { $gt: new Date(checkIn) },
   };
-  
+
+  //it is used when user itself refrese screen so temp will show itself room booked 
   if (userId) {
     tempQuery.user = { $ne: userId };
   }
@@ -35,12 +33,9 @@ const isRoomBooked = async (roomId, checkIn, checkOut, excludeBookingId = null, 
   return !!tempConflict;
 };
 
-// ─────────────────────────────────────────────
-// Auto-complete bookings whose checkout has passed
-// ─────────────────────────────────────────────
+
 const autoCompleteExpiredBookings = async (roomId) => {
   const now = new Date();
-  // Find confirmed bookings for this room that are past checkout
   const expired = await Booking.find({
     room: roomId,
     status: "confirmed",
@@ -52,23 +47,19 @@ const autoCompleteExpiredBookings = async (roomId) => {
       { room: roomId, status: "confirmed", checkOut: { $lte: now } },
       { status: "completed" }
     );
-    // Set room back to Available
     await Room.findByIdAndUpdate(roomId, { bookingStatus: "Available" });
   }
 };
 
-// ─────────────────────────────────────────────
-// CREATE BOOKING
-// ─────────────────────────────────────────────
+
 exports.createBooking = async (req, res) => {
   try {
     const { hotelId, roomId, guestName, guestEmail, guestPhone, guests, checkIn, checkOut, userId } = req.body;
 
-    // Validate required fields
+  
     if (!hotelId || !roomId || !guestName || !guestEmail || !guestPhone || !checkIn || !checkOut) {
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
-
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
 
@@ -79,8 +70,6 @@ exports.createBooking = async (req, res) => {
     if (checkInDate < new Date(new Date().setHours(0,0,0,0))) {
       return res.status(400).json({ success: false, message: "Check-in date cannot be in the past" });
     }
-
-    // Verify hotel exists
     const hotel = await Hotel.findById(hotelId);
     if (!hotel) return res.status(404).json({ success: false, message: "Hotel not found" });
 
@@ -97,7 +86,7 @@ exports.createBooking = async (req, res) => {
       return res.status(409).json({
         success: false,
         message: "This room is already booked for the selected dates. Please choose different dates.",
-      });śśśśśś
+      });
     }
 
     // Calculate nights & total
@@ -143,9 +132,9 @@ exports.createBooking = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────
+
 // CHECK ROOM AVAILABILITY
-// ─────────────────────────────────────────────
+
 exports.checkAvailability = async (req, res) => {
   try {
     const { roomId } = req.params;
@@ -166,9 +155,9 @@ exports.checkAvailability = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────
+
 // GET ROOM CALENDAR AVAILABILITY
-// ─────────────────────────────────────────────
+
 exports.getRoomCalendarAvailability = async (req, res) => {
   try {
     const { roomId } = req.params;
@@ -251,9 +240,9 @@ exports.acquireTempLock = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────
+
 // GET ROOM STATUS (is currently booked right now?)
-// ─────────────────────────────────────────────
+
 exports.getRoomBookingStatus = async (req, res) => {
   try {
     const { roomId } = req.params;
@@ -292,9 +281,9 @@ exports.getRoomBookingStatus = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────
+
 // GET ALL BOOKINGS FOR A HOTEL
-// ─────────────────────────────────────────────
+
 exports.getBookingsByHotel = async (req, res) => {
   try {
     const { hotelId } = req.params;
@@ -307,9 +296,9 @@ exports.getBookingsByHotel = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────
+
 // GET ALL BOOKINGS (SuperAdmin)
-// ─────────────────────────────────────────────
+
 exports.getAllBookings = async (req, res) => {
   try {
     const bookings = await Booking.find()
@@ -324,7 +313,7 @@ exports.getAllBookings = async (req, res) => {
 
 // ─────────────────────────────────────────────
 // GET BOOKINGS BY GUEST EMAIL
-// ─────────────────────────────────────────────
+
 exports.getBookingsByGuest = async (req, res) => {
   try {
     const { email } = req.params;

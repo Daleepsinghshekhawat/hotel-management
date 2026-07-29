@@ -17,6 +17,15 @@ const bookingController = require("../controller/bookingController");
 const couponController = require("../controller/couponController");
 
 
+
+
+
+
+
+
+
+
+
 router.post("/createCoupon", couponController.createCoupon);
 
 router.get("/getCoupons", couponController.getAllCoupons);
@@ -211,7 +220,7 @@ router.patch("/softDeleteCity/:id", cityController.softDeleteCity);
 router.patch("/restoreCity/:id", cityController.restoreCity);
 
 
-//to create the adminuser and adminaccreq verify
+//to create the adminuser and adminaccount req 
 
 router.post("/register", adminController.registerAdmin);
 router.get("/getAllAdminRequests",adminReqController.getAllAdminRequests)

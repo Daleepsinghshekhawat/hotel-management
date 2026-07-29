@@ -1,3 +1,4 @@
+
 import axios from "axios";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -27,71 +28,138 @@ function Signup() {
     navigate("/login");
   }
 
+  const styles = {
+    page: {
+      minHeight: "100vh",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      background:
+        "linear-gradient(135deg, #0f172a, #1e3a8a, #2563eb)",
+      fontFamily: "Arial, sans-serif",
+      padding: "20px",
+    },
+
+    card: {
+      width: "380px",
+      background: "rgba(255,255,255,0.12)",
+      backdropFilter: "blur(15px)",
+      borderRadius: "20px",
+      padding: "35px",
+      boxShadow: "0 15px 35px rgba(0,0,0,0.3)",
+      border: "1px solid rgba(255,255,255,0.2)",
+    },
+
+    title: {
+      color: "#fff",
+      textAlign: "center",
+      marginBottom: "8px",
+      fontSize: "32px",
+      fontWeight: "bold",
+    },
+
+    subtitle: {
+      textAlign: "center",
+      color: "#ddd",
+      marginBottom: "30px",
+      fontSize: "14px",
+    },
+
+    input: {
+      width: "100%",
+      padding: "14px",
+      marginBottom: "18px",
+      borderRadius: "10px",
+      border: "1px solid rgba(255,255,255,0.3)",
+      outline: "none",
+      background: "rgba(255,255,255,0.15)",
+      color: "#fff",
+      fontSize: "15px",
+      boxSizing: "border-box",
+    },
+
+    button: {
+      width: "100%",
+      padding: "14px",
+      background: "#fff",
+      color: "#1e3a8a",
+      border: "none",
+      borderRadius: "10px",
+      fontSize: "16px",
+      fontWeight: "bold",
+      cursor: "pointer",
+      transition: "0.3s",
+    },
+
+    loginText: {
+      textAlign: "center",
+      color: "#eee",
+      marginTop: "20px",
+      fontSize: "14px",
+    },
+
+    link: {
+      color: "#FFD700",
+      marginLeft: "5px",
+      textDecoration: "none",
+      fontWeight: "bold",
+    },
+  };
+
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "90vh",
-      }}
-    >
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "20px",
-          width: "300px",
-          padding: "30px",
-          border: "1px solid gray",
-          borderRadius: "10px",
-          boxShadow: "0px 0px 10px lightgray",
-        }}
-      >
-        <h1 style={{ textAlign: "center" }}>Signup</h1>
+    <div style={styles.page}>
+      <form onSubmit={handleSubmit} style={styles.card}>
+        <h1 style={styles.title}>Create Account</h1>
+
+        <p style={styles.subtitle}>
+          Sign up to continue
+        </p>
 
         <input
           type="text"
           name="name"
-          placeholder="Enter Name"
+          placeholder="👤 Enter Name"
           onChange={handleChange}
-          style={{ padding: "10px" }}
+          style={styles.input}
         />
 
         <input
           type="email"
           name="email"
-          placeholder="Enter Email"
+          placeholder="📧 Enter Email"
           onChange={handleChange}
-          style={{ padding: "10px" }}
+          style={styles.input}
         />
 
         <input
           type="password"
           name="password"
-          placeholder="Enter Password"
+          placeholder="🔒 Enter Password"
           onChange={handleChange}
-          style={{ padding: "10px" }}
+          style={styles.input}
         />
 
-      
         <button
           type="submit"
-          style={{
-            padding: "10px",
-            backgroundColor: "black",
-            color: "white",
-            border: "none",
-            cursor: "pointer",
+          style={styles.button}
+          onMouseOver={(e) => {
+            e.target.style.background = "#2563eb";
+            e.target.style.color = "#fff";
+            e.target.style.transform = "scale(1.03)";
+          }}
+          onMouseOut={(e) => {
+            e.target.style.background = "#fff";
+            e.target.style.color = "#1e3a8a";
+            e.target.style.transform = "scale(1)";
           }}
         >
-          Signup
+          Create Account
         </button>
-        <p>
-          Already have an account ?
-          <Link style={{ color: "blue" }} to="/login">
-            login
+
+        <p style={styles.loginText}>
+          Already have an account?
+          <Link to="/login" style={styles.link}>
+            Login
           </Link>
         </p>
       </form>
