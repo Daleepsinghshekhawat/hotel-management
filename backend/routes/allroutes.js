@@ -247,6 +247,8 @@ router.get("/getBookingsByGuest/:email", bookingController.getBookingsByGuest);
 router.patch("/cancelBooking/:id", bookingController.cancelBooking);
 router.patch("/checkInBooking/:id", bookingController.checkInBooking);
 router.patch("/checkoutBooking/:id", bookingController.checkoutBooking);
+const reviewRoutes = require("./reviewRoutes");
+router.use("/reviews", reviewRoutes);
 
 router.get("/test", (req, res) => {
   res.send("API is working");

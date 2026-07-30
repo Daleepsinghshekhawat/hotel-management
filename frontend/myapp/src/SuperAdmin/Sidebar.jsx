@@ -1,10 +1,25 @@
-import React, { useState } from "react";
+import React from "react";
 import { NavLink } from "react-router-dom";
+import { 
+  Home, 
+  BookOpen, 
+  Building2, 
+  Users, 
+  UserCog, 
+  Briefcase, 
+  BedDouble, 
+  MapPin,
+  Map,
+  Globe,
+  Receipt, 
+  Tags, 
+  MessageSquare, 
+  BarChart2, 
+  Settings, 
+  LogOut 
+} from "lucide-react";
 
 function Sidebar() {
-  const [hotelsOpen, setHotelsOpen] = useState(false);
-  const [adminsOpen, setAdminsOpen] = useState(false);
-
   const handleLogout = () => {
     if (window.confirm("Are you sure you want to log out?")) {
       localStorage.removeItem("user");
@@ -14,181 +29,123 @@ function Sidebar() {
   };
 
   const navLinkStyle = (isActive) => ({
-    display: "block",
-    textDecoration: "none",
-    padding: "10px 14px",
-    marginBottom: "4px",
-    borderRadius: "8px",
-    color: isActive ? "#ffffff" : "#94a3b8",
-    background: isActive ? "#2563eb" : "transparent",
-    fontWeight: isActive ? 600 : 500,
-    fontSize: "14px",
-    transition: "all 0.2s ease",
-  });
-
-  const subNavLinkStyle = (isActive) => ({
-    display: "block",
-    textDecoration: "none",
-    padding: "8px 12px 8px 36px",
-    marginBottom: "4px",
-    borderRadius: "8px",
-    color: isActive ? "#ffffff" : "#64748b",
-    background: isActive ? "rgba(37, 99, 235, 0.15)" : "transparent",
-    borderLeft: isActive ? "3px solid #2563eb" : "3px solid transparent",
-    fontWeight: isActive ? 600 : 500,
-    fontSize: "13px",
-    transition: "all 0.2s ease",
-  });
-
-  const sectionHeaderStyle = {
     display: "flex",
-    justifyContent: "space-between",
     alignItems: "center",
-    width: "100%",
-    background: "transparent",
-    border: "none",
-    padding: "10px 14px",
-    color: "#94a3b8",
-    cursor: "pointer",
-    fontSize: "14px",
-    fontWeight: 600,
-    textAlign: "left",
-    borderRadius: "8px",
+    gap: "12px",
+    textDecoration: "none",
+    padding: "12px 20px",
     marginBottom: "4px",
-    outline: "none",
+    borderRadius: "10px",
+    color: isActive ? "#ffffff" : "#94a3b8",
+    background: isActive ? "#3b82f6" : "transparent",
+    fontWeight: isActive ? 600 : 500,
+    fontSize: "14px",
     transition: "all 0.2s ease",
-  };
+  });
+
+  const links = [
+    { to: "/superadmin/dashboard", icon: <Home size={20} />, label: "Dashboard" },
+    { to: "/superadmin/bookings", icon: <BookOpen size={20} />, label: "Bookings" },
+    { to: "/superadmin/approved", icon: <Building2 size={20} />, label: "Hotels" },
+    { to: "/superadmin/users", icon: <Users size={20} />, label: "Users" },
+    { to: "/superadmin/admins/all", icon: <UserCog size={20} />, label: "Admins" },
+    { to: "/superadmin/employees", icon: <Briefcase size={20} />, label: "Employees" },
+    { to: "/superadmin/state", icon: <Globe size={20} />, label: "States" },
+    { to: "/superadmin/district", icon: <Map size={20} />, label: "Districts" },
+    { to: "/superadmin/city", icon: <MapPin size={20} />, label: "Cities" },
+    { to: "/superadmin/taxes", icon: <Receipt size={20} />, label: "Taxes & Charges" },
+    { to: "/superadmin/coupons", icon: <Tags size={20} />, label: "Offers & Coupons" },
+    { to: "/superadmin/reviews", icon: <MessageSquare size={20} />, label: "Reviews" },
+    { to: "/superadmin/reports", icon: <BarChart2 size={20} />, label: "Reports" },
+    { to: "/superadmin/settings", icon: <Settings size={20} />, label: "Settings" },
+  ];
 
   return (
     <div
       style={{
-        width: "250px",
-        minHeight: "100vh",
+        width: "260px",
+        height: "100vh",
         background: "#0f172a",
         color: "#f8fafc",
         padding: "24px 16px",
-        boxShadow: "2px 0 12px rgba(0,0,0,0.15)",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
         boxSizing: "border-box",
+        position: "sticky",
+        top: 0,
       }}
     >
       <div style={{ overflowY: "auto", flex: 1, paddingRight: "4px" }}>
-        <h2 style={{ margin: "0 0 4px", fontSize: "20px", fontWeight: 800, color: "#ffffff" }}>
-          Super Admin
-        </h2>
-        <p
+        <div style={{ padding: "0 10px", marginBottom: "24px" }}>
+          {/* Invisible gap since the logo isn't in screenshot, but we can keep it blank or add title */}
+        </div>
+
+        {links.map((link, idx) => (
+          <NavLink key={idx} to={link.to} style={({ isActive }) => navLinkStyle(isActive)}>
+            {link.icon}
+            <span>{link.label}</span>
+          </NavLink>
+        ))}
+        
+        <button
+          onClick={handleLogout}
           style={{
-            margin: "0 0 24px",
-            color: "#64748b",
-            fontSize: "11px",
-            textTransform: "uppercase",
-            letterSpacing: "1.5px",
-            fontWeight: 700,
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            width: "100%",
+            padding: "12px 20px",
+            borderRadius: "10px",
+            border: "none",
+            background: "transparent",
+            color: "#94a3b8",
+            cursor: "pointer",
+            fontWeight: 500,
+            fontSize: "14px",
+            marginTop: "10px",
+            transition: "all 0.2s",
+            textAlign: "left",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+            e.currentTarget.style.color = "#ffffff";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.color = "#94a3b8";
           }}
         >
-          Control Panel
-        </p>
-
-        {/* General Links */}
-        <NavLink to="/superadmin/dashboard" style={({ isActive }) => navLinkStyle(isActive)}>
-          📊 Dashboard
-        </NavLink>
-        <NavLink to="/superadmin/state" style={({ isActive }) => navLinkStyle(isActive)}>
-          🗺️ States
-        </NavLink>
-        <NavLink to="/superadmin/district" style={({ isActive }) => navLinkStyle(isActive)}>
-          🏙️ Districts
-        </NavLink>
-        <NavLink to="/superadmin/city" style={({ isActive }) => navLinkStyle(isActive)}>
-          🌆 Cities
-        </NavLink>
-
-        {/* Collapsible Hotels Section */}
-        <div style={{ margin: "8px 0" }}>
-          <button
-            onClick={() => setHotelsOpen(!hotelsOpen)}
-            style={sectionHeaderStyle}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "#1e293b")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-          >
-            <span>🏨 Hotels</span>
-            <span>{hotelsOpen ? "▼" : "▶"}</span>
-          </button>
-          {hotelsOpen && (
-            <div style={{ marginTop: "2px", display: "flex", flexDirection: "column" }}>
-              <NavLink to="/superadmin/add-hotel" style={({ isActive }) => subNavLinkStyle(isActive)}>
-                ➕ Add Hotel
-              </NavLink>
-              <NavLink to="/superadmin/hotel-requests" style={({ isActive }) => subNavLinkStyle(isActive)}>
-                ⏳ Hotel Requests
-              </NavLink>
-              <NavLink to="/superadmin/approved" style={({ isActive }) => subNavLinkStyle(isActive)}>
-                ✅ Approved Hotels
-              </NavLink>
-            </div>
-          )}
-        </div>
-
-        {/* Collapsible Admins Section */}
-        <div style={{ margin: "8px 0" }}>
-          <button
-            onClick={() => setAdminsOpen(!adminsOpen)}
-            style={sectionHeaderStyle}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "#1e293b")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-          >
-            <span>🛡️ Admins</span>
-            <span>{adminsOpen ? "▼" : "▶"}</span>
-          </button>
-          {adminsOpen && (
-            <div style={{ marginTop: "2px", display: "flex", flexDirection: "column" }}>
-              <NavLink to="/superadmin/admins/add" style={({ isActive }) => subNavLinkStyle(isActive)}>
-                👤 Add Admin
-              </NavLink>
-              <NavLink to="/superadmin/admins/requests" style={({ isActive }) => subNavLinkStyle(isActive)}>
-                ⏳ Admin Requests
-              </NavLink>
-              <NavLink to="/superadmin/admins/all" style={({ isActive }) => subNavLinkStyle(isActive)}>
-                👥 All Admins
-              </NavLink>
-            </div>
-          )}
-        </div>
-
-        {/* Users Link */}
-        <NavLink to="/superadmin/users" style={({ isActive }) => navLinkStyle(isActive)}>
-          👥 Users
-        </NavLink>
-
-
-        {/* Settings Link */}
-        <NavLink to="/superadmin/settings" style={({ isActive }) => navLinkStyle(isActive)}>
-          ⚙️ Settings
-        </NavLink>
+          <LogOut size={20} />
+          <span>Logout</span>
+        </button>
       </div>
 
-      <button
-        onClick={handleLogout}
-        style={{
-          width: "100%",
-          padding: "11px",
-          borderRadius: "8px",
-          border: "none",
-          background: "#ef4444",
-          color: "#fff",
-          cursor: "pointer",
-          fontWeight: 600,
-          fontSize: "13px",
-          marginTop: "20px",
-          transition: "background 0.2s",
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.background = "#dc2626")}
-        onMouseLeave={(e) => (e.currentTarget.style.background = "#ef4444")}
-      >
-        🚪 Logout
-      </button>
+      <div style={{
+        marginTop: "20px",
+        padding: "16px 10px",
+        display: "flex",
+        alignItems: "center",
+        gap: "12px",
+        borderTop: "1px solid rgba(255,255,255,0.1)"
+      }}>
+        <div style={{
+          width: "40px",
+          height: "40px",
+          borderRadius: "50%",
+          background: "#fbbf24",
+          overflow: "hidden",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center"
+        }}>
+           <img src="https://ui-avatars.com/api/?name=Super+Admin&background=fbbf24&color=fff" alt="Admin" style={{width: "100%", height: "100%"}} />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <span style={{ fontSize: "14px", fontWeight: 600, color: "#ffffff" }}>Super Admin</span>
+          <span style={{ fontSize: "12px", color: "#94a3b8" }}>superadmin@gmail.com</span>
+        </div>
+      </div>
     </div>
   );
 }

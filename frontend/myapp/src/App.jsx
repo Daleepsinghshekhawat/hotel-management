@@ -45,6 +45,10 @@ import Bookings from "./SuperAdmin/Bookings";
 import EditHotel from"./SuperAdmin/EditHotel";
 import Setting from "./SuperAdmin/Settings";
 import Sidebar from "./SuperAdmin/Sidebar";
+import Employees from "./SuperAdmin/Employees";
+import Coupons from "./SuperAdmin/Coupons";
+import Reviews from "./SuperAdmin/Reviews";
+import Reports from "./SuperAdmin/Reports";
 
 
 
@@ -138,8 +142,12 @@ function App() {
           <Route path="admins/requests" element={<AdminRequests />} />
           <Route path="admins/all" element={<AllAdmins />} />
           <Route path="users" element = {<AllUsers/>}/>
-          <Route path="bookings" element = {<bookings/>}/>
-          <Route path="edit-hotel" element={<EditHotel/>}/>
+          <Route path="employees" element={<Employees />} />
+          <Route path="coupons" element={<Coupons />} />
+          <Route path="reviews" element={<Reviews />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="bookings" element={<Bookings />} />
+          <Route path="hotels/edit/:id" element={<EditHotel/>}/>
           <Route path="sidebar" element={<Sidebar/>}/>
           <Route path="settings" element={<Setting/>}/>
         </Route>

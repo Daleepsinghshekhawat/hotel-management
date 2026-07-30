@@ -3,6 +3,7 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import URL from "../api";
 import RoomList from "../Admin/RoomList";
+import { IndianRupee, BedDouble, BookOpen, Building2, TrendingUp, Hotel } from "lucide-react";
 
 const formatLocation = (location) => {
   if (!location) return "N/A";
@@ -22,9 +23,10 @@ export default function HotelDashboard() {
 
   const [stats, setStats] = useState({
     activeHotels: 0,
+    totalRooms: 0,
+    totalBookings: 0,
+    totalRevenue: 0,
     pendingRequests: 0,
-    approvedRequests: 0,
-    rejectedRequests: 0,
   });
 
   const fetchData = async () => {
@@ -39,14 +41,43 @@ export default function HotelDashboard() {
       const activeList = hotelsRes.data.result || [];
       const requestsList = requestsRes.data.result || [];
 
+      let roomsCount = 0;
+      let bookingsCount = 0;
+      let revenueSum = 0;
+
+      // Fetch additional stats for each active hotel
+      await Promise.all(activeList.map(async (hotel) => {
+        try {
+          const [roomsData, bookingsData] = await Promise.all([
+            axios.get(`${URL}/api/getRoomsByHotel/${hotel._id}`),
+            axios.get(`${URL}/api/getBookingsByHotel/${hotel._id}`)
+          ]);
+
+          const rooms = roomsData.data.result || [];
+          const bookings = bookingsData.data.result || [];
+
+          roomsCount += rooms.length;
+          
+          const validBookings = bookings.filter(b => b.status !== "cancelled");
+          bookingsCount += validBookings.length;
+          
+          validBookings.forEach(b => {
+            revenueSum += (b.totalAmount || 0);
+          });
+        } catch (e) {
+          console.error(`Error fetching stats for hotel ${hotel._id}:`, e);
+        }
+      }));
+
       setHotels(activeList);
       setRequests(requestsList);
 
       setStats({
         activeHotels: activeList.length,
+        totalRooms: roomsCount,
+        totalBookings: bookingsCount,
+        totalRevenue: revenueSum,
         pendingRequests: requestsList.filter((r) => r.status === "pending").length,
-        approvedRequests: requestsList.filter((r) => r.status === "approved").length,
-        rejectedRequests: requestsList.filter((r) => r.status === "rejected").length,
       });
     } catch (err) {
       console.log("Error loading dashboard data:", err);
@@ -68,53 +99,58 @@ export default function HotelDashboard() {
   };
 
   return (
-    <div style={{ fontFamily: "'Segoe UI', sans-serif" }}>
+    <div style={{ fontFamily: "'Inter', sans-serif", padding: "10px" }}>
       <div style={{ marginBottom: "28px" }}>
-        <h2 style={{ margin: "0 0 4px", fontSize: "22px", color: "#0f172a", fontWeight: 700 }}>
-          🏨 Hotel Dashboard
+        <h2 style={{ margin: "0 0 4px", fontSize: "24px", color: "#0f172a", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}>
+          <Building2 size={24} color="#3b82f6" />
+          Partner Dashboard
         </h2>
         <p style={{ margin: 0, color: "#64748b", fontSize: "14px" }}>
-          Welcome back! Manage your active hotels, view requests, and control room details.
+          Welcome back, {user.name || "Partner"}! Manage your hotels, view revenue, and control inventory.
         </p>
       </div>
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: "40px", color: "#94a3b8" }}>
-          ⏳ Loading workspace data...
+        <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
+          Loading dashboard metrics...
         </div>
       ) : (
         <>
-          {/* Stats Cards */}
-          <div style={{ display: "flex", gap: "16px", marginBottom: "28px", flexWrap: "wrap" }}>
-            {[
-              { label: "Active Hotels", count: stats.activeHotels, bg: "#dbeafe", color: "#1d4ed8", icon: "🏨" },
-              { label: "Pending Listing Review", count: stats.pendingRequests, bg: "#fef9c3", color: "#854d0e", icon: "⏳" },
-              { label: "Approved Listings", count: stats.approvedRequests, bg: "#dcfce7", color: "#166534", icon: "✅" },
-              { label: "Rejected Listings", count: stats.rejectedRequests, bg: "#fee2e2", color: "#991b1b", icon: "❌" },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                style={{
-                  flex: "1 1 180px",
-                  background: stat.bg,
-                  borderRadius: "14px",
-                  padding: "18px 20px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "14px",
-                }}
-              >
-                <span style={{ fontSize: "28px" }}>{stat.icon}</span>
-                <div>
-                  <div style={{ fontSize: "26px", fontWeight: 800, color: stat.color, lineHeight: 1 }}>
-                    {stat.count}
-                  </div>
-                  <div style={{ fontSize: "12px", color: stat.color, fontWeight: 600, marginTop: "4px" }}>
-                    {stat.label}
-                  </div>
-                </div>
+          {/* KPI Cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px", marginBottom: "32px" }}>
+            
+            <div style={kpiCardStyle}>
+              <div style={kpiIconWrapper("#dcfce7", "#16a34a")}><IndianRupee size={20} /></div>
+              <div>
+                <div style={kpiLabelStyle}>Total Revenue</div>
+                <div style={kpiValueStyle}>₹{stats.totalRevenue.toLocaleString()}</div>
               </div>
-            ))}
+            </div>
+
+            <div style={kpiCardStyle}>
+              <div style={kpiIconWrapper("#e0e7ff", "#4f46e5")}><BookOpen size={20} /></div>
+              <div>
+                <div style={kpiLabelStyle}>Total Bookings</div>
+                <div style={kpiValueStyle}>{stats.totalBookings.toLocaleString()}</div>
+              </div>
+            </div>
+
+            <div style={kpiCardStyle}>
+              <div style={kpiIconWrapper("#dbeafe", "#2563eb")}><Building2 size={20} /></div>
+              <div>
+                <div style={kpiLabelStyle}>Active Hotels</div>
+                <div style={kpiValueStyle}>{stats.activeHotels}</div>
+              </div>
+            </div>
+
+            <div style={kpiCardStyle}>
+              <div style={kpiIconWrapper("#f3e8ff", "#9333ea")}><BedDouble size={20} /></div>
+              <div>
+                <div style={kpiLabelStyle}>Total Rooms</div>
+                <div style={kpiValueStyle}>{stats.totalRooms}</div>
+              </div>
+            </div>
+            
           </div>
 
           {/* Quick Actions */}
@@ -130,6 +166,7 @@ export default function HotelDashboard() {
                 fontWeight: 700,
                 fontSize: "14px",
                 boxShadow: "0 4px 12px rgba(37,99,235,0.15)",
+                display: "flex", alignItems: "center", gap: "8px"
               }}
             >
               ➕ Add New Hotel
@@ -138,22 +175,28 @@ export default function HotelDashboard() {
               to="/hotel/hotels"
               style={{
                 padding: "12px 20px",
-                background: "#e2e8f0",
+                background: "#fff",
+                border: "1px solid #cbd5e1",
                 color: "#334155",
                 borderRadius: "10px",
                 textDecoration: "none",
-                fontWeight: 700,
+                fontWeight: 600,
                 fontSize: "14px",
+                display: "flex", alignItems: "center", gap: "8px",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
               }}
             >
-              📋 My Listing Requests
+              📋 View Requests ({stats.pendingRequests} Pending)
             </Link>
           </div>
 
           
-          <h3 style={{ margin: "0 0 20px", color: "#0f172a", fontWeight: 700 }}>
-            🏨 Active Hotels & Room Inventory
-          </h3>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
+            <Hotel size={20} color="#0f172a" />
+            <h3 style={{ margin: 0, color: "#0f172a", fontWeight: 700, fontSize: "18px" }}>
+              Active Properties & Room Inventory
+            </h3>
+          </div>
 
           {hotels.length === 0 ? (
             <div
@@ -197,7 +240,7 @@ export default function HotelDashboard() {
                       background: "#fff",
                       border: "1px solid #e2e8f0",
                       borderRadius: "16px",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.02)",
+                      boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)",
                       overflow: "hidden",
                     }}
                   >
@@ -209,7 +252,7 @@ export default function HotelDashboard() {
                         gap: "20px",
                         padding: "20px",
                         flexWrap: "wrap",
-                        borderBottom: isExpanded ? "1px solid #f1f5f9" : "none",
+                        borderBottom: isExpanded ? "1px solid #e2e8f0" : "none",
                         background: isExpanded ? "#f8fafc" : "transparent",
                       }}
                     >
@@ -224,7 +267,7 @@ export default function HotelDashboard() {
                       >
                         {hotel.image ? (
                           <img
-                            src={hotel.image}
+                            src={hotel.image.startsWith("http") ? hotel.image : `${URL}/${hotel.image.replace(/\\/g, '/')}`}
                             alt={hotel.hotelName}
                             style={{ width: "100%", height: "100%", objectFit: "cover" }}
                           />
@@ -238,7 +281,7 @@ export default function HotelDashboard() {
                               fontSize: "32px",
                             }}
                           >
-                            🏨
+                            <Building2 size={32} color="#475569" />
                           </div>
                         )}
                       </div>
@@ -260,13 +303,14 @@ export default function HotelDashboard() {
                           onClick={() => toggleExpandHotel(hotel._id)}
                           style={{
                             padding: "10px 18px",
-                            background: isExpanded ? "#64748b" : "#2563eb",
-                            color: "#fff",
+                            background: isExpanded ? "#e2e8f0" : "#2563eb",
+                            color: isExpanded ? "#334155" : "#fff",
                             border: "none",
                             borderRadius: "8px",
                             fontWeight: 600,
                             fontSize: "13px",
                             cursor: "pointer",
+                            transition: "all 0.2s"
                           }}
                         >
                           {isExpanded ? "Close Rooms" : "Manage Rooms 🔑"}
@@ -290,3 +334,40 @@ export default function HotelDashboard() {
     </div>
   );
 }
+
+const kpiCardStyle = {
+  background: "#fff",
+  padding: "24px",
+  borderRadius: "16px",
+  border: "1px solid #e2e8f0",
+  boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)",
+  display: "flex",
+  alignItems: "center",
+  gap: "16px"
+};
+
+const kpiIconWrapper = (bg, color) => ({
+  width: "48px",
+  height: "48px",
+  borderRadius: "12px",
+  background: bg,
+  color: color,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center"
+});
+
+const kpiLabelStyle = {
+  fontSize: "13px",
+  fontWeight: 600,
+  color: "#64748b",
+  textTransform: "uppercase",
+  letterSpacing: "0.5px",
+  marginBottom: "4px"
+};
+
+const kpiValueStyle = {
+  fontSize: "24px",
+  fontWeight: 800,
+  color: "#0f172a"
+};

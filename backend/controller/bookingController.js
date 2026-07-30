@@ -2,6 +2,7 @@ const Booking = require("../model/booking");
 const Room = require("../model/room");
 const Hotel = require("../model/hotelModel");
 const TempBooking = require("../model/tempBooking");
+const Coupon = require("../model/couponModel");
 
 
 const isRoomBooked = async (roomId, checkIn, checkOut, excludeBookingId = null, userId = null) => {
@@ -54,7 +55,7 @@ const autoCompleteExpiredBookings = async (roomId) => {
 
 exports.createBooking = async (req, res) => {
   try {
-    const { hotelId, roomId, guestName, guestEmail, guestPhone, guests, checkIn, checkOut, userId } = req.body;
+    const { hotelId, roomId, guestName, guestEmail, guestPhone, guests, checkIn, checkOut, userId, couponCode } = req.body;
 
   
     if (!hotelId || !roomId || !guestName || !guestEmail || !guestPhone || !checkIn || !checkOut) {
@@ -92,7 +93,45 @@ exports.createBooking = async (req, res) => {
     // Calculate nights & total
     const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
     const pricePerNight = room.finalPrice || room.price;
-    const totalAmount = Math.round(pricePerNight * nights);
+    let totalAmount = Math.round(pricePerNight * nights);
+
+    // Apply coupon if provided
+    if (couponCode) {
+      const coupon = await Coupon.findOne({ couponCode: couponCode.toUpperCase(), hotel: hotelId });
+      if (!coupon) {
+        return res.status(404).json({ success: false, message: "Invalid coupon code for this hotel" });
+      }
+      if (coupon.status !== "Active") {
+        return res.status(400).json({ success: false, message: "Coupon is not active" });
+      }
+      if (new Date(coupon.expiryDate) < new Date()) {
+        return res.status(400).json({ success: false, message: "Coupon has expired" });
+      }
+      if (coupon.usedCount >= coupon.maxUsage) {
+        return res.status(400).json({ success: false, message: "Coupon usage limit reached" });
+      }
+      if (totalAmount < coupon.minimumBookingAmount) {
+        return res.status(400).json({ success: false, message: `Minimum booking amount of ${coupon.minimumBookingAmount} required for this coupon` });
+      }
+
+      // Calculate discount
+      let discountAmount = 0;
+      if (coupon.discountType === "percentage") {
+        discountAmount = (totalAmount * coupon.discount) / 100;
+        if (coupon.maximumDiscount > 0 && discountAmount > coupon.maximumDiscount) {
+          discountAmount = coupon.maximumDiscount;
+        }
+      } else {
+        discountAmount = coupon.discount;
+      }
+
+      totalAmount = Math.round(totalAmount - discountAmount);
+      if (totalAmount < 0) totalAmount = 0;
+
+      // Update coupon usage
+      coupon.usedCount += 1;
+      await coupon.save();
+    }
 
     // Create booking
     const booking = await Booking.create({
@@ -303,7 +342,7 @@ exports.getAllBookings = async (req, res) => {
   try {
     const bookings = await Booking.find()
       .populate("hotel", "hotelName location")
-      .populate("room", "roomName roomType")
+      .populate("room", "roomName roomType images")
       .sort({ createdAt: -1 });
     return res.status(200).json({ success: true, result: bookings });
   } catch (err) {
