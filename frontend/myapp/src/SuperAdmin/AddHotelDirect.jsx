@@ -14,6 +14,17 @@ export default function AddHotelDirect() {
   const [selectedCity, setSelectedCity] = useState("");
   const [image, setImage] = useState(null);
 
+  const [hotelType, setHotelType] = useState("Hotel");
+  const [amenities, setAmenities] = useState([]);
+  const availableAmenities = ["WiFi", "Parking", "Restaurant", "Swimming Pool", "AC", "Room Service"];
+
+  const handleAmenityChange = (e) => {
+    const value = e.target.value;
+    setAmenities(prev => 
+      prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]
+    );
+  };
+
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
@@ -105,6 +116,8 @@ export default function AddHotelDirect() {
       formData.append("email", form.email.trim());
       formData.append("location", selectedCity);
       formData.append("description", form.description.trim());
+      formData.append("hotelType", hotelType);
+      formData.append("amenities", JSON.stringify(amenities));
       formData.append("image", image);
 
       await axios.post(`${apiurl}/api/addHotelDirect`, formData);
@@ -268,6 +281,22 @@ export default function AddHotelDirect() {
           </div>
 
           <div>
+            <label style={labelStyle}>Hotel Type *</label>
+            <select
+              style={inputStyle}
+              value={hotelType}
+              onChange={(e) => setHotelType(e.target.value)}
+              required
+            >
+              <option value="Hotel">Hotel</option>
+              <option value="Resort">Resort</option>
+              <option value="Villa">Villa</option>
+              <option value="Homestay">Homestay</option>
+              <option value="Hostel">Hostel</option>
+            </select>
+          </div>
+
+          <div>
             <label style={labelStyle}>Description & Details *</label>
             <textarea
               style={{ ...inputStyle, resize: "vertical", minHeight: "120px" }}
@@ -277,6 +306,24 @@ export default function AddHotelDirect() {
               placeholder="Describe location, highlights, key features, and surrounding options..."
               required
             />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Amenities (Optional)</label>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", padding: "10px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #cbd5e1" }}>
+              {availableAmenities.map((amenity) => (
+                <label key={amenity} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "#475569", cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    value={amenity}
+                    checked={amenities.includes(amenity)}
+                    onChange={handleAmenityChange}
+                    style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                  />
+                  {amenity}
+                </label>
+              ))}
+            </div>
           </div>
 
           <div>

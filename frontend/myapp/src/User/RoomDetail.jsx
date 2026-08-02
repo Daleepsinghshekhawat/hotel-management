@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { ChevronLeft, Calendar as CalendarIcon, Users, CreditCard, CheckCircle2, AlertCircle } from "lucide-react";
 import URL from "../api";
-import "./RoomDetail.css";
+import "./RoomDetail.css"; // Keep the calendar CSS but overhaul the layout
 
 export default function RoomDetail() {
   const { hotelId, roomId } = useParams();
@@ -12,19 +13,19 @@ export default function RoomDetail() {
   const [hotel, setHotel] = useState(null);
   
   // Calendar data
-  const [bookedDates, setBookedDates] = useState([]); // Dates fully booked (Red)
-  const [pendingDates, setPendingDates] = useState([]); // Dates pending (Yellow)
+  const [bookedDates, setBookedDates] = useState([]);
+  const [pendingDates, setPendingDates] = useState([]);
   
   // Booking state
   const [checkIn, setCheckIn] = useState(null);
   const [checkOut, setCheckOut] = useState(null);
-  const [lockStatus, setLockStatus] = useState(""); // "", "locking", "locked", "error"
+  const [lockStatus, setLockStatus] = useState(""); 
   const [lockError, setLockError] = useState("");
 
   const [form, setForm] = useState({
     name: "", email: "", phone: "", guests: 1
   });
-  const [bookingStep, setBookingStep] = useState("calendar"); // calendar -> form -> success
+  const [bookingStep, setBookingStep] = useState("calendar"); 
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
@@ -47,7 +48,6 @@ export default function RoomDetail() {
         setRoom(roomRes.data.result);
         setHotel(hotelRes.data.result);
         
-        // Parse calendar dates
         const bDates = [];
         const pDates = [];
         
@@ -69,18 +69,14 @@ export default function RoomDetail() {
 
         allBookings.forEach(b => {
           const dates = getDatesBetween(b.checkIn, b.checkOut);
-          
-          // Determine if it should be red (checked in) or yellow (not checked in yet)
           const today = new Date();
           today.setHours(0,0,0,0);
           const checkInDate = new Date(b.checkIn);
           checkInDate.setHours(0,0,0,0);
           
           if (b.status === "pending" || checkInDate > today) {
-            // Not checked in yet or explicitly pending -> Yellow
             pDates.push(...dates);
           } else {
-            // Checked in -> Red
             bDates.push(...dates);
           }
         });
@@ -109,17 +105,16 @@ export default function RoomDetail() {
   }, [roomId, hotelId, navigate]);
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
-
   const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
 
   const handleDateClick = (dateStr) => {
-    if (bookedDates.includes(dateStr) || pendingDates.includes(dateStr)) return; // Blocked
+    if (bookedDates.includes(dateStr) || pendingDates.includes(dateStr)) return;
     
     const dateObj = new Date(dateStr);
     const today = new Date();
     today.setHours(0,0,0,0);
-    if (dateObj < today) return; // Past date
+    if (dateObj < today) return; 
 
     if (!checkIn) {
       setCheckIn(dateStr);
@@ -194,7 +189,15 @@ export default function RoomDetail() {
     }
   };
 
-  if (!room || !hotel) return <div style={{padding:"40px", textAlign:"center"}}>Loading...</div>;
+  if (!room || !hotel) return (
+    <div style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "16px", fontFamily: "'Inter', sans-serif" }}>
+      <div style={{ width: "48px", height: "48px", border: "4px solid #e2e8f0", borderTop: "4px solid #2563eb", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+
+  const nights = (checkIn && checkOut) ? Math.max(0, Math.ceil((new Date(checkOut) - new Date(checkIn)) / 86400000)) : 0;
+  const totalCost = nights > 0 ? (room.finalPrice || room.price) * nights : 0;
 
   const renderCalendar = () => {
     const year = currentMonth.getFullYear();
@@ -248,87 +251,164 @@ export default function RoomDetail() {
         <div className="calendar-legend">
           <div className="legend-item"><span className="box available"></span> Available</div>
           <div className="legend-item"><span className="box pending"></span> Pending</div>
-          <div className="legend-item"><span className="box booked"></span> Booked / Locked</div>
+          <div className="legend-item"><span className="box booked"></span> Booked</div>
         </div>
       </div>
     );
   };
 
   return (
-    <div className="room-detail-container">
-      <div className="room-header">
-        <h1>{room.roomName}</h1>
-        <p>{hotel.hotelName} - {room.roomType}</p>
+    <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "'Inter', sans-serif" }}>
+      
+      {/* Header Container */}
+      <div style={{ background: "#fff", borderBottom: "1px solid #e2e8f0", padding: "24px 5% 20px" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <button onClick={() => navigate(-1)} style={{
+            display: "flex", alignItems: "center", gap: "4px", background: "none", border: "none",
+            color: "#64748b", fontWeight: 600, fontSize: "14px", cursor: "pointer", padding: "0", marginBottom: "16px"
+          }}>
+            <ChevronLeft size={16} /> Back to hotel
+          </button>
+          
+          <h1 style={{ margin: "0 0 8px", fontSize: "28px", fontWeight: 700, color: "#0f172a" }}>
+            {room.roomName}
+          </h1>
+          <p style={{ margin: 0, color: "#475569", fontSize: "15px" }}>
+            {hotel.hotelName} • {room.roomType}
+          </p>
+        </div>
       </div>
 
-      <div className="room-layout">
-        <div className="room-info">
-           <img src={room.images?.[0] || 'https://via.placeholder.com/600x400'} alt="Room" className="room-main-img"/>
-           <h3>Details</h3>
-           <p><strong>Price:</strong> ₹{room.finalPrice || room.price} / night</p>
-           <p><strong>Max Guests:</strong> {room.maxGuests}</p>
-           <p>{room.description}</p>
-        </div>
-
-        <div className="room-booking-section">
-          {bookingStep === "calendar" && (
-            <div className="calendar-section">
-              <h3>Select Dates</h3>
-              {renderCalendar()}
-              
-              <div className="date-selection">
-                <p>Check-in: {checkIn || "Select"}</p>
-                <p>Check-out: {checkOut || "Select"}</p>
-              </div>
-
-              {lockError && <div className="error-msg">{lockError}</div>}
-
-              <button 
-                className="btn-lock" 
-                onClick={handleLockDates}
-                disabled={!checkIn || !checkOut || lockStatus === "locking"}
-              >
-                {lockStatus === "locking" ? "Locking..." : "Lock Dates & Continue"}
-              </button>
+      <div style={{ maxWidth: "1200px", margin: "40px auto 80px", padding: "0 5%" }}>
+        <div style={{ display: "flex", gap: "40px", flexWrap: "wrap", alignItems: "flex-start" }}>
+          
+          {/* Left Side: Info & Calendar */}
+          <div style={{ flex: "1 1 600px" }}>
+            
+            <div style={{ borderRadius: "16px", overflow: "hidden", marginBottom: "32px", height: "400px" }}>
+              <img src={room.images?.[0] || 'https://via.placeholder.com/800x500'} alt="Room" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </div>
-          )}
 
-          {bookingStep === "form" && (
-            <form onSubmit={handleFinalBook} className="booking-form">
-              <h3>Guest Details</h3>
-              <div className="form-group">
-                <label>Name</label>
-                <input required value={form.name} onChange={e=>setForm({...form, name: e.target.value})}/>
-              </div>
-              <div className="form-group">
-                <label>Email</label>
-                <input required type="email" value={form.email} onChange={e=>setForm({...form, email: e.target.value})}/>
-              </div>
-              <div className="form-group">
-                <label>Phone</label>
-                <input required value={form.phone} onChange={e=>setForm({...form, phone: e.target.value})}/>
-              </div>
-              <div className="form-group">
-                <label>Guests</label>
-                <input type="number" min={1} max={room.maxGuests} required value={form.guests} onChange={e=>setForm({...form, guests: e.target.value})}/>
-              </div>
+            <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "32px", marginBottom: "32px" }}>
+              <h2 style={{ fontSize: "20px", fontWeight: 600, color: "#0f172a", margin: "0 0 16px" }}>Room Details</h2>
+              <p style={{ color: "#475569", lineHeight: "1.6", fontSize: "15px", margin: "0 0 24px" }}>{room.description}</p>
               
-              <div className="summary">
-                <p>Check-in: {checkIn}</p>
-                <p>Check-out: {checkOut}</p>
+              <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#0f172a", fontWeight: 500 }}>
+                  <Users size={18} color="#64748b" /> Up to {room.maxGuests} guests
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#0f172a", fontWeight: 500 }}>
+                  <CreditCard size={18} color="#64748b" /> ₹{room.finalPrice || room.price} / night
+                </div>
               </div>
-              <button className="btn-submit" type="submit">Confirm Booking</button>
-              <button type="button" className="btn-cancel" onClick={() => setBookingStep("calendar")}>Back</button>
-            </form>
-          )}
-
-          {bookingStep === "success" && (
-            <div className="success-msg">
-              <h3>Booking Successful!</h3>
-              <p>Your room has been booked.</p>
-              <button onClick={() => navigate("/user/account/bookings")}>View My Bookings</button>
             </div>
-          )}
+
+            {bookingStep === "calendar" && (
+              <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "32px" }}>
+                <h2 style={{ fontSize: "20px", fontWeight: 600, color: "#0f172a", margin: "0 0 24px", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <CalendarIcon size={20} /> Select Dates
+                </h2>
+                {renderCalendar()}
+              </div>
+            )}
+          </div>
+
+          {/* Right Side: Sticky Checkout */}
+          <div style={{ width: "380px", flexShrink: 0 }}>
+            <div style={{ position: "sticky", top: "120px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "32px", boxShadow: "0 10px 40px rgba(0,0,0,0.06)" }}>
+              
+              {bookingStep === "success" ? (
+                <div style={{ textAlign: "center" }}>
+                  <CheckCircle2 size={64} color="#16a34a" style={{ margin: "0 auto 16px" }} />
+                  <h3 style={{ margin: "0 0 8px", fontSize: "24px", color: "#0f172a" }}>Booking Confirmed!</h3>
+                  <p style={{ margin: "0 0 24px", color: "#475569" }}>We've sent the details to {form.email}</p>
+                  <button 
+                    onClick={() => navigate("/user/account/bookings")}
+                    style={{ width: "100%", padding: "14px", background: "#0f172a", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer" }}
+                  >
+                    View My Bookings
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px" }}>
+                    <div>
+                      <span style={{ fontSize: "24px", fontWeight: 700, color: "#0f172a" }}>₹{room.finalPrice || room.price}</span>
+                      <span style={{ color: "#64748b", fontSize: "15px" }}> / night</span>
+                    </div>
+                  </div>
+
+                  {bookingStep === "calendar" && (
+                    <>
+                      <div style={{ border: "1px solid #cbd5e1", borderRadius: "12px", overflow: "hidden", marginBottom: "24px" }}>
+                        <div style={{ display: "flex", borderBottom: "1px solid #cbd5e1" }}>
+                          <div style={{ flex: 1, padding: "12px", borderRight: "1px solid #cbd5e1" }}>
+                            <div style={{ fontSize: "10px", fontWeight: 800, textTransform: "uppercase", color: "#0f172a" }}>Check-in</div>
+                            <div style={{ color: checkIn ? "#0f172a" : "#64748b", fontSize: "14px", marginTop: "2px", fontWeight: checkIn ? 600 : 400 }}>{checkIn || "Select date"}</div>
+                          </div>
+                          <div style={{ flex: 1, padding: "12px" }}>
+                            <div style={{ fontSize: "10px", fontWeight: 800, textTransform: "uppercase", color: "#0f172a" }}>Checkout</div>
+                            <div style={{ color: checkOut ? "#0f172a" : "#64748b", fontSize: "14px", marginTop: "2px", fontWeight: checkOut ? 600 : 400 }}>{checkOut || "Select date"}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {lockError && (
+                        <div style={{ padding: "12px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", color: "#dc2626", fontSize: "13px", marginBottom: "16px", display: "flex", alignItems: "center", gap: "6px" }}>
+                          <AlertCircle size={14} /> {lockError}
+                        </div>
+                      )}
+
+                      <button
+                        onClick={handleLockDates}
+                        disabled={!checkIn || !checkOut || lockStatus === "locking"}
+                        style={{
+                          width: "100%", padding: "14px", borderRadius: "8px", border: "none",
+                          background: (!checkIn || !checkOut || lockStatus === "locking") ? "#cbd5e1" : "#2563eb", 
+                          color: "#fff", fontWeight: 600, fontSize: "16px",
+                          cursor: (!checkIn || !checkOut || lockStatus === "locking") ? "not-allowed" : "pointer"
+                        }}
+                      >
+                        {lockStatus === "locking" ? "Checking..." : "Reserve Dates"}
+                      </button>
+                    </>
+                  )}
+
+                  {bookingStep === "form" && (
+                    <form onSubmit={handleFinalBook}>
+                      <h3 style={{ margin: "0 0 16px", fontSize: "18px", color: "#0f172a" }}>Guest Details</h3>
+                      
+                      <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "24px" }}>
+                        <input required value={form.name} onChange={e=>setForm({...form, name: e.target.value})} placeholder="Full Name" style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", fontSize: "14px" }} />
+                        <input required type="email" value={form.email} onChange={e=>setForm({...form, email: e.target.value})} placeholder="Email Address" style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", fontSize: "14px" }} />
+                        <input required value={form.phone} onChange={e=>setForm({...form, phone: e.target.value})} placeholder="Phone Number" style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", fontSize: "14px" }} />
+                        <input type="number" min={1} max={room.maxGuests} required value={form.guests} onChange={e=>setForm({...form, guests: e.target.value})} placeholder="Number of Guests" style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", fontSize: "14px" }} />
+                      </div>
+
+                      <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "16px", marginBottom: "24px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "14px", color: "#475569" }}>
+                          <span>₹{room.finalPrice || room.price} x {nights} nights</span>
+                          <span>₹{totalCost.toLocaleString()}</span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: "18px", color: "#0f172a", marginTop: "16px" }}>
+                          <span>Total</span>
+                          <span>₹{totalCost.toLocaleString()}</span>
+                        </div>
+                      </div>
+
+                      <button type="submit" style={{ width: "100%", padding: "14px", background: "#e51d53", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 600, fontSize: "16px", cursor: "pointer", marginBottom: "12px" }}>
+                        Confirm Booking
+                      </button>
+                      <button type="button" onClick={() => setBookingStep("calendar")} style={{ width: "100%", padding: "14px", background: "none", color: "#475569", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: 600, fontSize: "16px", cursor: "pointer" }}>
+                        Back to Calendar
+                      </button>
+                    </form>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+
         </div>
       </div>
     </div>

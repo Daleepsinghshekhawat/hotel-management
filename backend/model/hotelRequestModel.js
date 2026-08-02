@@ -64,6 +64,16 @@ const hotelRequestSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
+    hotelType: {
+      type: String,
+      enum: ["Hotel", "Resort", "Villa", "Homestay", "Hostel"],
+      default: "Hotel",
+    },
+
+    amenities: [{
+      type: String,
+    }],
   },
   {
     timestamps: true,

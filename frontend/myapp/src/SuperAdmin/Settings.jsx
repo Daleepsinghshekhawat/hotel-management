@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import axios from "axios";
+import URL from "../api";
 
 export default function Settings() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -16,11 +18,20 @@ export default function Settings() {
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      alert("Password updated successfully (simulation).");
+    try {
+      const response = await axios.post(`${URL}/users/resetPassword`, {
+        email: user.email,
+        password: passwordForm.newPassword,
+      });
+      if (response.data) {
+        alert("Password updated successfully.");
+        setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to update password. Please try again.");
+    } finally {
       setLoading(false);
-      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-    }, 1000);
+    }
   };
 
   const inputStyle = {

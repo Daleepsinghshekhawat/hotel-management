@@ -351,6 +351,25 @@ export default function ApprovedHotels() {
                   </div>
                 </div>
 
+                {/* Amenities Box */}
+                <div style={{ gridColumn: "1 / -1", background: "#f8fafc", padding: "16px", borderRadius: "12px", border: "1px solid #f1f5f9" }}>
+                  <span style={{ display: "block", marginBottom: "12px", fontSize: "12px", color: "#64748b", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.5px" }}>Hotel Type & Amenities</span>
+                  <div style={{ marginBottom: "12px", fontSize: "14px", color: "#1e293b" }}>
+                    <strong>Type:</strong> {selectedHotel.hotelType || "Hotel"}
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                    {selectedHotel.amenities && selectedHotel.amenities.length > 0 ? (
+                      selectedHotel.amenities.map((am) => (
+                        <span key={am} style={{ background: "#e2e8f0", color: "#475569", padding: "4px 10px", borderRadius: "6px", fontSize: "12px", fontWeight: 600 }}>
+                          {am}
+                        </span>
+                      ))
+                    ) : (
+                      <span style={{ fontSize: "14px", color: "#64748b" }}>No amenities listed.</span>
+                    )}
+                  </div>
+                </div>
+
               </div>
 
               {/* Rooms Section */}

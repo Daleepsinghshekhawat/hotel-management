@@ -16,10 +16,15 @@ import {
   MessageSquare, 
   BarChart2, 
   Settings, 
-  LogOut 
+  LogOut,
+  Moon,
+  Sun,
+  ClipboardList,
+  PlusSquare,
+  UserPlus
 } from "lucide-react";
 
-function Sidebar() {
+function Sidebar({ theme, toggleTheme }) {
   const handleLogout = () => {
     if (window.confirm("Are you sure you want to log out?")) {
       localStorage.removeItem("user");
@@ -45,18 +50,17 @@ function Sidebar() {
 
   const links = [
     { to: "/superadmin/dashboard", icon: <Home size={20} />, label: "Dashboard" },
-    { to: "/superadmin/bookings", icon: <BookOpen size={20} />, label: "Bookings" },
     { to: "/superadmin/approved", icon: <Building2 size={20} />, label: "Hotels" },
-    { to: "/superadmin/users", icon: <Users size={20} />, label: "Users" },
+    { to: "/superadmin/add-hotel", icon: <PlusSquare size={20} />, label: "Add Hotel" },
+    { to: "/superadmin/hotel-requests", icon: <ClipboardList size={20} />, label: "Hotel Requests" },
     { to: "/superadmin/admins/all", icon: <UserCog size={20} />, label: "Admins" },
-    { to: "/superadmin/employees", icon: <Briefcase size={20} />, label: "Employees" },
+    { to: "/superadmin/admins/add", icon: <UserPlus size={20} />, label: "Add Admin" },
+    { to: "/superadmin/admins/requests", icon: <ClipboardList size={20} />, label: "Admin Requests" },
     { to: "/superadmin/state", icon: <Globe size={20} />, label: "States" },
     { to: "/superadmin/district", icon: <Map size={20} />, label: "Districts" },
     { to: "/superadmin/city", icon: <MapPin size={20} />, label: "Cities" },
-    { to: "/superadmin/taxes", icon: <Receipt size={20} />, label: "Taxes & Charges" },
     { to: "/superadmin/coupons", icon: <Tags size={20} />, label: "Offers & Coupons" },
     { to: "/superadmin/reviews", icon: <MessageSquare size={20} />, label: "Reviews" },
-    { to: "/superadmin/reports", icon: <BarChart2 size={20} />, label: "Reports" },
     { to: "/superadmin/settings", icon: <Settings size={20} />, label: "Settings" },
   ];
 
@@ -77,8 +81,30 @@ function Sidebar() {
       }}
     >
       <div style={{ overflowY: "auto", flex: 1, paddingRight: "4px" }}>
-        <div style={{ padding: "0 10px", marginBottom: "24px" }}>
-          {/* Invisible gap since the logo isn't in screenshot, but we can keep it blank or add title */}
+        <div style={{ padding: "10px", marginBottom: "30px", display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{
+            width: "32px",
+            height: "32px",
+            background: "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
+            borderRadius: "8px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 4px 10px rgba(59, 130, 246, 0.4)"
+          }}>
+            <UserCog size={20} color="#fff" />
+          </div>
+          <span style={{
+            fontSize: "20px",
+            fontWeight: 800,
+            background: "linear-gradient(to right, #ffffff, #94a3b8)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            letterSpacing: "1px",
+            textTransform: "uppercase"
+          }}>
+            Superadmin
+          </span>
         </div>
 
         {links.map((link, idx) => (
@@ -88,37 +114,81 @@ function Sidebar() {
           </NavLink>
         ))}
         
-        <button
-          onClick={handleLogout}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            width: "100%",
-            padding: "12px 20px",
-            borderRadius: "10px",
-            border: "none",
-            background: "transparent",
-            color: "#94a3b8",
-            cursor: "pointer",
-            fontWeight: 500,
-            fontSize: "14px",
-            marginTop: "10px",
-            transition: "all 0.2s",
-            textAlign: "left",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-            e.currentTarget.style.color = "#ffffff";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.color = "#94a3b8";
-          }}
-        >
-          <LogOut size={20} />
-          <span>Logout</span>
-        </button>
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", margin: "20px 0 10px 0", paddingTop: "10px" }}>
+          <button
+            onClick={toggleTheme}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              width: "100%",
+              padding: "12px 20px",
+              borderRadius: "10px",
+              border: "none",
+              background: "transparent",
+              color: "#94a3b8",
+              cursor: "pointer",
+              fontWeight: 500,
+              fontSize: "14px",
+              transition: "all 0.2s",
+              textAlign: "left",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+              e.currentTarget.style.color = "#ffffff";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.color = "#94a3b8";
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              {theme === "dark" ? <Moon size={20} /> : <Sun size={20} />}
+              <span>{theme === "dark" ? "Dark Mode" : "Light Mode"}</span>
+            </div>
+            <div style={{ 
+              width: "36px", height: "20px", background: theme === "dark" ? "#3b82f6" : "rgba(255,255,255,0.1)", 
+              borderRadius: "20px", position: "relative", transition: "0.3s" 
+            }}>
+              <div style={{
+                width: "16px", height: "16px", background: "#fff", borderRadius: "50%",
+                position: "absolute", top: "2px", left: theme === "dark" ? "18px" : "2px", transition: "0.3s"
+              }}/>
+            </div>
+          </button>
+          
+          <button
+            onClick={handleLogout}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              width: "100%",
+              padding: "12px 20px",
+              borderRadius: "10px",
+              border: "none",
+              background: "transparent",
+              color: "#94a3b8",
+              cursor: "pointer",
+              fontWeight: 500,
+              fontSize: "14px",
+              marginTop: "4px",
+              transition: "all 0.2s",
+              textAlign: "left",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+              e.currentTarget.style.color = "#ffffff";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.color = "#94a3b8";
+            }}
+          >
+            <LogOut size={20} />
+            <span>Logout</span>
+          </button>
+        </div>
       </div>
 
       <div style={{

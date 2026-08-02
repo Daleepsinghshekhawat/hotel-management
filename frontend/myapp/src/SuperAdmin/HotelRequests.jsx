@@ -735,6 +735,11 @@ export default function HotelRequests() {
                 }}
               >
                 <div>
+                  <strong>Hotel Type:</strong>{" "}
+                  {viewingRequest.hotelType || "Hotel"}
+                </div>
+
+                <div>
                   <strong>Owner Name:</strong>{" "}
                   {viewingRequest.ownerName}
                 </div>
@@ -758,6 +763,13 @@ export default function HotelRequests() {
                   <strong>Description:</strong>
                   <br />
                   {viewingRequest.description}
+                </div>
+
+                <div>
+                  <strong>Amenities:</strong>{" "}
+                  {viewingRequest.amenities && viewingRequest.amenities.length > 0 
+                    ? viewingRequest.amenities.join(", ") 
+                    : "None"}
                 </div>
 
                 <div>

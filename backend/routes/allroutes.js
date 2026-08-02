@@ -30,6 +30,8 @@ router.post("/createCoupon", couponController.createCoupon);
 
 router.get("/getCoupons", couponController.getAllCoupons);
 
+router.get("/getCouponsByAdmin/:email", couponController.getCouponsByAdmin);
+
 router.get("/getCoupon/:id", couponController.getCouponById);
 
 router.patch("/updateCoupon/:id", couponController.updateCoupon);

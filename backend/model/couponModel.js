@@ -5,7 +5,12 @@ const couponSchema = new mongoose.Schema(
     hotel:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"hotels",
-        required:true
+        required:false
+    },
+    adminEmail:{
+        type:String,
+        required:false,
+        trim:true
     },
 
     couponCode:{

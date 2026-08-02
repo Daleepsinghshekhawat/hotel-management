@@ -97,7 +97,16 @@ exports.createBooking = async (req, res) => {
 
     // Apply coupon if provided
     if (couponCode) {
-      const coupon = await Coupon.findOne({ couponCode: couponCode.toUpperCase(), hotel: hotelId });
+      const coupon = await Coupon.findOne({
+        couponCode: couponCode.toUpperCase(),
+        $or: [
+          { hotel: hotelId },
+          { adminEmail: hotel.email },
+          { hotel: null, adminEmail: null },
+          { hotel: { $exists: false }, adminEmail: { $exists: false } }
+        ]
+      });
+
       if (!coupon) {
         return res.status(404).json({ success: false, message: "Invalid coupon code for this hotel" });
       }
@@ -341,7 +350,7 @@ exports.getBookingsByHotel = async (req, res) => {
 exports.getAllBookings = async (req, res) => {
   try {
     const bookings = await Booking.find()
-      .populate("hotel", "hotelName location")
+      .populate("hotel", "hotelName location image")
       .populate("room", "roomName roomType images")
       .sort({ createdAt: -1 });
     return res.status(200).json({ success: true, result: bookings });

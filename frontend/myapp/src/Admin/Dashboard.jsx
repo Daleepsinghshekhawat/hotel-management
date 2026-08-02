@@ -90,6 +90,17 @@ export default function Dashboard() {
         let confirmed = 0;
         let pending = 0;
         let cancelled = 0;
+        let currentlyOccupiedRooms = 0;
+        let todayBookings = 0;
+        let todayCheckins = 0;
+        let todayCheckouts = 0;
+
+        const getLocalYYYYMMDD = (d) => {
+          const dt = new Date(d);
+          const offset = dt.getTimezoneOffset() * 60000;
+          return new Date(dt.getTime() - offset).toISOString().split('T')[0];
+        };
+        const todayStr = getLocalYYYYMMDD(new Date());
 
         let allBookings = [];
         const hotelMap = {};
@@ -113,7 +124,7 @@ export default function Dashboard() {
               hotelMap[hotel._id] = { 
                 id: hotel._id,
                 name: hotel.hotelName, 
-                image: hotel.images?.[0] || "",
+                image: hotel.image || "",
                 revenue: 0, 
                 bookings: 0 
               };
@@ -137,11 +148,30 @@ export default function Dashboard() {
                 // Time Series Data
                 const d = new Date(b.createdAt);
                 
+                // Today's specific metrics
+                if (b.createdAt && getLocalYYYYMMDD(b.createdAt) === todayStr) todayBookings++;
+                if (b.checkInDate && getLocalYYYYMMDD(b.checkInDate) === todayStr) todayCheckins++;
+                if (b.checkOutDate && getLocalYYYYMMDD(b.checkOutDate) === todayStr) todayCheckouts++;
+
                 // Daily (Current Month)
                 const dayKey = d.toLocaleString('default', { day: '2-digit', month: 'short' });
                 if (!dailyMap[dayKey]) dailyMap[dayKey] = { name: dayKey, Bookings: 0, Revenue: 0 };
                 dailyMap[dayKey].Bookings += 1;
                 dailyMap[dayKey].Revenue += amt;
+
+                // Currently Occupied Rooms
+                if (b.checkInDate && b.checkOutDate) {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const inDate = new Date(b.checkInDate);
+                  inDate.setHours(0, 0, 0, 0);
+                  const outDate = new Date(b.checkOutDate);
+                  outDate.setHours(0, 0, 0, 0);
+
+                  if (today >= inDate && today <= outDate) {
+                    currentlyOccupiedRooms += (b.rooms || 1);
+                  }
+                }
 
                 // Monthly
                 const monthKey = d.toLocaleString('default', { month: 'short' });
@@ -195,11 +225,13 @@ export default function Dashboard() {
           totalBookings: bookingsCount,
           totalRevenue: revenueSum,
           pendingPayments: pendingPay,
-          roomsAvailable: roomsCount > confirmed ? roomsCount - confirmed : Math.floor(roomsCount * 0.4), // simulated if no real data
-          roomsBooked: confirmed, // simulated logic
           bookingsConfirmed: confirmed,
           bookingsPending: pending,
           bookingsCancelled: cancelled,
+          currentlyOccupiedRooms: currentlyOccupiedRooms,
+          todayBookings,
+          todayCheckins,
+          todayCheckouts,
         });
 
       } catch (err) {
@@ -219,11 +251,14 @@ export default function Dashboard() {
   ];
 
   const pieDataRooms = [
-    { name: 'Available', value: stats.roomsAvailable },
-    { name: 'Booked', value: stats.roomsBooked },
-    { name: 'Maintenance', value: Math.floor(stats.totalRooms * 0.1) },
-    { name: 'Out of Order', value: Math.floor(stats.totalRooms * 0.05) },
+    { name: 'Available', value: Math.max(0, stats.totalRooms - (stats.currentlyOccupiedRooms || 0)) },
+    { name: 'Booked', value: stats.currentlyOccupiedRooms || 0 },
   ];
+
+  // Dynamic Date Range
+  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", padding: "10px 20px", background: colors.bg, minHeight: "100vh" }}>
@@ -232,15 +267,15 @@ export default function Dashboard() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px" }}>
         <div>
           <h2 style={{ margin: "0 0 4px", fontSize: "28px", fontWeight: 700, color: colors.textMain }}>
-            Welcome back, {user.name || "Admin"}
+            Admin Overview
           </h2>
           <p style={{ margin: 0, color: colors.textMuted, fontSize: "14px" }}>
-            Here's what's happening with your hotel business today.
+            Welcome back, {user.name || "Admin"}! Here's what's happening with your business today.
           </p>
         </div>
         <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
           <div style={{ background: colors.cardBg, padding: "10px 16px", borderRadius: "8px", border: `1px solid ${colors.border}`, fontSize: "14px", fontWeight: 600, color: colors.textMain }}>
-            01 May 2025 - 30 May 2025 📅
+            {startOfMonth} - {endOfMonth} 📅
           </div>
         </div>
       </div>
@@ -251,12 +286,16 @@ export default function Dashboard() {
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
           
           {/* ROW 1: KPI CARDS */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "16px" }}>
-            <KpiCard title="Total Bookings" value={stats.totalBookings.toLocaleString()} trend="↑ 18.5%" icon={<Calendar />} iconBg="#e0e7ff" iconColor="#4f46e5" colors={colors} />
-            <KpiCard title="Total Hotels" value={stats.totalHotels} trend="↑ 2" icon={<Building2 />} iconBg="#dcfce7" iconColor="#10b981" colors={colors} />
-            <KpiCard title="Total Rooms" value={stats.totalRooms} trend="↑ 6" icon={<BedDouble />} iconBg="#fef3c7" iconColor="#f59e0b" colors={colors} />
-            <KpiCard title="Total Customers" value={stats.totalUsers.toLocaleString()} trend="↑ 22.8%" icon={<Users />} iconBg="#f3e8ff" iconColor="#9333ea" colors={colors} />
-            <KpiCard title="Total Revenue" value={`₹${stats.totalRevenue.toLocaleString()}`} trend="↑ 25.6%" icon={<IndianRupee />} iconBg="#ccfbf1" iconColor="#14b8a6" colors={colors} />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "16px" }}>
+            <KpiCard title="Total Bookings" value={stats.totalBookings.toLocaleString()} trend={`${stats.bookingsConfirmed} Confirmed`} icon={<Calendar />} iconBg="#e0e7ff" iconColor="#4f46e5" colors={colors} />
+            <KpiCard title="Today's Bookings" value={stats.todayBookings} trend="New Today" icon={<Calendar />} iconBg="#e0e7ff" iconColor="#4f46e5" colors={colors} />
+            <KpiCard title="Today's Check-ins" value={stats.todayCheckins} trend="Arriving Today" icon={<Users />} iconBg="#f3e8ff" iconColor="#9333ea" colors={colors} />
+            <KpiCard title="Today's Check-outs" value={stats.todayCheckouts} trend="Leaving Today" icon={<Building2 />} iconBg="#fef3c7" iconColor="#f59e0b" colors={colors} />
+            
+            <KpiCard title="Total Hotels" value={stats.totalHotels} trend="Active" icon={<Building2 />} iconBg="#dcfce7" iconColor="#10b981" colors={colors} />
+            <KpiCard title="Total Rooms" value={stats.totalRooms} trend={`${Math.max(0, stats.totalRooms - (stats.currentlyOccupiedRooms || 0))} Available`} icon={<BedDouble />} iconBg="#fef3c7" iconColor="#f59e0b" colors={colors} />
+            <KpiCard title="Total Customers" value={stats.totalUsers.toLocaleString()} trend="Registered" icon={<Users />} iconBg="#f3e8ff" iconColor="#9333ea" colors={colors} />
+            <KpiCard title="Total Revenue" value={`₹${stats.totalRevenue.toLocaleString()}`} trend="Earned" icon={<IndianRupee />} iconBg="#ccfbf1" iconColor="#14b8a6" colors={colors} />
             <KpiCard title="Pending Payments" value={`₹${stats.pendingPayments.toLocaleString()}`} trend={`${stats.bookingsPending} Pending`} icon={<Wallet />} iconBg="#fee2e2" iconColor="#ef4444" colors={colors} />
           </div>
 
@@ -348,7 +387,7 @@ export default function Dashboard() {
                       <td style={{ padding: "14px 0", color: "#4f46e5", fontWeight: 600 }}>#{b._id.slice(-6).toUpperCase()}</td>
                       <td style={{ padding: "14px 0" }}>{b.name}</td>
                       <td style={{ padding: "14px 0" }}>{b.hotelName}</td>
-                      <td style={{ padding: "14px 0" }}>{new Date(b.checkInDate).toLocaleDateString()}</td>
+                      <td style={{ padding: "14px 0" }}>{b.checkInDate ? new Date(b.checkInDate).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'}) : "N/A"}</td>
                       <td style={{ padding: "14px 0", fontWeight: 600 }}>₹{b.totalAmount}</td>
                       <td style={{ padding: "14px 0" }}>
                         <span style={statusBadge(b.status)}>{b.status}</span>
@@ -432,7 +471,7 @@ export default function Dashboard() {
                           <div style={{ fontSize: "11px", color: colors.textMuted }}>{b.hotelName}</div>
                         </div>
                       </div>
-                      <div style={{ color: colors.textMain, fontWeight: 500 }}>{new Date(b.checkInDate).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'})}</div>
+                      <div style={{ color: colors.textMain, fontWeight: 500 }}>{b.checkInDate ? new Date(b.checkInDate).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'}) : "N/A"}</div>
                       <div style={{ color: colors.textMuted }}>{b.rooms || 1} Rooms</div>
                       <Phone size={14} color="#94a3b8" style={{ cursor: "pointer" }} />
                     </div>

@@ -21,6 +21,7 @@ import AdminUsersAndOwners from "./Admin/AdminUsersAndOwners";
 import AddRoom from "./admin/AddRoom";
 import EditRoom from "./admin/EditRoom";
 import RoomDetails from "./admin/RoomDetails";
+import AdminCoupons from "./Admin/Coupons";
 
 
 
@@ -36,19 +37,14 @@ import HotelRequests from "./SuperAdmin/HotelRequests";
 import AdminRequests from "./SuperAdmin/AdminRequests";
 import AddHotelDirect from "./SuperAdmin/AddHotelDirect";
 import ApprovedHotels from "./SuperAdmin/ApprovedHotels";
-import UsersAndAdmins from "./SuperAdmin/UsersAndAdmins";
 import AdminRequestForm from "./AdminRequestForm";
-import AllUsers from "./SuperAdmin/AllUsers";
 import AllAdmins from "./SuperAdmin/AllAdmins";
 import AddAdmin from "./SuperAdmin/AddAdmin";
-import Bookings from "./SuperAdmin/Bookings";
 import EditHotel from"./SuperAdmin/EditHotel";
 import Setting from "./SuperAdmin/Settings";
 import Sidebar from "./SuperAdmin/Sidebar";
-import Employees from "./SuperAdmin/Employees";
 import Coupons from "./SuperAdmin/Coupons";
 import Reviews from "./SuperAdmin/Reviews";
-import Reports from "./SuperAdmin/Reports";
 
 
 
@@ -60,6 +56,7 @@ import HotelDashboard from "./hotel/HotelDashboard";
 import HotelActiveBooking from "./hotel/HotelActiveBookings";
 import HotelBookingHistory from "./hotel/HotelBookingHistory";
 import HotelSidebar from "./hotel/HotelSidebar";
+import HotelDetailFull from "./hotel/HotelDetailFull";
 
 
 
@@ -86,6 +83,7 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="add-hotel" element={<AddHotel />} />
           <Route path="hotels" element={<Hotels />} />
+          <Route path="hotel-detail/:id" element={<HotelDetailFull />} />
           <Route path="hotels/edit/:id" element={<EditHotel/>}/>
           <Route path="bookings" element={<HotelActiveBooking/>}/>
           <Route path="booking-history" element={<HotelBookingHistory/>}/>
@@ -95,12 +93,14 @@ function App() {
           <Route path="edit-room/:id" element={<EditRoom />} />
           <Route path="room/:id" element={<RoomDetails />} />
           <Route path="users-owners" element={<AdminUsersAndOwners />} />
+          <Route path="coupons" element={<AdminCoupons />} />
         </Route>
 
         <Route path="/hotel" element={<HotelLayout />}>
           <Route index element={<HotelDashboard />} />
           <Route path="add-hotel" element={<AddHotel />} />
           <Route path="hotels" element={<Hotels />} />
+          <Route path="hotel-detail/:id" element={<HotelDetailFull />} />
           <Route path="add-room" element={<AddRoom />} />
           <Route path="edit-room/:id" element={<EditRoom />} />
           <Route path="room/:id" element={<RoomDetails />} />
@@ -108,6 +108,7 @@ function App() {
           <Route path="bookings" element={<HotelActiveBooking />} />
           <Route path="booking-history" element={<HotelBookingHistory />} />
           <Route path="edit/:id" from element={<EditOneHotel/>}/>
+          <Route path="coupons" element={<AdminCoupons />} />
         </Route>
 
         {/* User routes — wrapped in UserLayout (navbar + footer) */}
@@ -136,17 +137,12 @@ function App() {
           <Route path="admins/requests" element={<AdminRequests />} />
           <Route path="approved" element={<ApprovedHotels/>}/>
           <Route path="add-hotel" element={<AddHotelDirect />} />
-          <Route path="users-admins" element={<UsersAndAdmins />} />
           <Route path="all-admins" element={<AllAdmins/>}/>
           <Route path="admins/add" element={<AddAdmin />} />
           <Route path="admins/requests" element={<AdminRequests />} />
           <Route path="admins/all" element={<AllAdmins />} />
-          <Route path="users" element = {<AllUsers/>}/>
-          <Route path="employees" element={<Employees />} />
           <Route path="coupons" element={<Coupons />} />
           <Route path="reviews" element={<Reviews />} />
-          <Route path="reports" element={<Reports />} />
-          <Route path="bookings" element={<Bookings />} />
           <Route path="hotels/edit/:id" element={<EditHotel/>}/>
           <Route path="sidebar" element={<Sidebar/>}/>
           <Route path="settings" element={<Setting/>}/>

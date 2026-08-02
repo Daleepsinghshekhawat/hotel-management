@@ -6,6 +6,7 @@ exports.createCoupon = async (req, res) => {
   try {
     const {
       hotel,
+      adminEmail,
       couponCode,
       discountType,
       discount,
@@ -16,21 +17,22 @@ exports.createCoupon = async (req, res) => {
     } = req.body;
 
     // Check required fields
-    if (!hotel || !couponCode || !discount || !expiryDate) {
+    if (!couponCode || !discount || !expiryDate) {
       return res.status(400).json({
         success: false,
         message: "Please fill all required fields.",
       });
     }
 
-    // Check hotel exists
-    const hotelExists = await Hotel.findById(hotel);
-
-    if (!hotelExists) {
-      return res.status(404).json({
-        success: false,
-        message: "Hotel not found.",
-      });
+    // Check hotel exists if provided
+    if (hotel) {
+      const hotelExists = await Hotel.findById(hotel);
+      if (!hotelExists) {
+        return res.status(404).json({
+          success: false,
+          message: "Hotel not found.",
+        });
+      }
     }
 
     // Check duplicate coupon code
@@ -47,7 +49,8 @@ exports.createCoupon = async (req, res) => {
 
   
     const coupon = await Coupon.create({
-      hotel,
+      hotel: hotel || null,
+      adminEmail: adminEmail || null,
       couponCode,
       discountType,
       discount,
@@ -76,6 +79,38 @@ exports.getAllCoupons = async (req, res) => {
   try {
     const coupons = await Coupon.find()
       .populate("hotel", "hotelname ownerName")
+      .sort({ createdAt: -1 });
+
+    return res.json({
+      success: true,
+      coupons,
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+
+exports.getCouponsByAdmin = async (req, res) => {
+  try {
+    const adminEmail = req.params.email;
+    
+    // First find all hotels associated with this admin
+    const adminHotels = await Hotel.find({ email: adminEmail });
+    const hotelIds = adminHotels.map(h => h._id);
+
+    const coupons = await Coupon.find({
+      $or: [
+        { hotel: { $in: hotelIds } },
+        { adminEmail: adminEmail }
+      ]
+    })
+      .populate("hotel", "hotelName ownerName")
       .sort({ createdAt: -1 });
 
     return res.json({

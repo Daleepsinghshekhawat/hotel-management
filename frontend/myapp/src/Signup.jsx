@@ -21,11 +21,39 @@ function Signup() {
   async function handleSubmit(e) {
     e.preventDefault();
 
-    const res = await axios.post(`${URL}/users/signup`, data);
-
-    alert(res.data.message);
-
-    navigate("/login");
+    try {
+      const res = await axios.post(`${URL}/users/signup`, data);
+      alert(res.data.message || "Signup successful!");
+      navigate("/login");
+    } catch (err) {
+      if (err.response && err.response.status === 409) {
+        // User exists, try logging them in automatically
+        try {
+          const loginRes = await axios.post(`${URL}/users/login`, {
+            email: data.email,
+            password: data.password
+          });
+          
+          alert("Account exists! Logging you in automatically.");
+          
+          localStorage.setItem("token", loginRes.data.token);
+          localStorage.setItem("user", JSON.stringify(loginRes.data.user));
+          
+          if (loginRes.data.user.role === "superadmin") navigate("/superadmin");
+          else if (loginRes.data.user.role === "admin") navigate("/adminpage");
+          else if (loginRes.data.user.role === "hotelOwner") navigate("/hotel");
+          else navigate("/user");
+          
+        } catch (loginErr) {
+          alert("This email is already registered, but the password provided is incorrect. Please go to the Login page.");
+        }
+      } else if (err.response && err.response.data && err.response.data.message) {
+        alert(err.response.data.message);
+      } else {
+        alert("An error occurred during signup.");
+      }
+      console.error("Signup error:", err);
+    }
   }
 
   const styles = {

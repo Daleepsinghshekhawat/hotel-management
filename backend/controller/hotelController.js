@@ -181,7 +181,7 @@ exports.getHotelsByStatus = async (req, res) => {
 exports.updateHotel = async (req, res) => {
   try {
     const { id } = req.params;
-    const { hotelName, ownerName, email, location, description } = req.body;
+    const { hotelName, ownerName, email, location, description, hotelType, amenities } = req.body;
 
     let hotel = await hotelModel.findById(id);
     if (!hotel) {
@@ -204,6 +204,8 @@ exports.updateHotel = async (req, res) => {
     hotel.location = location || hotel.location;
     hotel.description = description || hotel.description;
     hotel.image = imageUrl;
+    if (hotelType) hotel.hotelType = hotelType;
+    if (amenities) hotel.amenities = JSON.parse(amenities);
 
     await hotel.save();
 
@@ -216,6 +218,8 @@ exports.updateHotel = async (req, res) => {
         location: hotel.location,
         description: hotel.description,
         image: hotel.image,
+        hotelType: hotel.hotelType,
+        amenities: hotel.amenities
       });
     }
 

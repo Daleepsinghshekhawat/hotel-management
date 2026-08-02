@@ -25,6 +25,8 @@ exports.submitHotelRequest = async (req, res) => {
       location,
       description,
       submittedBy,
+      hotelType,
+      amenities
     } = req.body;
 
     if (
@@ -65,6 +67,8 @@ exports.submitHotelRequest = async (req, res) => {
       image: imageUrl,
       registrationId,
       submittedBy: submittedBy || email,
+      hotelType: hotelType || "Hotel",
+      amenities: amenities ? JSON.parse(amenities) : [],
     });
 
     await sendEmail({
@@ -206,6 +210,8 @@ exports.approveRequest = async (req, res) => {
         submittedBy: request.submittedBy,
         requestId: request._id,
         status: "active",
+        hotelType: request.hotelType || "Hotel",
+        amenities: request.amenities || [],
       });
     }
 
@@ -374,6 +380,8 @@ exports.addHotelDirect = async (req, res) => {
       email,
       location,
       description,
+      hotelType,
+      amenities
     } = req.body;
 
     if (!hotelName || !ownerName || !email || !location || !description) {
@@ -406,6 +414,8 @@ exports.addHotelDirect = async (req, res) => {
       registrationId,
       submittedBy: "superadmin",
       status: "approved",
+      hotelType: hotelType || "Hotel",
+      amenities: amenities ? JSON.parse(amenities) : [],
     });
 
     // 2. Create active hotel entry
@@ -420,6 +430,8 @@ exports.addHotelDirect = async (req, res) => {
       submittedBy: "superadmin",
       requestId: hotelRequestData._id,
       status: "active",
+      hotelType: hotelType || "Hotel",
+      amenities: amenities ? JSON.parse(amenities) : [],
     });
 
     // 3. Find or Create in hotelowners collection

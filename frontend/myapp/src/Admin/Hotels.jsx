@@ -28,29 +28,6 @@ export default function Hotels() {
   const [tab, setTab] = useState("all");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
-  const [viewingHotel, setViewingHotel] = useState(null);
-  const [viewingHotelRooms, setViewingHotelRooms] = useState([]);
-  const [fetchingRooms, setFetchingRooms] = useState(false);
-
-  useEffect(() => {
-    if (!viewingHotel) {
-      setViewingHotelRooms([]);
-      return;
-    }
-    const fetchRooms = async () => {
-      setFetchingRooms(true);
-      try {
-        const res = await axios.get(`${URL}/api/getRoomsByHotel/${viewingHotel._id}`);
-        setViewingHotelRooms(res.data.result || []);
-      } catch (err) {
-        console.log(err);
-        setViewingHotelRooms([]);
-      } finally {
-        setFetchingRooms(false);
-      }
-    };
-    fetchRooms();
-  }, [viewingHotel]);
 
   const fetchHotels = async () => {
     if (!user.email) return;
@@ -278,7 +255,10 @@ export default function Hotels() {
 
                   <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
                     <button
-                      onClick={() => setViewingHotel(item)}
+                      onClick={() => {
+                        const prefix = window.location.pathname.startsWith("/hotel") ? "/hotel" : "/adminpage";
+                        navigate(`${prefix}/hotel-detail/${item._id}`);
+                      }}
                       style={{
                         flex: 1,
                         padding: "9px 0",
@@ -381,141 +361,6 @@ export default function Hotels() {
         </div>
       )}
 
-      {viewingHotel && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.55)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-            padding: "20px",
-          }}
-          onClick={() => setViewingHotel(null)}
-        >
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: "20px",
-              width: "100%",
-              maxWidth: "560px",
-              maxHeight: "90vh",
-              overflowY: "auto",
-              padding: "24px",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 style={{ margin: "0 0 4px", fontSize: "22px", color: "#0f172a", fontWeight: 800 }}>{viewingHotel.hotelName}</h2>
-            <p style={{ margin: "0 0 16px", color: "#64748b", fontSize: "14px" }}>
-              📍 {formatLocation(viewingHotel.location)}
-            </p>
-            {viewingHotel.image && (
-              <img
-                src={viewingHotel.image}
-                alt={viewingHotel.hotelName}
-                style={{
-                  width: "100%",
-                  maxHeight: "220px",
-                  objectFit: "cover",
-                  borderRadius: "12px",
-                  marginBottom: "20px",
-                }}
-              />
-            )}
-            
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", marginBottom: "20px" }}>
-              <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-                <span style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase", fontWeight: 600 }}>Owner Name</span>
-                <strong style={{ fontSize: "14px", color: "#1e293b", display: "block", marginTop: "2px" }}>{viewingHotel.ownerName}</strong>
-              </div>
-              <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-                <span style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase", fontWeight: 600 }}>Contact Email</span>
-                <strong style={{ fontSize: "14px", color: "#1e293b", display: "block", marginTop: "2px", wordBreak: "break-all" }}>{viewingHotel.email}</strong>
-              </div>
-              <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-                <span style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase", fontWeight: 600 }}>Registration ID</span>
-                <strong style={{ fontSize: "14px", color: "#1e293b", display: "block", marginTop: "2px" }}>{viewingHotel.registrationId}</strong>
-              </div>
-              <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-                <span style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase", fontWeight: 600 }}>Verification Status</span>
-                <strong style={{ fontSize: "14px", color: "#1e293b", display: "block", marginTop: "2px", textTransform: "capitalize" }}>{viewingHotel.status}</strong>
-              </div>
-            </div>
-
-            <div style={{ marginBottom: "20px" }}>
-              <span style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase", fontWeight: 600, display: "block", marginBottom: "6px" }}>Description</span>
-              <p style={{ margin: 0, fontSize: "14px", color: "#334155", lineHeight: "1.6", background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-                {viewingHotel.description}
-              </p>
-            </div>
-
-            {viewingHotel.rejectionReason && (
-              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", padding: "12px 16px", color: "#dc2626", fontSize: "13px", marginBottom: "20px" }}>
-                <strong>Rejection Reason:</strong> {viewingHotel.rejectionReason}
-              </div>
-            )}
-
-            {/* Rooms list */}
-            <div style={{ marginTop: "20px", paddingTop: "20px", borderTop: "1px solid #e2e8f0" }}>
-              <h3 style={{ margin: "0 0 12px", fontSize: "16px", color: "#0f172a", fontWeight: 700 }}>
-                Rooms ({viewingHotelRooms.length})
-              </h3>
-              {fetchingRooms ? (
-                <div style={{ color: "#64748b", fontSize: "14px" }}>Loading rooms...</div>
-              ) : viewingHotelRooms.length === 0 ? (
-                <div style={{ color: "#64748b", fontSize: "14px" }}>No rooms added yet.</div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "250px", overflowY: "auto", paddingRight: "4px" }}>
-                  {viewingHotelRooms.map((room) => (
-                    <div 
-                      key={room._id} 
-                      style={{ 
-                        padding: "10px 14px", 
-                        background: "#f8fafc", 
-                        border: "1px solid #e2e8f0", 
-                        borderRadius: "10px",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center"
-                      }}
-                    >
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: "14px", color: "#1e293b" }}>
-                          Room {room.roomNumber} - {room.roomName}
-                        </div>
-                        <div style={{ fontSize: "12px", color: "#64748b", marginTop: "2px" }}>
-                          {room.roomType} · {room.bedType || "Standard"} Bed · {room.bookingStatus}
-                        </div>
-                      </div>
-                      <div style={{ fontWeight: 700, fontSize: "14px", color: "#2563eb" }}>
-                        ₹{room.price}/night
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <button
-              onClick={() => setViewingHotel(null)}
-              style={{
-                marginTop: "16px",
-                width: "100%",
-                padding: "11px",
-                border: "none",
-                borderRadius: "10px",
-                background: "#e2e8f0",
-                cursor: "pointer",
-                fontWeight: 700,
-              }}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

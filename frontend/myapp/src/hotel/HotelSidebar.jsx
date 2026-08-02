@@ -1,97 +1,168 @@
 import { NavLink, useNavigate } from "react-router-dom";
-
-const menuItems = [
-  { to: "/hotel", label: "📊 Dashboard", end: true },
-  { to: "/hotel/add-hotel", label: "➕ Add Hotel" },
-  { to: "/hotel/hotels", label: "🏨 My Hotels" },
-  { to: "/hotel/bookings", label: "🛎️ Active Bookings" },
-  { to: "/hotel/booking-history", label: "📋 Booking History" },
-];
+import { 
+  LayoutDashboard, 
+  Building2, 
+  BedDouble, 
+  CalendarCheck, 
+  ClipboardList, 
+  Tags,
+  LogOut,
+  UserCog
+} from "lucide-react";
 
 function HotelSidebar() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/login");
+    if (window.confirm("Are you sure you want to log out?")) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+    }
   };
+
+  const menuItems = [
+    { to: "/hotel", label: "Dashboard", icon: <LayoutDashboard size={20} />, end: true },
+    { to: "/hotel/add-hotel", label: "Add Hotel", icon: <Building2 size={20} /> },
+    { to: "/hotel/hotels", label: "My Hotels", icon: <BedDouble size={20} /> },
+    { to: "/hotel/bookings", label: "Active Bookings", icon: <CalendarCheck size={20} /> },
+    { to: "/hotel/booking-history", label: "Booking History", icon: <ClipboardList size={20} /> },
+    { to: "/hotel/coupons", label: "Offers & Coupons", icon: <Tags size={20} /> },
+  ];
 
   return (
     <div
       style={{
-        width: "240px",
-        minHeight: "100vh",
+        width: "260px",
+        height: "100vh",
         background: "#0f172a",
         color: "#f8fafc",
-        padding: "24px 18px",
-        boxShadow: "2px 0 10px rgba(0,0,0,0.16)",
+        padding: "24px 16px",
         display: "flex",
         flexDirection: "column",
+        justifyContent: "space-between",
+        boxSizing: "border-box",
+        position: "sticky",
+        top: 0,
       }}
     >
-      <h2 style={{ margin: "0 0 4px", fontSize: "22px" }}>Hotel Panel</h2>
-      <p
-        style={{
-          margin: "0 0 8px",
-          color: "#94a3b8",
-          fontSize: "12px",
-          textTransform: "uppercase",
-          letterSpacing: "1px",
-        }}
-      >
-        Owner Workspace
-      </p>
-      <p
-        style={{
-          margin: "0 0 24px",
-          color: "#cbd5e1",
-          fontSize: "13px",
-          wordBreak: "break-word",
-          fontWeight: 500,
-        }}
-      >
-        👤 {user.name || "Owner"} ({user.role})
-      </p>
+      <div style={{ overflowY: "auto", flex: 1, paddingRight: "4px" }}>
+        {/* Brand Header */}
+        <div style={{ padding: "10px", marginBottom: "30px", display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{
+            width: "32px",
+            height: "32px",
+            background: "linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%)",
+            borderRadius: "8px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 4px 10px rgba(255, 255, 255, 0.2)"
+          }}>
+            <UserCog size={20} color="#0f172a" />
+          </div>
+          <span style={{
+            fontSize: "20px",
+            fontWeight: 800,
+            background: "linear-gradient(to right, #ffffff, #94a3b8)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            letterSpacing: "1px",
+            textTransform: "uppercase"
+          }}>
+            Hotel Owner
+          </span>
+        </div>
 
-      <div style={{ flex: 1 }}>
+        {/* Links */}
         {menuItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             end={item.end}
             style={({ isActive }) => ({
-              display: "block",
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
               textDecoration: "none",
-              padding: "10px 12px",
-              marginBottom: "8px",
-              borderRadius: "8px",
-              color: isActive ? "#ffffff" : "#cbd5e1",
-              background: isActive ? "#2563eb" : "transparent",
+              padding: "12px 20px",
+              marginBottom: "4px",
+              borderRadius: "10px",
+              color: isActive ? "#0f172a" : "#94a3b8",
+              background: isActive ? "#ffffff" : "transparent",
               fontWeight: isActive ? 600 : 500,
+              fontSize: "14px",
+              transition: "all 0.2s ease",
             })}
           >
-            {item.label}
+            {item.icon}
+            <span>{item.label}</span>
           </NavLink>
         ))}
+        
+        {/* Logout */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", margin: "20px 0 10px 0", paddingTop: "10px" }}>
+          <button
+            onClick={handleLogout}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              width: "100%",
+              padding: "12px 20px",
+              borderRadius: "10px",
+              border: "none",
+              background: "transparent",
+              color: "#94a3b8",
+              cursor: "pointer",
+              fontWeight: 500,
+              fontSize: "14px",
+              marginTop: "4px",
+              transition: "all 0.2s",
+              textAlign: "left",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+              e.currentTarget.style.color = "#ef4444";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.color = "#94a3b8";
+            }}
+          >
+            <LogOut size={20} />
+            <span>Logout</span>
+          </button>
+        </div>
       </div>
 
-      <button
-        onClick={handleLogout}
-        style={{
-          marginTop: "24px",
-          padding: "10px 12px",
-          borderRadius: "8px",
-          border: "1px solid #475569",
-          background: "transparent",
-          color: "#fca5a5",
-          cursor: "pointer",
-          fontWeight: 600,
-        }}
-      >
-        Logout
-      </button>
+      {/* User Profile Footer */}
+      <div style={{
+        marginTop: "20px",
+        padding: "16px 10px",
+        display: "flex",
+        alignItems: "center",
+        gap: "12px",
+        borderTop: "1px solid rgba(255,255,255,0.1)"
+      }}>
+        <div style={{
+          width: "40px",
+          height: "40px",
+          borderRadius: "50%",
+          background: "#ffffff",
+          overflow: "hidden",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center"
+        }}>
+           <img src={`https://ui-avatars.com/api/?name=${user.name || "Owner"}&background=ffffff&color=0f172a`} alt="Owner" style={{width: "100%", height: "100%"}} />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <span style={{ fontSize: "14px", fontWeight: 600, color: "#ffffff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{user.name || "Owner"}</span>
+          <span style={{ fontSize: "12px", color: "#94a3b8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{user.email || "owner@hotel.com"}</span>
+        </div>
+      </div>
     </div>
   );
 }

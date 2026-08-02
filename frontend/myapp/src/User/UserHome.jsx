@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { Search, MapPin, Star, Waves, Dumbbell, Sparkles, Utensils, ParkingCircle, Wifi, Wind, Dog, ChevronRight } from "lucide-react";
 import URL from "../api";
-import bannerImage from "../assets/banner.jpg";
+
+// Use a high-quality Unsplash image for the hero banner instead of the local asset
+const bannerImage = "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1600";
+
 export default function UserHome() {
   const navigate = useNavigate();
   const [hotels, setHotels] = useState([]);
@@ -15,7 +19,6 @@ export default function UserHome() {
       .catch(() => setHotels([]))
       .finally(() => setLoading(false));
   }, []);
-  
 
   const featured = hotels.slice(0, 6);
 
@@ -27,210 +30,185 @@ export default function UserHome() {
     }
   };
 
+  const facilities = [
+    { icon: <Waves size={24} strokeWidth={1.5} />, label: "Pool", key: "swimmingPool" },
+    { icon: <Dumbbell size={24} strokeWidth={1.5} />, label: "Gym", key: "gym" },
+    { icon: <Sparkles size={24} strokeWidth={1.5} />, label: "Spa", key: "spa" },
+    { icon: <Utensils size={24} strokeWidth={1.5} />, label: "Dining", key: "restaurant" },
+    { icon: <ParkingCircle size={24} strokeWidth={1.5} />, label: "Parking", key: "parking" },
+    { icon: <Wifi size={24} strokeWidth={1.5} />, label: "WiFi", key: "wifi" },
+    { icon: <Wind size={24} strokeWidth={1.5} />, label: "AC", key: "ac" },
+    { icon: <Dog size={24} strokeWidth={1.5} />, label: "Pets", key: "pets" },
+  ];
+
   return (
-    <div>
+    <div style={{ fontFamily: "'Inter', sans-serif" }}>
       {/* Hero Section */}
       <div style={{
-        // minHeight: "88vh",
-        // //  background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4f46e5 100%)",
-
-        // display: "flex", flexDirection: "column", alignItems: "center",
-        // justifyContent: "center", padding: "80px 5% 60px",
-        // position: "relative", overflow: "hidden"
-
-
-
-        minHeight: "88vh",
+        minHeight: "90vh",
+        position: "relative",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        // padding: "80px 5% 60px",
-        position: "relative",
-        overflow: "hidden",
-
-        backgroundImage: `
-linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.25)),
-url(${bannerImage})
-`,
+        backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%), url('${bannerImage}')`,
         backgroundSize: "cover",
         backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
       }}>
-        {/* Decorative blobs */}
-        <div style={{
-          position: "absolute", width: "600px", height: "600px", borderRadius: "50%",
-          background: "rgba(139,92,246,0.15)", top: "-200px", right: "-200px",
-          filter: "blur(80px)"
-        }} />
-        <div style={{
-          position: "absolute", width: "400px", height: "400px", borderRadius: "50%",
-          background: "rgba(99,102,241,0.2)", bottom: "-100px", left: "-100px",
-          filter: "blur(60px)"
-        }} />
-
-        <div style={{ position: "relative", textAlign: "center", maxWidth: "750px" }}>
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: "8px",
-            background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)",
-            borderRadius: "100px", padding: "8px 18px", marginBottom: "24px",
-            backdropFilter: "blur(10px)"
+        <div style={{ textAlign: "center", zIndex: 1, padding: "0 20px" }}>
+          <h1 style={{ 
+            fontSize: "clamp(42px, 6vw, 72px)", 
+            fontWeight: 800, 
+            color: "#fff", 
+            margin: "0 0 16px", 
+            letterSpacing: "-1.5px",
+            lineHeight: 1.1
           }}>
-            <span style={{ fontSize: "16px" }}>✨</span>
-            <span style={{ color: "#c7d2fe", fontSize: "13px", fontWeight: 600 }}>
-              Discover & Book Premium Hotels
-            </span>
-          </div>
-
-          <h1 style={{
-            fontSize: "clamp(36px, 6vw, 72px)", fontWeight: 800, color: "#fff",
-            margin: "0 0 20px", lineHeight: 1.1, letterSpacing: "-2px"
-          }}>
-            Find Your Perfect
-            <span style={{
-              display: "block",
-              background: "linear-gradient(135deg, #a5b4fc, #f0abfc)",
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
-            }}>
-              Stay Tonight
-            </span>
+            Find your next stay
           </h1>
-
-          <p style={{
-            fontSize: "clamp(15px, 2vw, 18px)", color: "#c7d2fe",
-            margin: "0 0 48px", lineHeight: 1.7, maxWidth: "550px", margin: "0 auto 48px"
+          <p style={{ 
+            fontSize: "clamp(16px, 2vw, 20px)", 
+            color: "#f8fafc", 
+            margin: "0 0 48px", 
+            fontWeight: 400 
           }}>
-            Browse thousands of hotels, filter by location, amenities, and price. Book instantly with our seamless experience.
+            Search low prices on hotels, homes and much more...
           </p>
+        </div>
 
-          {/* Search Bar */}
-          <div style={{
-            display: "flex", background: "#fff", borderRadius: "16px",
-            padding: "8px 8px 8px 20px", boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
-            gap: "10px", maxWidth: "600px", margin: "0 auto 48px"
-          }}>
-            <span style={{ display: "flex", alignItems: "center", fontSize: "20px" }}>🔍</span>
+        {/* Floating Search Bar */}
+        <div style={{
+          position: "absolute",
+          bottom: "-32px",
+          width: "90%",
+          maxWidth: "860px",
+          background: "#fff",
+          borderRadius: "100px",
+          padding: "10px",
+          display: "flex",
+          alignItems: "center",
+          boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
+          border: "1px solid #e2e8f0"
+        }}>
+          <div style={{ flex: 1, display: "flex", alignItems: "center", padding: "0 24px" }}>
+            <MapPin size={24} color="#64748b" style={{ flexShrink: 0 }} />
             <input
               type="text"
-              placeholder="Search by hotel name, city, or location..."
+              placeholder="Where are you going?"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               onKeyDown={e => e.key === "Enter" && handleSearch()}
               style={{
-                flex: 1, border: "none", outline: "none",
-                fontSize: "15px", color: "#1e293b", background: "transparent"
+                width: "100%",
+                border: "none",
+                outline: "none",
+                fontSize: "16px",
+                fontWeight: 500,
+                color: "#0f172a",
+                padding: "16px",
+                background: "transparent"
               }}
             />
-            <button
-              onClick={handleSearch}
-              style={{
-                padding: "14px 28px", borderRadius: "12px", border: "none",
-                background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-                color: "#fff", fontWeight: 700, fontSize: "15px",
-                cursor: "pointer", whiteSpace: "nowrap",
-                boxShadow: "0 4px 15px rgba(99,102,241,0.4)",
-                transition: "transform 0.2s"
-              }}
-            >
-              Search
-            </button>
           </div>
-
-          {/* Stats */}
-          <div style={{ display: "flex", justifyContent: "center", gap: "48px", flexWrap: "wrap" }}>
-            {[
-              { label: "Hotels", value: `${hotels.length}+` },
-              { label: "Cities", value: "50+" },
-              { label: "Happy Guests", value: "10K+" },
-            ].map(stat => (
-              <div key={stat.label} style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "28px", fontWeight: 800, color: "#fff" }}>{stat.value}</div>
-                <div style={{ fontSize: "13px", color: "#c7d2fe", fontWeight: 500 }}>{stat.label}</div>
-              </div>
-            ))}
-          </div>
+          <button
+            onClick={handleSearch}
+            style={{
+              padding: "16px 40px",
+              borderRadius: "100px",
+              border: "none",
+              background: "#2563eb",
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: "16px",
+              cursor: "pointer",
+              transition: "background 0.2s"
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = "#1d4ed8"}
+            onMouseLeave={e => e.currentTarget.style.background = "#2563eb"}
+          >
+            Search
+          </button>
         </div>
       </div>
 
-      {/* Amenity Filter Pills */}
-      <div style={{ padding: "48px 5% 0", background: "#fff" }}>
-        <h2 style={{ textAlign: "center", fontSize: "28px", fontWeight: 800, color: "#1e293b", margin: "0 0 8px" }}>
-          Browse by Facilities
-        </h2>
-        <p style={{ textAlign: "center", color: "#64748b", margin: "0 0 32px", fontSize: "15px" }}>
-          Filter hotels by what matters most to you
-        </p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "center" }}>
-          {[
-            { icon: "🏊", label: "Swimming Pool", key: "swimmingPool" },
-            { icon: "💪", label: "Gym", key: "gym" },
-            { icon: "🧖", label: "Spa", key: "spa" },
-            { icon: "🍽️", label: "Restaurant", key: "restaurant" },
-            { icon: "🅿️", label: "Parking", key: "parking" },
-            { icon: "📶", label: "Free WiFi", key: "wifi" },
-            { icon: "❄️", label: "AC Rooms", key: "ac" },
-            { icon: "🐾", label: "Pet Friendly", key: "pets" },
-          ].map(fac => (
-            <button
+      {/* Facilities Categories */}
+      <div style={{ maxWidth: "1400px", margin: "100px auto 60px", padding: "0 5%" }}>
+        <h2 style={{ fontSize: "24px", fontWeight: 700, color: "#0f172a", margin: "0 0 32px" }}>Browse by property type</h2>
+        <div style={{ 
+          display: "grid", 
+          gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", 
+          gap: "16px" 
+        }}>
+          {facilities.map((fac) => (
+            <div 
               key={fac.key}
               onClick={() => navigate(`/user/hotels?facility=${fac.key}`)}
               style={{
-                display: "flex", alignItems: "center", gap: "8px",
-                padding: "12px 20px", borderRadius: "100px",
-                border: "2px solid #e2e8f0", background: "#f8faff",
-                color: "#475569", fontWeight: 600, fontSize: "14px",
-                cursor: "pointer", transition: "all 0.2s"
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "12px",
+                padding: "24px 16px",
+                borderRadius: "16px",
+                background: "#fff",
+                border: "1px solid #e2e8f0",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                boxShadow: "0 2px 10px rgba(0,0,0,0.02)"
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.borderColor = "#6366f1";
-                e.currentTarget.style.color = "#6366f1";
-                e.currentTarget.style.background = "#eef2ff";
+                e.currentTarget.style.borderColor = "#2563eb";
+                e.currentTarget.style.boxShadow = "0 8px 20px rgba(37,99,235,0.1)";
+                e.currentTarget.style.transform = "translateY(-4px)";
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.borderColor = "#e2e8f0";
-                e.currentTarget.style.color = "#475569";
-                e.currentTarget.style.background = "#f8faff";
+                e.currentTarget.style.boxShadow = "0 2px 10px rgba(0,0,0,0.02)";
+                e.currentTarget.style.transform = "translateY(0)";
               }}
             >
-              <span style={{ fontSize: "18px" }}>{fac.icon}</span>
-              {fac.label}
-            </button>
+              <div style={{ color: "#475569" }}>{fac.icon}</div>
+              <span style={{ fontSize: "14px", fontWeight: 600, color: "#0f172a" }}>{fac.label}</span>
+            </div>
           ))}
         </div>
       </div>
 
       {/* Featured Hotels */}
-      <div style={{ padding: "60px 5%" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px", flexWrap: "wrap", gap: "12px" }}>
+      <div style={{ maxWidth: "1400px", margin: "0 auto 80px", padding: "0 5%" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "32px" }}>
           <div>
-            <h2 style={{ fontSize: "28px", fontWeight: 800, color: "#1e293b", margin: "0 0 6px" }}>Featured Hotels</h2>
-            <p style={{ color: "#64748b", margin: 0, fontSize: "15px" }}>Top-rated stays curated for you</p>
+            <h2 style={{ fontSize: "28px", fontWeight: 700, color: "#0f172a", margin: "0 0 8px" }}>Trending destinations</h2>
+            <p style={{ color: "#64748b", margin: 0, fontSize: "16px" }}>Most popular choices for travelers from India</p>
           </div>
           <button
             onClick={() => navigate("/user/hotels")}
             style={{
-              padding: "11px 24px", borderRadius: "10px", border: "2px solid #6366f1",
-              background: "transparent", color: "#6366f1", fontWeight: 700,
-              fontSize: "14px", cursor: "pointer"
+              display: "flex", alignItems: "center", gap: "6px",
+              padding: "10px 20px", borderRadius: "100px", border: "1px solid #cbd5e1",
+              background: "#fff", color: "#0f172a", fontWeight: 600,
+              fontSize: "14px", cursor: "pointer", transition: "all 0.2s"
             }}
+            onMouseEnter={e => e.currentTarget.style.background = "#f1f5f9"}
+            onMouseLeave={e => e.currentTarget.style.background = "#fff"}
           >
-            View All Hotels →
+            Explore All <ChevronRight size={16} />
           </button>
         </div>
 
         {loading ? (
-          <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
-            {[1, 2, 3].map(i => (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "24px" }}>
+            {[1, 2, 3, 4].map(i => (
               <div key={i} style={{
-                flex: "1 1 300px", height: "360px", borderRadius: "20px",
+                height: "360px", borderRadius: "16px",
                 background: "linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%)",
                 backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite"
               }} />
             ))}
           </div>
         ) : featured.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8", fontSize: "16px" }}>
-            No hotels available yet. Check back soon!
+          <div style={{ textAlign: "center", padding: "60px", color: "#64748b", fontSize: "16px" }}>
+            No hotels available right now.
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "24px" }}>
@@ -239,38 +217,6 @@ url(${bannerImage})
             ))}
           </div>
         )}
-      </div>
-
-      {/* CTA Section */}
-      <div style={{
-        margin: "0 5% 80px",
-        background: "linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)",
-        borderRadius: "24px", padding: "60px 48px",
-        textAlign: "center", position: "relative", overflow: "hidden"
-      }}>
-        <div style={{
-          position: "absolute", width: "300px", height: "300px", borderRadius: "50%",
-          background: "rgba(255,255,255,0.08)", top: "-100px", right: "-50px"
-        }} />
-        <h2 style={{ fontSize: "36px", fontWeight: 800, color: "#fff", margin: "0 0 16px" }}>
-          Ready to Explore?
-        </h2>
-        <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "17px", margin: "0 0 32px" }}>
-          Browse all our hotels and find your perfect stay with filters for location, price, and amenities.
-        </p>
-        <button
-          onClick={() => navigate("/user/hotels")}
-          style={{
-            padding: "16px 40px", borderRadius: "14px", border: "none",
-            background: "#fff", color: "#6366f1", fontWeight: 800,
-            fontSize: "16px", cursor: "pointer", boxShadow: "0 8px 30px rgba(0,0,0,0.2)",
-            transition: "transform 0.2s"
-          }}
-          onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
-          onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
-        >
-          Browse All Hotels 🏨
-        </button>
       </div>
 
       <style>{`
@@ -291,67 +237,40 @@ function HotelCard({ hotel, navigate }) {
 
   return (
     <div
-      style={{
-        borderRadius: "20px", overflow: "hidden", background: "#fff",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.07)", transition: "all 0.3s",
-        cursor: "pointer"
-      }}
+      style={{ cursor: "pointer", display: "flex", flexDirection: "column", gap: "12px" }}
+      onClick={() => navigate(`/user/hotel/${hotel._id}`)}
       onMouseEnter={e => {
-        e.currentTarget.style.transform = "translateY(-6px)";
-        e.currentTarget.style.boxShadow = "0 16px 40px rgba(0,0,0,0.12)";
+        const img = e.currentTarget.querySelector('img');
+        if (img) img.style.transform = "scale(1.05)";
       }}
       onMouseLeave={e => {
-        e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.07)";
+        const img = e.currentTarget.querySelector('img');
+        if (img) img.style.transform = "scale(1)";
       }}
-      onClick={() => navigate(`/user/hotel/${hotel._id}`)}
     >
-      <div style={{ position: "relative", height: "200px", overflow: "hidden" }}>
+      <div style={{ position: "relative", aspectRatio: "4/3", borderRadius: "16px", overflow: "hidden" }}>
         <img
           src={hotel.image || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400"}
           alt={hotel.hotelName}
-          style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.4s" }}
-          onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
-          onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+          style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease" }}
         />
-        <div style={{
-          position: "absolute", top: "12px", right: "12px",
-          background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-          color: "#fff", padding: "5px 12px", borderRadius: "100px",
-          fontSize: "12px", fontWeight: 700
-        }}>
-          ✅ Active
+        <div style={{ position: "absolute", top: "12px", right: "12px", background: "rgba(255,255,255,0.9)", backdropFilter: "blur(4px)", padding: "4px 8px", borderRadius: "8px", display: "flex", alignItems: "center", gap: "4px", fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>
+          <Star size={14} fill="#eab308" color="#eab308" /> 4.8
         </div>
       </div>
 
-      <div style={{ padding: "20px" }}>
-        <h3 style={{ margin: "0 0 6px", fontSize: "17px", fontWeight: 700, color: "#1e293b" }}>
-          {hotel.hotelName}
-        </h3>
-        <p style={{ margin: "0 0 12px", color: "#64748b", fontSize: "13px", display: "flex", alignItems: "center", gap: "4px" }}>
-          📍 {city}
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "4px" }}>
+          <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", paddingRight: "10px" }}>
+            {hotel.hotelName}
+          </h3>
+        </div>
+        <p style={{ margin: "0 0 8px", color: "#64748b", fontSize: "14px", display: "flex", alignItems: "center", gap: "4px" }}>
+          {city}
         </p>
-        <p style={{
-          margin: "0 0 16px", color: "#94a3b8", fontSize: "13px",
-          display: "-webkit-box", WebkitLineClamp: 2,
-          WebkitBoxOrient: "vertical", overflow: "hidden"
-        }}>
-          {hotel.description}
+        <p style={{ margin: 0, fontSize: "15px", color: "#0f172a" }}>
+          <span style={{ fontWeight: 700 }}>Available Tonight</span>
         </p>
-
-        <button
-          onClick={e => { e.stopPropagation(); navigate(`/user/hotel/${hotel._id}`); }}
-          style={{
-            width: "100%", padding: "12px", borderRadius: "12px", border: "none",
-            background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-            color: "#fff", fontWeight: 700, fontSize: "14px",
-            cursor: "pointer", transition: "opacity 0.2s"
-          }}
-          onMouseEnter={e => e.currentTarget.style.opacity = "0.9"}
-          onMouseLeave={e => e.currentTarget.style.opacity = "1"}
-        >
-          View Rooms & Book Now
-        </button>
       </div>
     </div>
   );
