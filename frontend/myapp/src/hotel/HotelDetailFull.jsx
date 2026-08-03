@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Search, Filter, MapPin, Building, ArrowLeft, Mail, Info } from "lucide-react";
 import URL from "../api";
+import useDebounce from "../hooks/useDebounce";
 
 const formatLocation = (location) => {
   if (!location) return "N/A";
@@ -23,18 +24,19 @@ export default function HotelDetailFull() {
   
   // Filter/Search States
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
   const [statusFilter, setStatusFilter] = useState("All");
 
   useEffect(() => {
     fetchData();
-  }, [id]);
+  }, [id, debouncedSearch]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
       const [hotelRes, roomsRes] = await Promise.all([
         axios.get(`${URL}/api/getHotelById/${id}`),
-        axios.get(`${URL}/api/getRoomsByHotel/${id}`)
+        axios.get(`${URL}/api/getRoomsByHotel/${id}`, { params: { search: debouncedSearch } })
       ]);
       if (hotelRes.data.result) setHotel(hotelRes.data.result);
       if (roomsRes.data.success) setRooms(roomsRes.data.result || []);
@@ -68,10 +70,8 @@ export default function HotelDetailFull() {
   }
 
   const filteredRooms = rooms.filter(r => {
-    const matchesSearch = (r.roomName || "").toLowerCase().includes(search.toLowerCase()) || 
-                          (r.roomNumber || "").toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "All" || r.bookingStatus === statusFilter;
-    return matchesSearch && matchesStatus;
+    return matchesStatus;
   });
 
   return (

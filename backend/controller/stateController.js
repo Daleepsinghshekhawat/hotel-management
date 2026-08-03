@@ -17,8 +17,16 @@ exports.createState =async(req,res)=>{
 
 exports.getAllState = async(req,res)=>{
     try{
+      const { search } = req.query;
+      let query = { status: "active" };
+
+      if (search) {
+        query.$or = [
+          { Statename: { $regex: search, $options: "i" } }
+        ];
+      }
         
-      const result = await statemodel.find({ status: "active" });
+      const result = await statemodel.find(query);
       if(!result){
         return res.status(404).json({message:"state is not found "});
       }

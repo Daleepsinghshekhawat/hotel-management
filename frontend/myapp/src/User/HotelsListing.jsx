@@ -41,9 +41,18 @@ export default function HotelsListing() {
   const [priceRange, setPriceRange] = useState([0, 20000]);
   const [sortBy, setSortBy] = useState("default");
 
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   useEffect(() => {
     setLoading(true);
-    axios.get(`${URL}/api/getHotelsByStatus/active`)
+    axios.get(`${URL}/api/getHotelsByStatus/active`, { params: { search: debouncedSearch } })
       .then(async res => {
         const hotelList = res.data.result || [];
         setHotels(hotelList);
@@ -59,7 +68,7 @@ export default function HotelsListing() {
       })
       .catch(() => setHotels([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [debouncedSearch]);
 
   const toggleFacility = (key) => {
     setSelectedFacilities(prev =>
@@ -75,11 +84,6 @@ export default function HotelsListing() {
 
   const filtered = hotels.filter(hotel => {
     const hotelRooms = rooms[hotel._id] || [];
-    const loc = formatLocation(hotel.location).toLowerCase();
-    const name = (hotel.hotelName || "").toLowerCase();
-    const q = search.toLowerCase();
-
-    if (q && !name.includes(q) && !loc.includes(q) && !(hotel.ownerName || "").toLowerCase().includes(q)) return false;
 
     if (selectedFacilities.length > 0) {
       const hasAll = selectedFacilities.every(fac =>

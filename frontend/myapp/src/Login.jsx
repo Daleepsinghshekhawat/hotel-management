@@ -82,6 +82,7 @@ function Login() {
                 id="login-email"
                 type="email"
                 name="email"
+                autoComplete="email"
                 placeholder="you@example.com"
                 onChange={handleChange}
                 required
@@ -107,6 +108,7 @@ function Login() {
                 id="login-password"
                 type="password"
                 name="password"
+                autoComplete="current-password"
                 placeholder="Enter your password"
                 onChange={handleChange}
                 required

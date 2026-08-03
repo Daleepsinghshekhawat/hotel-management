@@ -12,8 +12,19 @@ const populateOptions = {
 
 exports.getAllHotels = async (req, res) => {
   try {
+    const { search } = req.query;
+    let filter = {};
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      filter.$or = [
+        { hotelName: searchRegex },
+        { ownerName: searchRegex },
+        { email: searchRegex }
+      ];
+    }
+
     const result = await hotelModel
-      .find()
+      .find(filter)
       .populate(populateOptions)
       .sort({ createdAt: -1 });
 
@@ -27,9 +38,20 @@ exports.getAllHotels = async (req, res) => {
 exports.getHotelsByAdmin = async (req, res) => {
   try {
     const { email } = req.params;
+    const { search } = req.query;
+    let filter = { submittedBy: email };
+
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      filter.$or = [
+        { hotelName: searchRegex },
+        { ownerName: searchRegex },
+        { email: searchRegex }
+      ];
+    }
 
     const result = await hotelModel
-      .find({ submittedBy: email })
+      .find(filter)
       .populate(populateOptions)
       .sort({ createdAt: -1 });
 
@@ -158,9 +180,29 @@ exports.getHotelById = async (req, res) => {
 exports.getHotelsByStatus = async (req, res) => {
   try {
     const { status } = req.params;
+    const { search } = req.query;
+
+    let filter = { status };
+
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      
+      const cityModel = require("../model/citymodel");
+      const matchedCities = await cityModel.find({ cityname: searchRegex }).select('_id');
+      const cityIds = matchedCities.map(c => c._id);
+
+      filter.$or = [
+        { hotelName: searchRegex },
+        { ownerName: searchRegex }
+      ];
+
+      if (cityIds.length > 0) {
+        filter.$or.push({ location: { $in: cityIds } });
+      }
+    }
 
     const result = await hotelModel
-      .find({ status })
+      .find(filter)
       .populate(populateOptions)
       .sort({ createdAt: -1 });
 

@@ -98,10 +98,7 @@ export default function UserLayout() {
               onMouseEnter={e => e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.05)"}
               onMouseLeave={e => e.currentTarget.style.boxShadow = "none"}
             >
-              <Menu size={18} />
-              <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#64748b", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
-                <User size={16} />
-              </div>
+              Login
             </button>
           </div>
         </div>

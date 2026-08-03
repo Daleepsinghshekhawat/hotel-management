@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import URL from "../api";
+import useDebounce from "../hooks/useDebounce";
 
 export default function AllAdmins() {
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
   const [actionLoading, setActionLoading] = useState(null);
 
   const fetchAdmins = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${URL}/api/getUsersByRole/admin`);
+      const res = await axios.get(`${URL}/api/getUsersByRole/admin`, { params: { search: debouncedSearch } });
       setAdmins(res.data.result || []);
     } catch (err) {
       console.error(err);
@@ -23,7 +25,7 @@ export default function AllAdmins() {
 
   useEffect(() => {
     fetchAdmins();
-  }, []);
+  }, [debouncedSearch]);
 
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Are you sure you want to permanently delete administrator account "${name}"?`)) return;
@@ -39,11 +41,7 @@ export default function AllAdmins() {
     }
   };
 
-  const filtered = admins.filter(
-    (a) =>
-      (a.name || "").toLowerCase().includes(search.toLowerCase()) ||
-      (a.email || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = admins;
 
   const formatDate = (dateString) => {
     return dateString

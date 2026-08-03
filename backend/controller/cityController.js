@@ -32,13 +32,22 @@ exports.createCity = async (req, res) => {
 exports.getAllCity = async (req, res) => {
     try {
         const { stateId } = req.params;
+        const { search } = req.query;
 
          console.log("State Id:", stateId);
 
-        const result = await cityModel.find({
+        let query = {
             state: stateId,
             status: "active"
-        });
+        };
+
+        if (search) {
+            query.$or = [
+                { cityname: { $regex: search, $options: "i" } }
+            ];
+        }
+
+        const result = await cityModel.find(query);
 
         res.status(200).json({ result });
 

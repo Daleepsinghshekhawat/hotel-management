@@ -77,7 +77,15 @@ exports.createCoupon = async (req, res) => {
 
 exports.getAllCoupons = async (req, res) => {
   try {
-    const coupons = await Coupon.find()
+    const { search } = req.query;
+    let query = {};
+    if (search) {
+      query.$or = [
+        { couponCode: { $regex: search, $options: "i" } }
+      ];
+    }
+
+    const coupons = await Coupon.find(query)
       .populate("hotel", "hotelname ownerName")
       .sort({ createdAt: -1 });
 

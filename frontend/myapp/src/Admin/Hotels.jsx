@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import URL from "../api";
+import useDebounce from "../hooks/useDebounce";
 
 const STATUS_TABS = ["all", "pending", "approved", "rejected", "deleted"];
 
@@ -27,13 +28,16 @@ export default function Hotels() {
   const [hotels, setHotels] = useState([]);
   const [tab, setTab] = useState("all");
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
   const [loading, setLoading] = useState(false);
 
   const fetchHotels = async () => {
     if (!user.email) return;
     setLoading(true);
     try {
-      const res = await axios.get(`${URL}/api/getRequestsByAdmin/${user.email}`);
+      const res = await axios.get(`${URL}/api/getRequestsByAdmin/${user.email}`, {
+        params: { search: debouncedSearch }
+      });
       setHotels(res.data.result || []);
     } catch (err) {
       console.log(err);
@@ -45,7 +49,7 @@ export default function Hotels() {
 
   useEffect(() => {
     fetchHotels();
-  }, [user.email]);
+  }, [user.email, debouncedSearch]);
 
   const tabFiltered =
     tab === "all"
@@ -70,12 +74,7 @@ export default function Hotels() {
     }
   };
 
-  const filtered = tabFiltered.filter(
-    (h) =>
-      (h.hotelName || "").toLowerCase().includes(search.toLowerCase()) ||
-      (h.ownerName || "").toLowerCase().includes(search.toLowerCase()) ||
-      formatLocation(h.location).toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = tabFiltered;
 
 
   const counts = {

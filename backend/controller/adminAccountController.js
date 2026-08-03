@@ -41,7 +41,17 @@ exports.createAdminAccount = async (req, res) => {
 
 exports.getAllAdminAccounts = async (req, res) => {
     try {
-        const admins = await AdminAccount.find().sort({
+        const { search } = req.query;
+        let filter = {};
+        if (search) {
+            const searchRegex = new RegExp(search, "i");
+            filter.$or = [
+                { name: searchRegex },
+                { email: searchRegex }
+            ];
+        }
+
+        const admins = await AdminAccount.find(filter).sort({
             createdAt: -1,
         });
 

@@ -11,7 +11,8 @@ const { generateOTP } = require("../utils/helper");
 
 exports.signup = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    let { name, email, password, role } = req.body;
+    email = email?.toLowerCase().trim();
 
     if (!(email && name && password)) {
       return res.status(404).json({ message: "all field are required" });
@@ -117,7 +118,8 @@ exports.signup = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
+    email = email?.toLowerCase().trim();
     if (!(email && password)) {
       return res.status(404).json({ message: "alll field are required" });
     }
@@ -168,7 +170,8 @@ exports.login = async (req, res) => {
 
 exports.forgotPassword = async (req, res) => {
   try {
-    const { email } = req.body;
+    let { email } = req.body;
+    email = email?.toLowerCase().trim();
     console.log(email);
 
     let user = await usermodel.findOne({ email });
@@ -216,7 +219,8 @@ exports.forgotPassword = async (req, res) => {
 
 exports.verifyOtp = async (req, res) => {
   try {
-    const { email, otp } = req.body;
+    let { email, otp } = req.body;
+    email = email?.toLowerCase().trim();
 
     let user = await usermodel.findOne({ email });
     if (!user) {
@@ -257,7 +261,8 @@ exports.verifyOtp = async (req, res) => {
 
 exports.resetPassword = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
+    email = email?.toLowerCase().trim();
 
     let user = await usermodel.findOne({ email });
     if (!user) {

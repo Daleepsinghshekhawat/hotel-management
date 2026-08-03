@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import URL from "../api";
+import useDebounce from "../hooks/useDebounce";
 import { Eye, X, MapPin, Phone, Mail, User, Building, BedDouble, CheckCircle } from "lucide-react";
 
 const formatLocation = (location) => {
@@ -18,6 +19,7 @@ export default function ApprovedHotels() {
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
   const [actionLoading, setActionLoading] = useState(null);
 
   // Modal State
@@ -28,7 +30,7 @@ export default function ApprovedHotels() {
   const fetchHotels = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${URL}/api/getHotelsByStatus/active`);
+      const res = await axios.get(`${URL}/api/getHotelsByStatus/active`, { params: { search: debouncedSearch } });
       setHotels(res.data.result || []);
     } catch (err) {
       console.error(err);
@@ -40,7 +42,7 @@ export default function ApprovedHotels() {
 
   useEffect(() => {
     fetchHotels();
-  }, []);
+  }, [debouncedSearch]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this hotel listing? This will remove it permanently.")) return;
@@ -96,13 +98,7 @@ export default function ApprovedHotels() {
     }
   };
 
-  const filtered = hotels.filter(
-    (h) =>
-      (h.hotelName || "").toLowerCase().includes(search.toLowerCase()) ||
-      (h.ownerName || "").toLowerCase().includes(search.toLowerCase()) ||
-      (h.email || "").toLowerCase().includes(search.toLowerCase()) ||
-      formatLocation(h.location).toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = hotels;
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif" }}>

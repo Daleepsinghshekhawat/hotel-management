@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import URL from "../api";
+import useDebounce from "../hooks/useDebounce";
 
 const District = () => {
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
   const [tab, setTab] = useState("active");
   const [states, setStates] = useState([]);
   const [districts, setDistricts] = useState([]);
@@ -40,7 +42,7 @@ const District = () => {
 
     try {
       const res = await axios.get(
-        `${URL}/api/getDistrictByState/${selectedState}`,
+        `${URL}/api/getDistrictByState/${selectedState}`, { params: { search: debouncedSearch } }
       );
     
       setDistricts(res.data.result );
@@ -52,7 +54,7 @@ const District = () => {
 
   useEffect(() => {
     fetchDistricts();
-  }, [selectedState]);
+  }, [selectedState, debouncedSearch]);
 
   const softDeleteDistrict = async (id) => {
     try {
@@ -140,11 +142,9 @@ const District = () => {
   };
 
   const filteredDistricts = districts.filter((item) => {
-    const name = item.districtname || "";
-    const matchesSearch = name.toLowerCase().includes(search.toLowerCase());
     const matchesTab =
       tab === "active" ? item.status === "active" : item.status === "inactive";
-    return matchesSearch && matchesTab;
+    return matchesTab;
   });
 
   const modalOverlayStyle = {

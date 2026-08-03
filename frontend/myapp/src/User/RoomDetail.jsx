@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { ChevronLeft, Calendar as CalendarIcon, Users, CreditCard, CheckCircle2, AlertCircle } from "lucide-react";
+import { ChevronLeft, Calendar as CalendarIcon, Users, CreditCard, CheckCircle2, AlertCircle, Wifi, Wind, Tv, Coffee, Bath, Droplets, Utensils, User, Star } from "lucide-react";
 import URL from "../api";
 import "./RoomDetail.css"; // Keep the calendar CSS but overhaul the layout
 
@@ -11,6 +11,7 @@ export default function RoomDetail() {
 
   const [room, setRoom] = useState(null);
   const [hotel, setHotel] = useState(null);
+  const [reviews, setReviews] = useState([]);
   
   // Calendar data
   const [bookedDates, setBookedDates] = useState([]);
@@ -39,14 +40,16 @@ export default function RoomDetail() {
 
     const fetchData = async () => {
       try {
-        const [roomRes, hotelRes, calRes] = await Promise.all([
+        const [roomRes, hotelRes, calRes, reviewsRes] = await Promise.all([
           axios.get(`${URL}/api/getRoom/${roomId}`),
           axios.get(`${URL}/api/getHotelById/${hotelId}`),
-          axios.get(`${URL}/api/room/${roomId}/calendar`)
+          axios.get(`${URL}/api/room/${roomId}/calendar`),
+          axios.get(`${URL}/api/reviews/hotel/${hotelId}`).catch(() => ({ data: { result: [] } }))
         ]);
         
         setRoom(roomRes.data.result);
         setHotel(hotelRes.data.result);
+        setReviews(reviewsRes.data.result || []);
         
         const bDates = [];
         const pDates = [];
@@ -301,6 +304,54 @@ export default function RoomDetail() {
                   <CreditCard size={18} color="#64748b" /> ₹{room.finalPrice || room.price} / night
                 </div>
               </div>
+            </div>
+
+            {/* Amenities Section */}
+            <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "32px", marginBottom: "32px" }}>
+              <h2 style={{ fontSize: "20px", fontWeight: 600, color: "#0f172a", margin: "0 0 24px" }}>Room Amenities</h2>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "20px" }}>
+                {room.wifi && <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#475569" }}><Wifi size={20} color="#2563eb" /> Free WiFi</div>}
+                {room.ac && <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#475569" }}><Wind size={20} color="#2563eb" /> Air Conditioning</div>}
+                {room.smartTV && <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#475569" }}><Tv size={20} color="#2563eb" /> Smart TV</div>}
+                {room.hotWater && <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#475569" }}><Droplets size={20} color="#2563eb" /> Hot Water</div>}
+                {room.attachedBathroom && <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#475569" }}><Bath size={20} color="#2563eb" /> Attached Bathroom</div>}
+                {room.coffeeMachine && <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#475569" }}><Coffee size={20} color="#2563eb" /> Coffee Machine</div>}
+                {room.roomService && <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#475569" }}><Utensils size={20} color="#2563eb" /> Room Service</div>}
+              </div>
+            </div>
+
+            {/* Reviews Section */}
+            <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "32px", marginBottom: "32px" }}>
+              <h2 style={{ fontSize: "20px", fontWeight: 600, color: "#0f172a", margin: "0 0 24px" }}>
+                Guest Reviews
+              </h2>
+              {reviews.length === 0 ? (
+                <p style={{ color: "#64748b", fontStyle: "italic" }}>No reviews yet for this property.</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                  {reviews.map(review => (
+                    <div key={review._id} style={{ borderBottom: "1px solid #e2e8f0", paddingBottom: "20px" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                          <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}>
+                            <User size={20} />
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 600, color: "#0f172a" }}>{review.user?.name || "Anonymous"}</div>
+                            <div style={{ fontSize: "12px", color: "#94a3b8" }}>{new Date(review.createdAt).toLocaleDateString()}</div>
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", gap: "2px" }}>
+                          {[1, 2, 3, 4, 5].map(star => (
+                            <Star key={star} size={16} fill={star <= review.rating ? "#eab308" : "none"} color={star <= review.rating ? "#eab308" : "#cbd5e1"} />
+                          ))}
+                        </div>
+                      </div>
+                      <p style={{ color: "#475569", lineHeight: "1.6", margin: "8px 0 0" }}>{review.reviewText}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {bookingStep === "calendar" && (

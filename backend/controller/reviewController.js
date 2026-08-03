@@ -38,10 +38,23 @@ exports.getReviewsByHotel = async (req, res) => {
 
 exports.getAllReviews = async (req, res) => {
   try {
-    const reviews = await Review.find()
+    const { search } = req.query;
+    let reviews = await Review.find()
       .populate("hotel", "hotelName")
       .populate("user", "name email")
       .sort({ createdAt: -1 });
+
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      reviews = reviews.filter((review) => {
+        return (
+          searchRegex.test(review.reviewText) ||
+          (review.user && searchRegex.test(review.user.name)) ||
+          (review.user && searchRegex.test(review.user.email))
+        );
+      });
+    }
+
     return res.status(200).json({ success: true, result: reviews });
   } catch (err) {
     console.error(err);

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import URL from "../api";
+import useDebounce from "../hooks/useDebounce";
 
 const STATUS_TABS = ["all", "pending", "approved", "rejected"];
 
@@ -14,6 +15,7 @@ export default function AdminRequests() {
   const [requests, setRequests] = useState([]);
   const [tab, setTab] = useState("all");
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
 
@@ -28,7 +30,7 @@ export default function AdminRequests() {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${URL}/api/getAllAdminRequests`);
+      const res = await axios.get(`${URL}/api/getAllAdminRequests`, { params: { search: debouncedSearch } });
       setRequests(res.data.result || []);
     } catch (err) {
       console.log(err);
@@ -40,7 +42,7 @@ export default function AdminRequests() {
 
   useEffect(() => {
     fetchRequests();
-  }, []);
+  }, [debouncedSearch]);
 
   const handleApprove = async (id) => {
     if (
@@ -129,13 +131,7 @@ export default function AdminRequests() {
   const tabFiltered =
     tab === "all" ? requests : requests.filter((r) => r.status === tab);
 
-  const filtered = tabFiltered.filter(
-    (r) =>
-      (r.name || "").toLowerCase().includes(search.toLowerCase()) ||
-      (r.email || "").toLowerCase().includes(search.toLowerCase()) ||
-      (r.occupation || "").toLowerCase().includes(search.toLowerCase()) ||
-      (r.mobileNumber || "").includes(search)
-  );
+  const filtered = tabFiltered;
 
   const counts = {
     pending: requests.filter((r) => r.status === "pending").length,

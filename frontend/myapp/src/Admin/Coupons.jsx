@@ -2,12 +2,14 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import URL from "../api";
 import { Tags, Search, CheckCircle, XCircle, PlusCircle, X } from "lucide-react";
+import useDebounce from "../hooks/useDebounce";
 
 export default function Coupons() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 500);
   const [showModal, setShowModal] = useState(false);
   const [hotels, setHotels] = useState([]);
   const [form, setForm] = useState({
@@ -20,7 +22,7 @@ export default function Coupons() {
     setLoading(true);
     try {
       const [couponRes, hotelRes] = await Promise.all([
-        axios.get(`${URL}/api/getCouponsByAdmin/${user.email}`),
+        axios.get(`${URL}/api/getCouponsByAdmin/${user.email}`, { params: { search: debouncedSearch } }),
         axios.get(`${URL}/api/getRequestsByAdmin/${user.email}`)
       ]);
       if (couponRes.data.success) setCoupons(couponRes.data.coupons || []);
@@ -34,7 +36,7 @@ export default function Coupons() {
 
   useEffect(() => {
     fetchCouponsAndHotels();
-  }, []);
+  }, [debouncedSearch]);
 
   const handleCreateCoupon = async (e) => {
     e.preventDefault();
@@ -77,10 +79,7 @@ export default function Coupons() {
     }
   };
 
-  const filteredCoupons = coupons.filter(c => 
-    c.couponCode?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    c.hotel?.hotelName?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCoupons = coupons;
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", padding: "10px" }}>

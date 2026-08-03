@@ -309,6 +309,7 @@ exports.addRoom = async (req, res) => {
 exports.getRoomsByHotel = async (req, res) => {
   try {
     const { hotelId } = req.params;
+    const { search } = req.query;
 
     let actualHotelId = hotelId;
     if (mongoose.Types.ObjectId.isValid(hotelId)) {
@@ -320,10 +321,20 @@ exports.getRoomsByHotel = async (req, res) => {
       }
     }
 
-    const rooms = await Room.find({
+    let filter = {
       hotel: actualHotelId,
       status: true,
-    }).sort({
+    };
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      filter.$or = [
+        { roomName: searchRegex },
+        { roomType: searchRegex },
+        { bedType: searchRegex }
+      ];
+    }
+
+    const rooms = await Room.find(filter).sort({
       createdAt: -1,
     });
 

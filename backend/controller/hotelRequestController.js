@@ -102,8 +102,17 @@ exports.submitHotelRequest = async (req, res) => {
 
 exports.getAllHotelRequests = async (req, res) => {
   try {
+    const { search } = req.query;
+    let filter = {};
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      filter.$or = [
+        { hotelName: searchRegex },
+        { ownerName: searchRegex }
+      ];
+    }
     const result = await hotelRequest
-      .find()
+      .find(filter)
       .populate(populateOptions)
       .sort({ createdAt: -1 });
 

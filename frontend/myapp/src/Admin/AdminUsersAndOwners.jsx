@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import URL from "../api";
+import useDebounce from "../hooks/useDebounce";
 
 const ROLE_TABS = ["all", "hotelOwner", "user"];
 
@@ -19,6 +20,7 @@ export default function AdminUsersAndOwners() {
   const [users, setUsers] = useState([]);
   const [roleFilter, setRoleFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
 
@@ -26,7 +28,9 @@ export default function AdminUsersAndOwners() {
     setLoading(true);
     try {
       // For "all", fetch "all" and filter admin/superadmin client-side
-      const res = await axios.get(`${URL}/api/getUsersByRole/${roleFilter}`);
+      const res = await axios.get(`${URL}/api/getUsersByRole/${roleFilter}`, {
+        params: { search: debouncedSearch }
+      });
       setUsers(res.data.result || []);
     } catch (err) {
       console.log("Error fetching users:", err);
@@ -38,7 +42,7 @@ export default function AdminUsersAndOwners() {
 
   useEffect(() => {
     fetchUsers();
-  }, [roleFilter]);
+  }, [roleFilter, debouncedSearch]);
 
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Are you sure you want to permanently delete user "${name}"?`)) return;
@@ -59,9 +63,7 @@ export default function AdminUsersAndOwners() {
   const filteredUsers = users.filter(
     (u) =>
       u.role !== "admin" &&
-      u.role !== "superadmin" &&
-      ((u.name || "").toLowerCase().includes(search.toLowerCase()) ||
-        (u.email || "").toLowerCase().includes(search.toLowerCase()))
+      u.role !== "superadmin"
   );
 
   const formatDate = (dateString) => {

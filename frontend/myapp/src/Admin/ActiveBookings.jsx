@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import URL from "../api";
+import useDebounce from "../hooks/useDebounce";
 
 export default function ActiveBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
 
   const fetchBookings = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${URL}/api/getAllBookings`);
+      const res = await axios.get(`${URL}/api/getAllBookings`, {
+        params: { search: debouncedSearch }
+      });
       // Filter for active bookings only
       const active = (res.data.result || []).filter(b => 
         b.status === "confirmed" || b.status === "pending"
@@ -26,7 +30,7 @@ export default function ActiveBookings() {
 
   useEffect(() => {
     fetchBookings();
-  }, []);
+  }, [debouncedSearch]);
 
   const handleCheckout = async (bookingId) => {
     if (!window.confirm("Are you sure you want to checkout/unbook this reservation?")) return;
@@ -69,19 +73,9 @@ export default function ActiveBookings() {
           textTransform: "capitalize",
         }}
       >
-        {status || "Unknown"}
       </span>
     );
   };
-
-  const filtered = bookings.filter((b) => {
-    const matchesSearch =
-      (b.guestName || "").toLowerCase().includes(search.toLowerCase()) ||
-      (b.guestEmail || "").toLowerCase().includes(search.toLowerCase()) ||
-      (b.hotel?.hotelName || "").toLowerCase().includes(search.toLowerCase()) ||
-      (b.room?.roomName || "").toLowerCase().includes(search.toLowerCase());
-    return matchesSearch;
-  });
 
   return (
     <div style={{ fontFamily: "'Segoe UI', sans-serif" }}>
@@ -119,7 +113,7 @@ export default function ActiveBookings() {
 
       {loading ? (
         <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>⏳ Loading active bookings...</div>
-      ) : filtered.length === 0 ? (
+      ) : bookings.length === 0 ? (
         <div style={{ textAlign: "center", padding: "60px 40px", background: "#ffffff", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
           <div style={{ fontSize: "48px", marginBottom: "12px" }}>🛎️</div>
           <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b", margin: "0 0 8px" }}>No Active Bookings</h3>
@@ -141,7 +135,7 @@ export default function ActiveBookings() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((b) => (
+              {bookings.map((b) => (
                 <tr key={b._id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                   <td style={{ padding: "14px 16px", fontWeight: 600, color: "#1e293b" }}>{b.hotel?.hotelName || "N/A"}</td>
                   <td style={{ padding: "14px 16px", color: "#475569" }}>

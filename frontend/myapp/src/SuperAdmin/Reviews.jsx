@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import URL from "../api";
+import useDebounce from "../hooks/useDebounce";
 import { MessageSquare, Search, Star, Trash2 } from "lucide-react";
 
 export default function Reviews() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 500);
 
   const fetchReviews = async () => {
     try {
-      const response = await axios.get(`${URL}/api/reviews/getAllReviews`);
+      const response = await axios.get(`${URL}/api/reviews/getAllReviews`, { params: { search: debouncedSearch } });
       if (response.data.success) {
         setReviews(response.data.result || []);
       }
@@ -23,7 +25,7 @@ export default function Reviews() {
 
   useEffect(() => {
     fetchReviews();
-  }, []);
+  }, [debouncedSearch]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this review?")) return;
@@ -42,11 +44,7 @@ export default function Reviews() {
     }
   };
 
-  const filteredReviews = reviews.filter(r => 
-    r.hotel?.hotelName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    r.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.reviewText?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredReviews = reviews;
 
   const renderStars = (rating) => {
     return (

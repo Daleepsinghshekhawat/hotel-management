@@ -335,7 +335,18 @@ exports.getRoomBookingStatus = async (req, res) => {
 exports.getBookingsByHotel = async (req, res) => {
   try {
     const { hotelId } = req.params;
-    const bookings = await Booking.find({ hotel: hotelId })
+    const { search } = req.query;
+    
+    let filter = { hotel: hotelId };
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      filter.$or = [
+        { guestName: searchRegex },
+        { guestEmail: searchRegex }
+      ];
+    }
+
+    const bookings = await Booking.find(filter)
       .populate("room", "roomName roomType floor roomNumber")
       .sort({ createdAt: -1 });
     return res.status(200).json({ success: true, result: bookings });
@@ -349,7 +360,16 @@ exports.getBookingsByHotel = async (req, res) => {
 
 exports.getAllBookings = async (req, res) => {
   try {
-    const bookings = await Booking.find()
+    const { search } = req.query;
+    let filter = {};
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      filter.$or = [
+        { guestName: searchRegex },
+        { guestEmail: searchRegex }
+      ];
+    }
+    const bookings = await Booking.find(filter)
       .populate("hotel", "hotelName location image")
       .populate("room", "roomName roomType images")
       .sort({ createdAt: -1 });

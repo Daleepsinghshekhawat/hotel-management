@@ -7,7 +7,16 @@ const { sendEmail } = require("../utils/helper");
 
 exports.getAllAdminRequests = async (req, res) => {
   try {
-    const result = await AdminRequest.find().sort({ createdAt: -1 });
+    const { search } = req.query;
+    let filter = {};
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      filter.$or = [
+        { name: searchRegex },
+        { email: searchRegex }
+      ];
+    }
+    const result = await AdminRequest.find(filter).sort({ createdAt: -1 });
     return res.status(200).json({ success: true, result });
   } catch (err) {
     return res.status(500).json({

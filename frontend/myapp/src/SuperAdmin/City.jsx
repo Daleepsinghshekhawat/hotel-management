@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import URL from "../api";
+import useDebounce from "../hooks/useDebounce";
 
 const City = () => {
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
   const [tab, setTab] = useState("active");
   const [states, setStates] = useState([]);
   const [districts, setDistricts] = useState([]);
@@ -64,7 +66,7 @@ const City = () => {
   const fetchCities = async () => {
     if (!selectedDistrict) { setCities([]); return; }
     try {
-      const res = await axios.get(`${URL}/api/getCityByDistrict/${selectedDistrict}`);
+      const res = await axios.get(`${URL}/api/getCityByDistrict/${selectedDistrict}`, { params: { search: debouncedSearch } });
       const list = Array.isArray(res.data?.result) ? res.data.result : [];
       setCities(list);
     } catch (err) {
@@ -75,7 +77,7 @@ const City = () => {
 
   useEffect(() => {
     fetchCities();
-  }, [selectedDistrict]);
+  }, [selectedDistrict, debouncedSearch]);
 
   const softDeleteCity = async (id) => {
     try {
@@ -181,11 +183,9 @@ const City = () => {
   };
 
   const filteredCities = cities.filter((item) => {
-    const name = item.cityname || "";
-    const matchesSearch = name.toLowerCase().includes(search.toLowerCase());
     const matchesTab =
       tab === "active" ? item.status === "active" : item.status === "inactive";
-    return matchesSearch && matchesTab;
+    return matchesTab;
   });
 
   const modalOverlayStyle = {

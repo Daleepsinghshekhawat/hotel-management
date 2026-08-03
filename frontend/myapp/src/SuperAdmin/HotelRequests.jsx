@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import URL from "../api";
+import useDebounce from "../hooks/useDebounce";
 
 const STATUS_TABS = ["all", "pending", "approved", "rejected"];
 
@@ -23,6 +24,7 @@ export default function HotelRequests() {
   const [requests, setRequests] = useState([]);
   const [tab, setTab] = useState("all");
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(null); // id of item being acted on
 
@@ -42,7 +44,7 @@ export default function HotelRequests() {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${URL}/api/getAllHotelRequests`);
+      const res = await axios.get(`${URL}/api/getAllHotelRequests`, { params: { search: debouncedSearch } });
       setRequests(res.data.result || []);
     } catch (err) {
       console.log(err);
@@ -54,7 +56,7 @@ export default function HotelRequests() {
 
   useEffect(() => {
     fetchRequests();
-  }, []);
+  }, [debouncedSearch]);
 
 
   // ── Actions ───────────────────────────────────────────────────────────────
@@ -131,13 +133,7 @@ export default function HotelRequests() {
   const tabFiltered =
     tab === "all" ? activeRequests : activeRequests.filter((r) => r.status === tab);
 
-  const filtered = tabFiltered.filter(
-    (r) =>
-      (r.hotelName || "").toLowerCase().includes(search.toLowerCase()) ||
-      (r.ownerName || "").toLowerCase().includes(search.toLowerCase()) ||
-      formatLocation(r.location).toLowerCase().includes(search.toLowerCase()) ||
-      (r.submittedBy || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = tabFiltered;
 
   // ── Counts ────────────────────────────────────────────────────────────────
   const counts = {

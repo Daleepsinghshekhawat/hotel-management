@@ -19,8 +19,17 @@ exports.createDistrict = async (req, res) => {
 
 exports.getAllDistrict = async (req, res) => {
   try {
+    const { search } = req.query;
+    let query = { status: "active" };
+
+    if (search) {
+      query.$or = [
+        { districtname: { $regex: search, $options: "i" } }
+      ];
+    }
+
     const result = await districtModel
-      .find({ status: "active" })
+      .find(query)
       .populate("stateId")
 
     if (!result) {

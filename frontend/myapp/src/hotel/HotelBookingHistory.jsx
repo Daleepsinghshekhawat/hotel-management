@@ -2,12 +2,14 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import URL from "../api";
+import useDebounce from "../hooks/useDebounce";
 
 export default function HotelBookingHistory() {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
   const [statusFilter, setStatusFilter] = useState("all");
   
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -21,7 +23,7 @@ export default function HotelBookingHistory() {
       
       // 2. Fetch bookings for each hotel concurrently
       const bookingPromises = hotels.map(hotel => 
-        axios.get(`${URL}/api/getBookingsByHotel/${hotel._id}`)
+        axios.get(`${URL}/api/getBookingsByHotel/${hotel._id}`, { params: { search: debouncedSearch } })
       );
       
       const responses = await Promise.all(bookingPromises);
@@ -57,7 +59,7 @@ export default function HotelBookingHistory() {
     if (user.email) {
       fetchBookings();
     }
-  }, [user.email]);
+  }, [user.email, debouncedSearch]);
 
   const formatDate = (dateString) => {
     return dateString
@@ -95,16 +97,10 @@ export default function HotelBookingHistory() {
   };
 
   const filtered = bookings.filter((b) => {
-    const matchesSearch =
-      (b.guestName || "").toLowerCase().includes(search.toLowerCase()) ||
-      (b.guestEmail || "").toLowerCase().includes(search.toLowerCase()) ||
-      (b.hotel?.hotelName || "").toLowerCase().includes(search.toLowerCase()) ||
-      (b.room?.roomName || "").toLowerCase().includes(search.toLowerCase());
-
     const matchesStatus =
       statusFilter === "all" || b.status === statusFilter;
 
-    return matchesSearch && matchesStatus;
+    return matchesStatus;
   });
 
   return (

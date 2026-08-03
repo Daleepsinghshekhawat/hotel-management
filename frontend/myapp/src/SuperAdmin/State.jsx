@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import URL from "../api";
+import useDebounce from "../hooks/useDebounce";
 
 const State = () => {
   const [states, setStates] = useState([]);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
   const [tab, setTab] = useState("active");
 
   // Modal state
@@ -22,7 +24,7 @@ const State = () => {
         tab === "active"
           ? `${URL}/api/getAllState`
           : `${URL}/api/getInactiveState`;
-      const res = await axios.get(url);
+      const res = await axios.get(url, { params: { search: debouncedSearch } });
       setStates(res.data.result || []);
     } catch (err) {
       console.log(err);
@@ -32,7 +34,7 @@ const State = () => {
 
   useEffect(() => {
     getStates();
-  }, [tab]);
+  }, [tab, debouncedSearch]);
 
   const softDelete = async (id) => {
     try {
@@ -131,9 +133,7 @@ const State = () => {
     });
   };
 
-  const filteredStates = states.filter((item) =>
-    (item.Statename || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredStates = states;
 
   const modalOverlayStyle = {
     position: "fixed",

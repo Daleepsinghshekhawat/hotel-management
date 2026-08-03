@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import URL from "../api";
+import useDebounce from "../hooks/useDebounce";
 
 const API = `${URL}/api`;
 
@@ -11,6 +12,7 @@ const RoomList = ({ hotelId }) => {
     const [loading, setLoading] = useState(true);
 
     const [search, setSearch] = useState("");
+    const debouncedSearch = useDebounce(search, 500);
     const [roomType, setRoomType] = useState("");
     const [status, setStatus] = useState("");
     const [sort, setSort] = useState("");
@@ -25,19 +27,12 @@ const RoomList = ({ hotelId }) => {
         if (hotelId) {
             getRooms();
         }
-    }, [hotelId]);
+    }, [hotelId, debouncedSearch]);
 
     useEffect(() => {
         let data = [...rooms];
 
-        // Search
-        if (search) {
-            data = data.filter(
-                (room) =>
-                    room.roomName.toLowerCase().includes(search.toLowerCase()) ||
-                    room.roomNumber.toLowerCase().includes(search.toLowerCase())
-            );
-        }
+        // Search removed from frontend
 
         // Room Type
         if (roomType) {
@@ -65,14 +60,16 @@ const RoomList = ({ hotelId }) => {
         }
 
         setFilteredRooms(data);
-    }, [rooms, search, roomType, status, sort]);
+    }, [rooms, roomType, status, sort]);
 
     const getRooms = async () => {
         try {
             setLoading(true);
 
             const res = await axios.get(
-                `${API}/getRoomsByHotel/${hotelId}`
+                `${API}/getRoomsByHotel/${hotelId}`, {
+                    params: { search: debouncedSearch }
+                }
             );
 
             if (res.data.success) {

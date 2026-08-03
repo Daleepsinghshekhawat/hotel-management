@@ -2,18 +2,22 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import URL from "../api";
+import useDebounce from "../hooks/useDebounce";
 
 export default function BookingHistory() {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
   const [statusFilter, setStatusFilter] = useState("all");
 
   const fetchBookings = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${URL}/api/getAllBookings`);
+      const res = await axios.get(`${URL}/api/getAllBookings`, {
+        params: { search: debouncedSearch }
+      });
       // Filter for past bookings only
       const history = (res.data.result || []).filter(b => 
         b.status === "completed" || b.status === "cancelled"
@@ -29,7 +33,7 @@ export default function BookingHistory() {
 
   useEffect(() => {
     fetchBookings();
-  }, []);
+  }, [debouncedSearch]);
 
   const formatDate = (dateString) => {
     return dateString
@@ -67,16 +71,10 @@ export default function BookingHistory() {
   };
 
   const filtered = bookings.filter((b) => {
-    const matchesSearch =
-      (b.guestName || "").toLowerCase().includes(search.toLowerCase()) ||
-      (b.guestEmail || "").toLowerCase().includes(search.toLowerCase()) ||
-      (b.hotel?.hotelName || "").toLowerCase().includes(search.toLowerCase()) ||
-      (b.room?.roomName || "").toLowerCase().includes(search.toLowerCase());
-
     const matchesStatus =
       statusFilter === "all" || b.status === statusFilter;
 
-    return matchesSearch && matchesStatus;
+    return matchesStatus;
   });
 
   // Group bookings by hotel for summary stats
