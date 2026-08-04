@@ -335,20 +335,25 @@ exports.getRoomBookingStatus = async (req, res) => {
 exports.getBookingsByHotel = async (req, res) => {
   try {
     const { hotelId } = req.params;
-    const { search } = req.query;
+    const { search, sort } = req.query;
     
     let filter = { hotel: hotelId };
     if (search) {
-      const searchRegex = new RegExp(search, "i");
       filter.$or = [
-        { guestName: searchRegex },
-        { guestEmail: searchRegex }
+        { guestName: { $regex: search, $options: "i" } },
+        { guestEmail: { $regex: search, $options: "i" } }
       ];
     }
 
+    let sortOption = {};
+    if (sort === "a-z") sortOption.guestName = 1;
+    else if (sort === "z-a") sortOption.guestName = -1;
+    else if (sort === "oldest") sortOption.createdAt = 1;
+    else sortOption.createdAt = -1;
+
     const bookings = await Booking.find(filter)
       .populate("room", "roomName roomType floor roomNumber")
-      .sort({ createdAt: -1 });
+      .sort(sortOption);
     return res.status(200).json({ success: true, result: bookings });
   } catch (err) {
     return res.status(500).json({ success: false, message: "Server error" });
@@ -360,19 +365,25 @@ exports.getBookingsByHotel = async (req, res) => {
 
 exports.getAllBookings = async (req, res) => {
   try {
-    const { search } = req.query;
+    const { search, sort } = req.query;
     let filter = {};
     if (search) {
-      const searchRegex = new RegExp(search, "i");
       filter.$or = [
-        { guestName: searchRegex },
-        { guestEmail: searchRegex }
+        { guestName: { $regex: search, $options: "i" } },
+        { guestEmail: { $regex: search, $options: "i" } }
       ];
     }
+
+    let sortOption = {};
+    if (sort === "a-z") sortOption.guestName = 1;
+    else if (sort === "z-a") sortOption.guestName = -1;
+    else if (sort === "oldest") sortOption.createdAt = 1;
+    else sortOption.createdAt = -1;
+
     const bookings = await Booking.find(filter)
       .populate("hotel", "hotelName location image")
       .populate("room", "roomName roomType images")
-      .sort({ createdAt: -1 });
+      .sort(sortOption);
     return res.status(200).json({ success: true, result: bookings });
   } catch (err) {
     return res.status(500).json({ success: false, message: "Server error" });

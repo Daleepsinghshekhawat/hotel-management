@@ -102,19 +102,25 @@ exports.submitHotelRequest = async (req, res) => {
 
 exports.getAllHotelRequests = async (req, res) => {
   try {
-    const { search } = req.query;
+    const { search, sort } = req.query;
     let filter = {};
     if (search) {
-      const searchRegex = new RegExp(search, "i");
       filter.$or = [
-        { hotelName: searchRegex },
-        { ownerName: searchRegex }
+        { hotelName: { $regex: search, $options: "i" } },
+        { ownerName: { $regex: search, $options: "i" } }
       ];
     }
+
+    let sortOption = {};
+    if (sort === "a-z") sortOption.hotelName = 1;
+    else if (sort === "z-a") sortOption.hotelName = -1;
+    else if (sort === "oldest") sortOption.createdAt = 1;
+    else sortOption.createdAt = -1;
+
     const result = await hotelRequest
       .find(filter)
       .populate(populateOptions)
-      .sort({ createdAt: -1 });
+      .sort(sortOption);
 
     // Filter out approved requests where the hotel no longer exists in hotelModel
     const activeRegistrationIds = new Set(

@@ -10,23 +10,30 @@ const populateOptions = {
   ],
 };
 
+
+
 exports.getAllHotels = async (req, res) => {
   try {
-    const { search } = req.query;
+    const { search, sort } = req.query;
     let filter = {};
     if (search) {
-      const searchRegex = new RegExp(search, "i");
       filter.$or = [
-        { hotelName: searchRegex },
-        { ownerName: searchRegex },
-        { email: searchRegex }
+        { hotelName: { $regex: search, $options: "i" } },
+        { ownerName: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } }
       ];
     }
+
+    let sortOption = {};
+    if (sort === "a-z") sortOption.hotelName = 1;
+    else if (sort === "z-a") sortOption.hotelName = -1;
+    else if (sort === "oldest") sortOption.createdAt = 1;
+    else sortOption.createdAt = -1;
 
     const result = await hotelModel
       .find(filter)
       .populate(populateOptions)
-      .sort({ createdAt: -1 });
+      .sort(sortOption);
 
     return res.status(200).json({ result });
   } catch (err) {
@@ -38,22 +45,27 @@ exports.getAllHotels = async (req, res) => {
 exports.getHotelsByAdmin = async (req, res) => {
   try {
     const { email } = req.params;
-    const { search } = req.query;
+    const { search, sort } = req.query;
     let filter = { submittedBy: email };
 
     if (search) {
-      const searchRegex = new RegExp(search, "i");
       filter.$or = [
-        { hotelName: searchRegex },
-        { ownerName: searchRegex },
-        { email: searchRegex }
+        { hotelName: { $regex: search, $options: "i" } },
+        { ownerName: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } }
       ];
     }
+
+    let sortOption = {};
+    if (sort === "a-z") sortOption.hotelName = 1;
+    else if (sort === "z-a") sortOption.hotelName = -1;
+    else if (sort === "oldest") sortOption.createdAt = 1;
+    else sortOption.createdAt = -1;
 
     const result = await hotelModel
       .find(filter)
       .populate(populateOptions)
-      .sort({ createdAt: -1 });
+      .sort(sortOption);
 
     return res.status(200).json({ result });
   } catch (err) {
@@ -180,20 +192,18 @@ exports.getHotelById = async (req, res) => {
 exports.getHotelsByStatus = async (req, res) => {
   try {
     const { status } = req.params;
-    const { search } = req.query;
+    const { search, sort } = req.query;
 
     let filter = { status };
 
     if (search) {
-      const searchRegex = new RegExp(search, "i");
-      
       const cityModel = require("../model/citymodel");
-      const matchedCities = await cityModel.find({ cityname: searchRegex }).select('_id');
+      const matchedCities = await cityModel.find({ cityname: { $regex: search, $options: "i" } }).select('_id');
       const cityIds = matchedCities.map(c => c._id);
 
       filter.$or = [
-        { hotelName: searchRegex },
-        { ownerName: searchRegex }
+        { hotelName: { $regex: search, $options: "i" } },
+        { ownerName: { $regex: search, $options: "i" } }
       ];
 
       if (cityIds.length > 0) {
@@ -201,10 +211,16 @@ exports.getHotelsByStatus = async (req, res) => {
       }
     }
 
+    let sortOption = {};
+    if (sort === "a-z") sortOption.hotelName = 1;
+    else if (sort === "z-a") sortOption.hotelName = -1;
+    else if (sort === "oldest") sortOption.createdAt = 1;
+    else sortOption.createdAt = -1;
+
     const result = await hotelModel
       .find(filter)
       .populate(populateOptions)
-      .sort({ createdAt: -1 });
+      .sort(sortOption);
 
     return res.status(200).json({
       success: true,

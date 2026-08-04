@@ -28,24 +28,12 @@ exports.signup = async (req, res) => {
     const salt = await bcrypt.genSalt(saltround);              //we use three lines to generate the secure hashpassword 
     const hashPassword = await bcrypt.hashSync(password, salt);
 
-    let result;
-    if (role === "hotelOwner") {
-      result = await hotelOwnerModel.create({
-        name,
-        email,
-        password: hashPassword,
-        role: "hotelOwner",
-      });
-    } else {
-      result = await usermodel.create({
-        name,
-        email,
-        password: hashPassword,
-        role,
-      });
-    }
-
-
+    const result = await usermodel.create({
+      name,
+      email,
+      password: hashPassword,
+      role: role || "user",
+    });
     try {
       await sendEmail({
         //here  we use this sendmail function to send email on signup
@@ -120,19 +108,27 @@ exports.login = async (req, res) => {
   try {
     let { email, password } = req.body;
     email = email?.toLowerCase().trim();
+
     if (!(email && password)) {
       return res.status(404).json({ message: "alll field are required" });
     }
 
+    // 1. Check for normal user
     let user = await usermodel.findOne({ email });
+    let hotelUser = null;
+    let adminUser = null;
+
+    
     if (!user) {
-      user = await hotelOwnerModel.findOne({ email });
+      hotelUser = await hotelOwnerModel.findOne({ email });
     }
-    if (!user) {
+
+  
+    if (!user && !hotelUser) {
       const AdminAccount = require("../model/adminAccountModel");
       const adminAcc = await AdminAccount.findOne({ email, status: "approved" });
       if (adminAcc) {
-        user = {
+        adminUser = {
           _id: adminAcc._id,
           name: adminAcc.name,
           email: adminAcc.email,
@@ -141,11 +137,15 @@ exports.login = async (req, res) => {
         };
       }
     }
-    if (!user) {
+
+
+    const finalUser = user || hotelUser || adminUser;
+
+    if (!finalUser) {
       return res.status(404).json({ message: "user must signup first" });
     }
 
-    const checkPassword = bcrypt.compareSync(password, user.password);
+    const checkPassword = bcrypt.compareSync(password, finalUser.password);
 
     if (!checkPassword) {
       return res.status(404).json({ message: "password not matched" });
@@ -160,12 +160,14 @@ exports.login = async (req, res) => {
     res.status(200).json({
       message: "user login sucessfully ",
       token,
-      user,
+      user: finalUser,
     });
   } catch (err) {
     return res.status(500).json({ message: "server error " });
   }
 };
+
+
 
 
 exports.forgotPassword = async (req, res) => {

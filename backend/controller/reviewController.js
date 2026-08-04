@@ -38,22 +38,23 @@ exports.getReviewsByHotel = async (req, res) => {
 
 exports.getAllReviews = async (req, res) => {
   try {
-    const { search } = req.query;
-    let reviews = await Review.find()
+    const { search, sort } = req.query;
+    
+    let filter = {};
+    if (search) {
+      filter.$or = [
+        { reviewText: { $regex: search, $options: "i" } }
+      ];
+    }
+
+    let sortOption = {};
+    if (sort === "oldest") sortOption.createdAt = 1;
+    else sortOption.createdAt = -1;
+
+    let reviews = await Review.find(filter)
       .populate("hotel", "hotelName")
       .populate("user", "name email")
-      .sort({ createdAt: -1 });
-
-    if (search) {
-      const searchRegex = new RegExp(search, "i");
-      reviews = reviews.filter((review) => {
-        return (
-          searchRegex.test(review.reviewText) ||
-          (review.user && searchRegex.test(review.user.name)) ||
-          (review.user && searchRegex.test(review.user.email))
-        );
-      });
-    }
+      .sort(sortOption);
 
     return res.status(200).json({ success: true, result: reviews });
   } catch (err) {

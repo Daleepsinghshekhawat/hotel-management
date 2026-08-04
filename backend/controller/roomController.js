@@ -309,7 +309,7 @@ exports.addRoom = async (req, res) => {
 exports.getRoomsByHotel = async (req, res) => {
   try {
     const { hotelId } = req.params;
-    const { search } = req.query;
+    const { search, sort } = req.query;
 
     let actualHotelId = hotelId;
     if (mongoose.Types.ObjectId.isValid(hotelId)) {
@@ -325,18 +325,48 @@ exports.getRoomsByHotel = async (req, res) => {
       hotel: actualHotelId,
       status: true,
     };
+
     if (search) {
-      const searchRegex = new RegExp(search, "i");
       filter.$or = [
-        { roomName: searchRegex },
-        { roomType: searchRegex },
-        { bedType: searchRegex }
+        {
+          roomName: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+        {
+          roomType: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+        {
+          bedType: {
+            $regex: search,
+            $options: "i",
+          },
+        },
       ];
     }
 
-    const rooms = await Room.find(filter).sort({
-      createdAt: -1,
-    });
+    let sortOption = {};
+    if (sort === "lowPrice") {
+      sortOption.price = 1;
+    } else if (sort === "highPrice") {
+      sortOption.price = -1;
+    } else if (sort === "a-z") {
+      sortOption.roomName = 1;
+    } else if (sort === "z-a") {
+      sortOption.roomName = -1;
+    } else if (sort === "newest") {
+      sortOption.createdAt = -1;
+    } else if (sort === "oldest") {
+      sortOption.createdAt = 1;
+    } else {
+      sortOption.createdAt = -1; // Default
+    }
+
+    const rooms = await Room.find(filter).sort(sortOption);
 
     res.json({
       success: true,
