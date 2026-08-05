@@ -6,6 +6,10 @@ import URL from "../api";
 export default function UserBookingHistory() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const navigate = useNavigate();
 
@@ -17,11 +21,12 @@ export default function UserBookingHistory() {
     const fetchBookings = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(`${URL}/api/getBookingsByGuest/${user.email}`);
-        const history = (res.data.result || []).filter(b => 
-          b.status === "completed" || b.status === "cancelled"
-        );
+        const res = await axios.get(`${URL}/api/getBookingsByGuest/${user.email}`, {
+          params: { page, limit, status: 'history' }
+        });
+        const history = res.data.result || [];
         setBookings(history);
+        setTotalPages(res.data.pagination?.totalPages || 1);
       } catch (err) {
         console.error(err);
       } finally {
@@ -29,7 +34,7 @@ export default function UserBookingHistory() {
       }
     };
     fetchBookings();
-  }, [user.email, navigate]);
+  }, [user.email, navigate, page, limit]);
 
   const formatDate = (dateString) => {
     return dateString
@@ -69,9 +74,29 @@ export default function UserBookingHistory() {
       <h2 style={{ fontSize: "28px", fontWeight: 800, color: "#1e293b", marginBottom: "8px" }}>
         📋 Booking History
       </h2>
-      <p style={{ color: "#64748b", marginBottom: "32px", fontSize: "15px" }}>
-        Your past stays and cancelled reservations.
-      </p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
+        <p style={{ color: "#64748b", margin: 0, fontSize: "15px" }}>
+          Your past stays and cancelled reservations.
+        </p>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <label style={{ fontSize: "14px", color: "#475569", fontWeight: 600 }}>Items per page:</label>
+          <select 
+            value={limit} 
+            onChange={(e) => {
+              setLimit(Number(e.target.value));
+              setPage(1);
+            }}
+            style={{
+              padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1",
+              background: "#fff", color: "#0f172a", outline: "none", cursor: "pointer"
+            }}
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+          </select>
+        </div>
+      </div>
 
       {loading ? (
         <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
@@ -141,6 +166,39 @@ export default function UserBookingHistory() {
               </div>
             </div>
           ))}
+          
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px", padding: "16px", background: "#fff", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                style={{
+                  padding: "10px 20px", borderRadius: "8px", border: "1px solid #cbd5e1",
+                  background: page === 1 ? "#f1f5f9" : "#fff", color: page === 1 ? "#94a3b8" : "#0f172a",
+                  fontWeight: 600, cursor: page === 1 ? "not-allowed" : "pointer"
+                }}
+              >
+                Previous
+              </button>
+
+              <span style={{ fontSize: "14px", fontWeight: 600, color: "#475569" }}>
+                Page <span style={{ color: "#2563eb" }}>{page}</span> of {totalPages}
+              </span>
+
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages || totalPages === 0}
+                style={{
+                  padding: "10px 20px", borderRadius: "8px", border: "1px solid #cbd5e1",
+                  background: page === totalPages || totalPages === 0 ? "#f1f5f9" : "#fff", color: page === totalPages || totalPages === 0 ? "#94a3b8" : "#0f172a",
+                  fontWeight: 600, cursor: page === totalPages || totalPages === 0 ? "not-allowed" : "pointer"
+                }}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

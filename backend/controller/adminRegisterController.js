@@ -1,6 +1,10 @@
 const AdminAccount = require("../model/adminAccountModel");
 const AdminRequest = require("../model/adminReqModel");
 
+
+
+
+
 //this controller creted to do 2 task at atome create the admin and crate the adminreq in adminreq and save in db
 
 

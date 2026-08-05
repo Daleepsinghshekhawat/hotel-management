@@ -41,6 +41,10 @@ export default function HotelsListing() {
   const [priceRange, setPriceRange] = useState([0, 20000]);
   const [sortBy, setSortBy] = useState("default");
 
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+
   const [debouncedSearch, setDebouncedSearch] = useState(search);
 
   useEffect(() => {
@@ -52,9 +56,10 @@ export default function HotelsListing() {
 
   useEffect(() => {
     setLoading(true);
-    axios.get(`${URL}/api/getHotelsByStatus/active`, { params: { search: debouncedSearch } })
+    axios.get(`${URL}/api/getHotelsByStatus/active`, { params: { search: debouncedSearch, page, limit } })
       .then(async res => {
         const hotelList = res.data.result || [];
+        setTotalPages(res.data.pagination?.totalPages || 1);
         setHotels(hotelList);
         // Fetch rooms for each hotel
         const roomMap = {};
@@ -68,7 +73,7 @@ export default function HotelsListing() {
       })
       .catch(() => setHotels([]))
       .finally(() => setLoading(false));
-  }, [debouncedSearch]);
+  }, [debouncedSearch, page, limit]);
 
   const toggleFacility = (key) => {
     setSelectedFacilities(prev =>
@@ -245,13 +250,35 @@ export default function HotelsListing() {
 
         {/* Listings */}
         <div style={{ flex: 1 }}>
-          <div style={{ marginBottom: "24px" }}>
-            <h1 style={{ fontSize: "24px", fontWeight: 700, color: "#0f172a", margin: "0 0 8px" }}>
-              {search ? `Properties in "${search}"` : "Explore all properties"}
-            </h1>
-            <p style={{ margin: 0, color: "#64748b", fontSize: "15px" }}>
-              {loading ? "Searching..." : `${sorted.length} properties found`}
-            </p>
+          <div style={{ marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <h1 style={{ fontSize: "24px", fontWeight: 700, color: "#0f172a", margin: "0 0 8px" }}>
+                {search ? `Properties in "${search}"` : "Explore all properties"}
+              </h1>
+              <p style={{ margin: 0, color: "#64748b", fontSize: "15px" }}>
+                {loading ? "Searching..." : `${sorted.length} properties on this page`}
+              </p>
+            </div>
+            
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <label style={{ fontSize: "14px", color: "#475569", fontWeight: 600 }}>Items per page:</label>
+              <select 
+                value={limit} 
+                onChange={(e) => {
+                  setLimit(Number(e.target.value));
+                  setPage(1); // Reset to page 1 when limit changes
+                }}
+                style={{
+                  padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1",
+                  background: "#fff", color: "#0f172a", outline: "none", cursor: "pointer"
+                }}
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
           </div>
 
           {loading ? (
@@ -281,6 +308,39 @@ export default function HotelsListing() {
                   navigate={navigate}
                 />
               ))}
+
+              {/* Pagination Controls */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "32px", padding: "16px", background: "#fff", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  style={{
+                    padding: "10px 20px", borderRadius: "8px", border: "1px solid #cbd5e1",
+                    background: page === 1 ? "#f1f5f9" : "#fff", color: page === 1 ? "#94a3b8" : "#0f172a",
+                    fontWeight: 600, cursor: page === 1 ? "not-allowed" : "pointer",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  Previous
+                </button>
+
+                <span style={{ fontSize: "14px", fontWeight: 600, color: "#475569" }}>
+                  Page <span style={{ color: "#2563eb" }}>{page}</span> of {totalPages}
+                </span>
+
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages || totalPages === 0}
+                  style={{
+                    padding: "10px 20px", borderRadius: "8px", border: "1px solid #cbd5e1",
+                    background: page === totalPages || totalPages === 0 ? "#f1f5f9" : "#fff", color: page === totalPages || totalPages === 0 ? "#94a3b8" : "#0f172a",
+                    fontWeight: 600, cursor: page === totalPages || totalPages === 0 ? "not-allowed" : "pointer",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  Next
+                </button>
+              </div>
             </div>
           )}
         </div>

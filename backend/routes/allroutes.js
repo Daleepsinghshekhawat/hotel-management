@@ -62,6 +62,10 @@ router.get(
     "/getAllHotelRequests",
     hotelRequestController.getAllHotelRequests
 );
+router.get(
+    "/getPaginatedHotelRequests",
+    hotelRequestController.getPaginatedHotelRequests
+);
 
 router.get(
     "/getRequestsByStatus",
@@ -226,6 +230,7 @@ router.patch("/restoreCity/:id", cityController.restoreCity);
 
 router.post("/register", adminController.registerAdmin);
 router.get("/getAllAdminRequests",adminReqController.getAllAdminRequests)
+router.get("/getPaginatedAdminRequests",adminReqController.getPaginatedAdminRequests)
 router.get("/getAdminRequestsByStatus/:status",adminReqController.getAdminRequestsByStatus)
 router.patch("/approveAdminRequest/:id",adminReqController.approveAdminRequest)
 router.patch("/rejectAdminRequest/:id",adminReqController.rejectAdminRequest)
@@ -234,6 +239,7 @@ router.post("/addAdminDirect", adminReqController.addAdminDirect)
 
 // User management routes for SuperAdmin
 router.get("/getUsersByRole/:role", superAdminController.getUsersByRole);
+router.get("/getPaginatedUsersByRole/:role", superAdminController.getPaginatedUsersByRole);
 router.delete("/deleteUser/:id", superAdminController.deleteUser);
 
 

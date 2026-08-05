@@ -306,7 +306,6 @@ exports.getRoomBookingStatus = async (req, res) => {
       checkOut: { $gt: now },
     });
 
-    // Also check future bookings
     const futureBooking = await Booking.findOne({
       room: roomId,
       status: { $in: ["confirmed", "pending"] },
@@ -396,11 +395,39 @@ exports.getAllBookings = async (req, res) => {
 exports.getBookingsByGuest = async (req, res) => {
   try {
     const { email } = req.params;
-    const bookings = await Booking.find({ guestEmail: email.toLowerCase() })
+    const { page = 1, limit = 10, status } = req.query;
+
+    let filter = { guestEmail: email.toLowerCase() };
+    if (status) {
+      if (status === 'history') {
+        filter.status = { $in: ["completed", "cancelled"] };
+      } else if (status === 'active') {
+        filter.status = { $nin: ["completed", "cancelled"] };
+      }
+    }
+
+    const allBookings = await Booking.find(filter);
+    const totalDocuments = allBookings.length;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const totalPages = Math.ceil(totalDocuments / parseInt(limit));
+
+    const bookings = await Booking.find(filter)
       .populate("hotel", "hotelName location image")
       .populate("room", "roomName roomType images price")
-      .sort({ createdAt: -1 });
-    return res.status(200).json({ success: true, result: bookings });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    return res.status(200).json({ 
+      success: true, 
+      result: bookings,
+      pagination: {
+        totalItems: totalDocuments,
+        totalPages,
+        currentPage: parseInt(page),
+      }
+    });
   } catch (err) {
     return res.status(500).json({ success: false, message: "Server error" });
   }

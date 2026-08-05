@@ -26,6 +26,52 @@ exports.getUsersByRole = async (req, res) => {
   }
 };
 
+exports.getPaginatedUsersByRole = async (req, res) => {
+  try {
+    const { role } = req.params;
+    const { page = 1, limit = 10, excludeAdmins } = req.query;
+    
+    let result = [];
+    if (role === "all") {
+      let filter = {};
+      if (excludeAdmins === 'true') {
+        filter = { role: { $nin: ["admin", "superadmin"] } };
+      }
+      const normalUsers = await userModel.find(filter).select("-password");
+      const hotelOwners = await hotelOwnerModel.find({}).select("-password");
+      result = [...normalUsers, ...hotelOwners];
+    } else if (role === "hotelOwner") {
+      const ownersFromOwnersColl = await hotelOwnerModel.find({}).select("-password");
+      const ownersFromUsersColl = await userModel.find({ role: "hotelOwner" }).select("-password");
+      result = [...ownersFromOwnersColl, ...ownersFromUsersColl];
+    } else if (role === "admin") {
+      result = await userModel.find({ role: "admin" }).select("-password");
+    } else {
+      result = await userModel.find({ role }).select("-password");
+    }
+
+    result.sort((a, b) => b.createdAt - a.createdAt);
+
+    const totalDocuments = result.length;
+    const totalPages = Math.ceil(totalDocuments / parseInt(limit));
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    const paginatedResult = result.slice(skip, skip + parseInt(limit));
+
+    return res.status(200).json({ 
+      success: true, 
+      result: paginatedResult,
+      pagination: {
+        totalItems: totalDocuments,
+        totalPages,
+        currentPage: parseInt(page),
+      }
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: "Server Error", error: err.message });
+  }
+};
+
 exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;

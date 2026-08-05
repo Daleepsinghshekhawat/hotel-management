@@ -10,18 +10,51 @@ const populateOptions = {
   ],
 };
 
+async function buildSearchFilter(search) {
+  let orFilter = [
+    { hotelName: { $regex: search, $options: "i" } },
+    { ownerName: { $regex: search, $options: "i" } },
+    { email: { $regex: search, $options: "i" } }
+  ];
 
+  const cityModel = require("../model/citymodel");
+  const districtModel = require("../model/districtmodel");
+  const stateModel = require("../model/statemodel");
+
+  const matchedStates = await stateModel.find({ Statename: { $regex: search, $options: "i" } }).select('_id');
+  const stateIds = matchedStates.map(s => s._id);
+
+  const matchedDistricts = await districtModel.find({ districtname: { $regex: search, $options: "i" } }).select('_id');
+  const districtIds = matchedDistricts.map(d => d._id);
+
+  const cityOrQuery = [
+    { cityname: { $regex: search, $options: "i" } }
+  ];
+
+  if (districtIds.length > 0) {
+    cityOrQuery.push({ district: { $in: districtIds } });
+  }
+
+  if (stateIds.length > 0) {
+    cityOrQuery.push({ state: { $in: stateIds } });
+  }
+
+  const matchedCities = await cityModel.find({ $or: cityOrQuery }).select('_id');
+  const cityIds = matchedCities.map(c => c._id);
+
+  if (cityIds.length > 0) {
+    orFilter.push({ location: { $in: cityIds } });
+  }
+
+  return orFilter;
+}
 
 exports.getAllHotels = async (req, res) => {
   try {
     const { search, sort } = req.query;
     let filter = {};
     if (search) {
-      filter.$or = [
-        { hotelName: { $regex: search, $options: "i" } },
-        { ownerName: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } }
-      ];
+      filter.$or = await buildSearchFilter(search);
     }
 
     let sortOption = {};
@@ -49,11 +82,7 @@ exports.getHotelsByAdmin = async (req, res) => {
     let filter = { submittedBy: email };
 
     if (search) {
-      filter.$or = [
-        { hotelName: { $regex: search, $options: "i" } },
-        { ownerName: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } }
-      ];
+      filter.$or = await buildSearchFilter(search);
     }
 
     let sortOption = {};
@@ -192,23 +221,12 @@ exports.getHotelById = async (req, res) => {
 exports.getHotelsByStatus = async (req, res) => {
   try {
     const { status } = req.params;
-    const { search, sort } = req.query;
+    const { search, sort, page = 1, limit = 10 } = req.query;
 
     let filter = { status };
 
     if (search) {
-      const cityModel = require("../model/citymodel");
-      const matchedCities = await cityModel.find({ cityname: { $regex: search, $options: "i" } }).select('_id');
-      const cityIds = matchedCities.map(c => c._id);
-
-      filter.$or = [
-        { hotelName: { $regex: search, $options: "i" } },
-        { ownerName: { $regex: search, $options: "i" } }
-      ];
-
-      if (cityIds.length > 0) {
-        filter.$or.push({ location: { $in: cityIds } });
-      }
+      filter.$or = await buildSearchFilter(search);
     }
 
     let sortOption = {};
@@ -217,14 +235,28 @@ exports.getHotelsByStatus = async (req, res) => {
     else if (sort === "oldest") sortOption.createdAt = 1;
     else sortOption.createdAt = -1;
 
+    // Use hotels.length to get total documents as requested
+    const allHotels = await hotelModel.find(filter);
+    const totalDocuments = allHotels.length;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const totalPages = Math.ceil(totalDocuments / parseInt(limit));
+
     const result = await hotelModel
       .find(filter)
       .populate(populateOptions)
-      .sort(sortOption);
+      .sort(sortOption)
+      .skip(skip)
+      .limit(parseInt(limit));
 
     return res.status(200).json({
       success: true,
       result,
+      pagination: {
+        totalItems: totalDocuments,
+        totalPages,
+        currentPage: parseInt(page),
+      }
     });
   } catch (err) {
     console.log(err);

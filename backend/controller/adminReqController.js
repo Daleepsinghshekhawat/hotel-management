@@ -32,6 +32,64 @@ exports.getAllAdminRequests = async (req, res) => {
   }
 };
 
+exports.getPaginatedAdminRequests = async (req, res) => {
+  try {
+    const { search, sort, page = 1, limit = 10, status } = req.query;
+    let filter = {};
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } }
+      ];
+    }
+    
+    if (status && status !== 'all') {
+      filter.status = status;
+    }
+
+    let sortOption = {};
+    if (sort === "a-z") sortOption.name = 1;
+    else if (sort === "z-a") sortOption.name = -1;
+    else if (sort === "oldest") sortOption.createdAt = 1;
+    else sortOption.createdAt = -1;
+
+    const allRequestsForCounts = await AdminRequest.find(search ? { $or: filter.$or } : {});
+    
+    const allRequests = await AdminRequest.find(filter);
+    const totalDocuments = allRequests.length;
+    
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const totalPages = Math.ceil(totalDocuments / parseInt(limit));
+
+    const result = await AdminRequest.find(filter)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(parseInt(limit));
+      
+    const counts = {
+      pending: allRequestsForCounts.filter(r => r.status === 'pending').length,
+      approved: allRequestsForCounts.filter(r => r.status === 'approved').length,
+      rejected: allRequestsForCounts.filter(r => r.status === 'rejected').length
+    };
+      
+    return res.status(200).json({ 
+      success: true, 
+      result,
+      counts,
+      pagination: {
+        totalItems: totalDocuments,
+        totalPages,
+        currentPage: parseInt(page),
+      }
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
 exports.getAdminRequestsByStatus = async (req, res) => {
   try {
     const { status } = req.params;

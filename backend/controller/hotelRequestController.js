@@ -147,6 +147,80 @@ exports.getAllHotelRequests = async (req, res) => {
   }
 };
 
+exports.getPaginatedHotelRequests = async (req, res) => {
+  try {
+    const { search, sort, page = 1, limit = 10, status } = req.query;
+    let filter = {};
+    if (search) {
+      filter.$or = [
+        { hotelName: { $regex: search, $options: "i" } },
+        { ownerName: { $regex: search, $options: "i" } }
+      ];
+    }
+    
+    if (status && status !== 'all') {
+      filter.status = status;
+    }
+
+    let sortOption = {};
+    if (sort === "a-z") sortOption.hotelName = 1;
+    else if (sort === "z-a") sortOption.hotelName = -1;
+    else if (sort === "oldest") sortOption.createdAt = 1;
+    else sortOption.createdAt = -1;
+
+    const result = await hotelRequest
+      .find(filter)
+      .populate(populateOptions)
+      .sort(sortOption);
+
+    const activeRegistrationIds = new Set(
+      (await hotelModel.find({ status: "active" }).select("registrationId")).map(
+        (h) => h.registrationId
+      )
+    );
+
+    const filterFunc = (r) => {
+      if (r.status === "approved") {
+        return activeRegistrationIds.has(r.registrationId);
+      }
+      if (r.status === "inactive") return false;
+      return true;
+    };
+
+    const filtered = result.filter(filterFunc);
+
+    // Calculate counts ignoring the status tab
+    const allRequestsForCounts = await hotelRequest.find(search ? { $or: filter.$or } : {}).populate(populateOptions);
+    const activeForCounts = allRequestsForCounts.filter(filterFunc);
+    
+    const counts = {
+      pending: activeForCounts.filter(r => r.status === 'pending').length,
+      approved: activeForCounts.filter(r => r.status === 'approved').length,
+      rejected: activeForCounts.filter(r => r.status === 'rejected').length
+    };
+
+    const totalDocuments = filtered.length;
+    const totalPages = Math.ceil(totalDocuments / parseInt(limit));
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    const paginatedResult = filtered.slice(skip, skip + parseInt(limit));
+
+    return res.status(200).json({ 
+      success: true, 
+      result: paginatedResult,
+      counts,
+      pagination: {
+        totalItems: totalDocuments,
+        totalPages,
+        currentPage: parseInt(page),
+      }
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Server Error" });
+  }
+};
+
 exports.getRequestsByStatus = async (req, res) => {
   try {
     const { status } = req.query;

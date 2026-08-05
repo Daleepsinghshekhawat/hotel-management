@@ -94,39 +94,6 @@ exports.getSingleAdminAccount = async (req, res) => {
 };
 
 
-// exports.approveAdmin = async (req, res) => {
-//     try {
-//         const admin = await AdminAccount.findById(req.params.id);
-
-//         if (!admin) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: "Admin account not found.",
-//             });
-//         }
-
-//         const tempPassword = Math.random().toString(36).slice(-8);
-//         const hashPassword = await bcrypt.hash(tempPassword, 10);
-
-//         admin.password = hashPassword,
-//             admin.role = "admin";
-//         admin.verified = true;
-//         admin.status = "approved";
-
-//         await admin.save();
-
-//         res.status(200).json({
-//             success: true,
-//             message: "Admin approved successfully.",
-//         });
-//     } catch (error) {
-//         res.status(500).json({
-//             success: false,
-//             message: error.message,
-//         });
-//     }
-// };
-
 exports.approveAdmin = async (req, res) => {
   try {
     const admin = await AdminAccount.findById(req.params.id);

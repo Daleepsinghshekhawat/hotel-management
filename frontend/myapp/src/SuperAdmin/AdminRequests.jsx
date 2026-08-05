@@ -18,6 +18,10 @@ export default function AdminRequests() {
   const debouncedSearch = useDebounce(search, 500);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [counts, setCounts] = useState({ pending: 0, approved: 0, rejected: 0 });
 
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectingId, setRejectingId] = useState(null);
@@ -30,8 +34,14 @@ export default function AdminRequests() {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${URL}/api/getAllAdminRequests`, { params: { search: debouncedSearch } });
+      const res = await axios.get(`${URL}/api/getPaginatedAdminRequests`, { 
+        params: { search: debouncedSearch, page, limit, status: tab } 
+      });
       setRequests(res.data.result || []);
+      setTotalPages(res.data.pagination?.totalPages || 1);
+      if (res.data.counts) {
+        setCounts(res.data.counts);
+      }
     } catch (err) {
       console.log(err);
       setRequests([]);
@@ -42,7 +52,7 @@ export default function AdminRequests() {
 
   useEffect(() => {
     fetchRequests();
-  }, [debouncedSearch]);
+  }, [debouncedSearch, page, limit, tab]);
 
   const handleApprove = async (id) => {
     if (
@@ -128,16 +138,7 @@ export default function AdminRequests() {
         })
       : "N/A";
 
-  const tabFiltered =
-    tab === "all" ? requests : requests.filter((r) => r.status === tab);
-
-  const filtered = tabFiltered;
-
-  const counts = {
-    pending: requests.filter((r) => r.status === "pending").length,
-    approved: requests.filter((r) => r.status === "approved").length,
-    rejected: requests.filter((r) => r.status === "rejected").length,
-  };
+  const filtered = requests;
 
   return (
     <div style={{ fontFamily: "'Segoe UI', sans-serif" }}>
@@ -185,7 +186,7 @@ export default function AdminRequests() {
         {STATUS_TABS.map((t) => (
           <button
             key={t}
-            onClick={() => setTab(t)}
+            onClick={() => { setTab(t); setPage(1); }}
             style={{
               border: "none",
               padding: "8px 18px",
@@ -203,23 +204,46 @@ export default function AdminRequests() {
         ))}
       </div>
 
-      <input
-        type="text"
-        placeholder="Search by name, email, occupation, or mobile..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{
-          width: "100%",
-          padding: "11px 16px",
-          borderRadius: "10px",
-          border: "1px solid #cbd5e1",
-          marginBottom: "24px",
-          boxSizing: "border-box",
-          fontSize: "14px",
-          outline: "none",
-          background: "#f8fafc",
-        }}
-      />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+        <div style={{ position: "relative", maxWidth: "300px", width: "100%" }}>
+          <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)" }}>🔍</span>
+          <input
+            type="text"
+            placeholder="Search by name or email..."
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            style={{
+              padding: "10px 10px 10px 36px",
+              borderRadius: "999px",
+              border: "1px solid #cbd5e1",
+              fontSize: "14px",
+              width: "100%",
+              outline: "none",
+              boxSizing: "border-box",
+            }}
+          />
+        </div>
+        
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <label style={{ fontSize: "14px", color: "#475569", fontWeight: 600 }}>Items per page:</label>
+          <select 
+            value={limit} 
+            onChange={(e) => {
+              setLimit(Number(e.target.value));
+              setPage(1);
+            }}
+            style={{
+              padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1",
+              background: "#fff", color: "#0f172a", outline: "none", cursor: "pointer"
+            }}
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
+        </div>
+      </div>
 
       {loading ? (
         <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
@@ -398,6 +422,38 @@ export default function AdminRequests() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "24px", padding: "16px 20px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+            style={{
+              padding: "8px 16px", borderRadius: "8px", border: "1px solid #cbd5e1",
+              background: page === 1 ? "#f1f5f9" : "#fff", color: page === 1 ? "#94a3b8" : "#0f172a",
+              fontWeight: 600, cursor: page === 1 ? "not-allowed" : "pointer"
+            }}
+          >
+            Previous
+          </button>
+
+          <span style={{ fontSize: "14px", fontWeight: 600, color: "#475569" }}>
+            Page <span style={{ color: "#2563eb" }}>{page}</span> of {totalPages}
+          </span>
+
+          <button
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages || totalPages === 0}
+            style={{
+              padding: "8px 16px", borderRadius: "8px", border: "1px solid #cbd5e1",
+              background: page === totalPages || totalPages === 0 ? "#f1f5f9" : "#fff", color: page === totalPages || totalPages === 0 ? "#94a3b8" : "#0f172a",
+              fontWeight: 600, cursor: page === totalPages || totalPages === 0 ? "not-allowed" : "pointer"
+            }}
+          >
+            Next
+          </button>
         </div>
       )}
 
