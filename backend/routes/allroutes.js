@@ -5,7 +5,7 @@ const stateController = require("../controller/stateController");
 const districtController = require("../controller/districtController");
 const cityController = require("../controller/cityController");
 
-const adminController = require("../controller/adminRegisterController");
+const adminController = require("../controller/adminAccountController");
 
 const adminReqController = require("../controller/adminReqController");
 const roomController = require("../controller/roomController");
@@ -228,7 +228,7 @@ router.patch("/restoreCity/:id", cityController.restoreCity);
 
 //to create the adminuser and adminaccount req 
 
-router.post("/register", adminController.registerAdmin);
+router.post("/register", adminController.createAdminRequest);
 router.get("/getAllAdminRequests",adminReqController.getAllAdminRequests)
 router.get("/getPaginatedAdminRequests",adminReqController.getPaginatedAdminRequests)
 router.get("/getAdminRequestsByStatus/:status",adminReqController.getAdminRequestsByStatus)

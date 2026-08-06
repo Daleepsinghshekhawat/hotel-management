@@ -241,9 +241,8 @@ exports.getRoomCalendarAvailability = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────
 // ACQUIRE TEMP LOCK
-// ─────────────────────────────────────────────
+
 exports.acquireTempLock = async (req, res) => {
   try {
     const { roomId } = req.params;

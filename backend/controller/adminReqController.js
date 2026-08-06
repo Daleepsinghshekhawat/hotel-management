@@ -360,3 +360,27 @@ exports.addAdminDirect = async (req, res) => {
     });
   }
 };
+
+
+exports.getSingleAdminRequest = async (req, res) => {
+  try {
+    const request = await AdminRequest.findById(req.params.id);
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: "Request not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      request,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};

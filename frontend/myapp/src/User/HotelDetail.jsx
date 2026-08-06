@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { MapPin, CheckCircle2, User, ChevronLeft, Wifi, Wind, Thermometer, Tv, Refrigerator, Microwave, DoorClosed, Briefcase, Sunset, Bath, Droplets, Waves, Dumbbell, Sparkles, Utensils, ParkingCircle, Martini, Coffee, Dog, Heart, Zap, Banknote, BedDouble, Expand, Maximize, CalendarCheck, Clock, Users } from "lucide-react";
+import { MapPin, CheckCircle2, User, ChevronLeft, Wifi, Wind, Thermometer, Tv, Refrigerator, Microwave, DoorClosed, Briefcase, Sunset, Bath, Droplets, Waves, Dumbbell, Sparkles, Utensils, ParkingCircle, Martini, Coffee, Dog, Heart, Zap, Banknote, BedDouble, Expand, Maximize, CalendarCheck, Clock, Users, Star } from "lucide-react";
 import URL from "../api";
 
 const formatLocation = (loc) => {
@@ -51,19 +51,27 @@ export default function HotelDetail() {
   const [hotel, setHotel] = useState(null);
   const [rooms, setRooms] = useState([]);
   const [roomStatuses, setRoomStatuses] = useState({});
+  const [reviews, setReviews] = useState([]);
+  const [rating, setRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [loading, setLoading] = useState(true);
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
   const fetchAll = useCallback(async () => {
     try {
-      const [hotelRes, roomRes] = await Promise.all([
+      const [hotelRes, roomRes, reviewsRes] = await Promise.all([
         axios.get(`${URL}/api/getHotelById/${id}`),
         axios.get(`${URL}/api/getRoomsByHotel/${id}`),
+        axios.get(`${URL}/api/reviews/getReviewsByHotel/${id}`),
       ]);
       const hotelData = hotelRes.data.result;
       const roomList = roomRes.data.result || [];
       setHotel(hotelData);
       setRooms(roomList);
+      if (reviewsRes.data.success) {
+        setReviews(reviewsRes.data.result || []);
+      }
 
       const statusMap = {};
       await Promise.all(roomList.map(async (r) => {
@@ -89,6 +97,44 @@ export default function HotelDetail() {
       return;
     }
     navigate(`/user/hotel/${id}/room/${room._id}`);
+  };
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    if (!currentUser || !currentUser._id) {
+      alert("Please login first to submit a review.");
+      navigate("/login");
+      return;
+    }
+    if (!reviewText.trim()) {
+      alert("Please write a review text.");
+      return;
+    }
+    try {
+      setIsSubmittingReview(true);
+      const payload = {
+        hotelId: id,
+        userId: currentUser._id,
+        rating,
+        reviewText
+      };
+      const res = await axios.post(`${URL}/api/reviews/addReview`, payload);
+      if (res.data.success) {
+        alert("Review added successfully");
+        setReviewText("");
+        setRating(5);
+        // Refresh reviews
+        const updatedReviews = await axios.get(`${URL}/api/reviews/getReviewsByHotel/${id}`);
+        if (updatedReviews.data.success) {
+          setReviews(updatedReviews.data.result || []);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Failed to submit review");
+    } finally {
+      setIsSubmittingReview(false);
+    }
   };
 
   const allAmenities = new Set();
@@ -235,6 +281,99 @@ export default function HotelDetail() {
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* Reviews Section */}
+            <div id="reviews-section" style={{ marginTop: "48px", paddingTop: "32px", borderTop: "1px solid #e2e8f0" }}>
+              <h2 style={{ fontSize: "22px", fontWeight: 600, color: "#0f172a", margin: "0 0 24px" }}>
+                Guest Reviews
+              </h2>
+              
+              {/* Existing Reviews List */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "24px", marginBottom: "40px" }}>
+                {reviews.length === 0 ? (
+                  <p style={{ color: "#64748b", margin: 0 }}>No reviews yet for this property. Be the first to review!</p>
+                ) : (
+                  reviews.map((rev) => (
+                    <div key={rev._id} style={{ padding: "20px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #f1f5f9" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+                        <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", color: "#475569", fontWeight: 600 }}>
+                          {rev.user?.name ? rev.user.name.charAt(0).toUpperCase() : "U"}
+                        </div>
+                        <div>
+                          <p style={{ margin: "0 0 4px", fontWeight: 600, color: "#0f172a" }}>{rev.user?.name || "Anonymous User"}</p>
+                          <div style={{ display: "flex", gap: "2px" }}>
+                            {[1, 2, 3, 4, 5].map(star => (
+                              <Star key={star} size={14} fill={star <= rev.rating ? "#fbbf24" : "transparent"} color={star <= rev.rating ? "#fbbf24" : "#cbd5e1"} />
+                            ))}
+                          </div>
+                        </div>
+                        <div style={{ marginLeft: "auto", fontSize: "13px", color: "#94a3b8" }}>
+                          {new Date(rev.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <p style={{ margin: 0, color: "#475569", lineHeight: "1.6", fontSize: "15px", whiteSpace: "pre-wrap" }}>
+                        {rev.reviewText}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Add Review Form */}
+              <div style={{ padding: "24px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "16px", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: 600, color: "#0f172a", margin: "0 0 16px" }}>Write a Review</h3>
+                {!currentUser || !currentUser._id ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px", alignItems: "flex-start" }}>
+                    <p style={{ margin: 0, color: "#64748b" }}>Please login to share your experience with other guests.</p>
+                    <button onClick={() => navigate("/login")} style={{ padding: "10px 20px", background: "#2563eb", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer" }}>
+                      Login to Review
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmitReview} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: "14px", fontWeight: 600, color: "#475569", marginBottom: "8px" }}>Rating</label>
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        {[1, 2, 3, 4, 5].map(star => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setRating(star)}
+                            style={{ background: "none", border: "none", padding: 0, cursor: "pointer", transition: "transform 0.1s" }}
+                            onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.1)"}
+                            onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+                          >
+                            <Star size={28} fill={star <= rating ? "#fbbf24" : "transparent"} color={star <= rating ? "#fbbf24" : "#cbd5e1"} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label htmlFor="reviewText" style={{ display: "block", fontSize: "14px", fontWeight: 600, color: "#475569", marginBottom: "8px" }}>Your Experience</label>
+                      <textarea
+                        id="reviewText"
+                        value={reviewText}
+                        onChange={(e) => setReviewText(e.target.value)}
+                        placeholder="Tell us about your stay..."
+                        rows="4"
+                        style={{ width: "100%", padding: "12px", border: "1px solid #cbd5e1", borderRadius: "8px", fontSize: "15px", fontFamily: "inherit", resize: "vertical", outline: "none", transition: "border-color 0.2s" }}
+                        onFocus={(e) => e.target.style.borderColor = "#2563eb"}
+                        onBlur={(e) => e.target.style.borderColor = "#cbd5e1"}
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={isSubmittingReview}
+                      style={{
+                        padding: "12px 24px", background: isSubmittingReview ? "#94a3b8" : "#0f172a", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 600, fontSize: "15px", cursor: isSubmittingReview ? "not-allowed" : "pointer", alignSelf: "flex-start", transition: "background 0.2s"
+                      }}
+                    >
+                      {isSubmittingReview ? "Submitting..." : "Submit Review"}
+                    </button>
+                  </form>
+                )}
+              </div>
             </div>
           </div>
 

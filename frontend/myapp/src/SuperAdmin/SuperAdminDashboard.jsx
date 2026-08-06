@@ -187,7 +187,7 @@ export default function SuperAdminDashboard() {
     hotels.forEach(h => {
       totalRooms += (h.totalRooms || 0);
     });
-    // Active bookings today (approximate occupancy)
+    // Active bookings today 
     let occupiedRooms = 0;
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     bookings.forEach(b => {
@@ -230,6 +230,8 @@ export default function SuperAdminDashboard() {
         }
       }
     });
+
+    
 
     reviews.forEach(r => {
       const hId = r.hotel?._id || r.hotel;

@@ -1,5 +1,7 @@
 const usermodel = require("../model/usermodel");
 const hotelOwnerModel = require("../model/hotelOwnerModel");
+const AdminAccount = require("../model/adminAccountModel");
+const AdminAccount = require("../model/adminAccountModel");
 
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
@@ -125,7 +127,6 @@ exports.login = async (req, res) => {
 
   
     if (!user && !hotelUser) {
-      const AdminAccount = require("../model/adminAccountModel");
       const adminAcc = await AdminAccount.findOne({ email, status: "approved" });
       if (adminAcc) {
         adminUser = {
@@ -264,7 +265,6 @@ exports.verifyOtp = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   try {
     let { email, password } = req.body;
-    email = email?.toLowerCase().trim();
 
     let user = await usermodel.findOne({ email });
     if (!user) {
@@ -290,7 +290,6 @@ exports.resetPassword = async (req, res) => {
     await user.save();
 
     if (user.role === "admin") {
-      const AdminAccount = require("../model/adminAccountModel");
       await AdminAccount.findOneAndUpdate({ email: user.email }, { password: hashPassword });
     }
 

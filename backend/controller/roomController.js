@@ -4,9 +4,9 @@ const Room = require("../model/room");
 const Hotel = require("../model/hotelModel");
 const { uploadImage } = require("../utils/cloudinary");
 
-// =============================
+
 // Add Room
-// =============================
+
 
 exports.addRoom = async (req, res) => {
   try {
@@ -111,9 +111,9 @@ exports.addRoom = async (req, res) => {
       instantBooking,
     } = req.body;
 
-    // ========================
+  
     // Validation
-    // ========================
+   
 
     if (!hotel || !roomName || !roomNumber || !roomType || !price) {
       return res.json({
@@ -122,9 +122,9 @@ exports.addRoom = async (req, res) => {
       });
     }
 
-    // ========================
+    
     // Check Hotel Exists
-    // ========================
+   
 
     let hotelExists = null;
     if (mongoose.Types.ObjectId.isValid(hotel)) {
@@ -143,9 +143,9 @@ exports.addRoom = async (req, res) => {
 
     const actualHotelId = hotelExists._id;
 
-    // ========================
+   
     // Duplicate Room Number
-    // ========================
+   
 
     const roomExists = await Room.findOne({
       hotel: actualHotelId,
@@ -159,9 +159,9 @@ exports.addRoom = async (req, res) => {
       });
     }
 
-    // ========================
+   
     // Upload Images
-    // ========================
+   
 
     let imageUrls = [];
 
@@ -171,17 +171,17 @@ exports.addRoom = async (req, res) => {
       imageUrls = uploadedImages.map((img) => img.secure_url);
     }
 
-    // ========================
+
     // Calculate Price
-    // ========================
+  
 
     const finalPrice =
       Number(price) -
       (Number(price) * Number(discount || 0)) / 100;
 
-    // ========================
+  
     // Save
-    // ========================
+   
 
     const room = await Room.create({
       hotel: actualHotelId,
@@ -383,9 +383,7 @@ exports.getRoomsByHotel = async (req, res) => {
   }
 };
 
-
 // Get Single Room
-
 
 exports.getSingleRoom = async (req, res) => {
   try {

@@ -6,17 +6,17 @@ exports.getUsersByRole = async (req, res) => {
     const { role } = req.params;
     let result = [];
     if (role === "all") {
-      const normalUsers = await userModel.find({}).select("-password");
-      const hotelOwners = await hotelOwnerModel.find({}).select("-password");
+      const normalUsers = await userModel.find({});
+      const hotelOwners = await hotelOwnerModel.find({});
       result = [...normalUsers, ...hotelOwners];
     } else if (role === "hotelOwner") {
-      const ownersFromOwnersColl = await hotelOwnerModel.find({}).select("-password");
-      const ownersFromUsersColl = await userModel.find({ role: "hotelOwner" }).select("-password");
+      const ownersFromOwnersColl = await hotelOwnerModel.find({});
+      const ownersFromUsersColl = await userModel.find({ role: "hotelOwner" });
       result = [...ownersFromOwnersColl, ...ownersFromUsersColl];
     } else if (role === "admin") {
-      result = await userModel.find({ role: "admin" }).select("-password");
+      result = await userModel.find({ role: "admin" });
     } else {
-      result = await userModel.find({ role }).select("-password");
+      result = await userModel.find({ role });
     }
     // Sort by createdAt descending
     result.sort((a, b) => b.createdAt - a.createdAt);
@@ -37,17 +37,17 @@ exports.getPaginatedUsersByRole = async (req, res) => {
       if (excludeAdmins === 'true') {
         filter = { role: { $nin: ["admin", "superadmin"] } };
       }
-      const normalUsers = await userModel.find(filter).select("-password");
-      const hotelOwners = await hotelOwnerModel.find({}).select("-password");
+      const normalUsers = await userModel.find(filter);
+      const hotelOwners = await hotelOwnerModel.find({});
       result = [...normalUsers, ...hotelOwners];
     } else if (role === "hotelOwner") {
-      const ownersFromOwnersColl = await hotelOwnerModel.find({}).select("-password");
-      const ownersFromUsersColl = await userModel.find({ role: "hotelOwner" }).select("-password");
+      const ownersFromOwnersColl = await hotelOwnerModel.find({});
+      const ownersFromUsersColl = await userModel.find({ role: "hotelOwner" });
       result = [...ownersFromOwnersColl, ...ownersFromUsersColl];
     } else if (role === "admin") {
-      result = await userModel.find({ role: "admin" }).select("-password");
+      result = await userModel.find({ role: "admin" });
     } else {
-      result = await userModel.find({ role }).select("-password");
+      result = await userModel.find({ role });
     }
 
     result.sort((a, b) => b.createdAt - a.createdAt);
