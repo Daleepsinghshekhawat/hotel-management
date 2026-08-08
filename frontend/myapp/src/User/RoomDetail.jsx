@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { ChevronLeft, Calendar as CalendarIcon, Users, CreditCard, CheckCircle2, AlertCircle, Wifi, Wind, Tv, Coffee, Bath, Droplets, Utensils, User, Star } from "lucide-react";
+import { ChevronLeft, Calendar as CalendarIcon, Users, CreditCard, CheckCircle2, AlertCircle, Wifi, Wind, Tv, Coffee, Bath, Droplets, Utensils, User, Star, Download } from "lucide-react";
 import URL from "../api";
 import "./RoomDetail.css"; // Keep the calendar CSS but overhaul the layout
 
@@ -31,9 +31,9 @@ export default function RoomDetail() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => {
-    if (!user || !user._id) {
-      alert("Please login first.");
-      navigate("/login");
+    const token = localStorage.getItem("token");
+    if (!user || !user._id || !token) {
+      navigate("/signup");
       return;
     }
     setForm(p => ({ ...p, name: user.name || "", email: user.email || "" }));
@@ -192,9 +192,25 @@ export default function RoomDetail() {
     }
   };
 
+  const handleDownloadPDF = async () => {
+    try {
+      const response = await axios.get(`${URL}/api/pdf/room/${roomId}`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `room-${roomId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Error downloading PDF", error);
+      alert("Failed to generate PDF");
+    }
+  };
+
   if (!room || !hotel) return (
     <div style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "16px", fontFamily: "'Inter', sans-serif" }}>
-      <div style={{ width: "48px", height: "48px", border: "4px solid #e2e8f0", borderTop: "4px solid #2563eb", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <div style={{ width: "48px", height: "48px", border: "4px solid var(--border-color)", borderTop: "4px solid var(--accent-color)", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
@@ -261,22 +277,33 @@ export default function RoomDetail() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-primary)", fontFamily: "'Inter', sans-serif" }}>
       
       {/* Header Container */}
-      <div style={{ background: "#fff", borderBottom: "1px solid #e2e8f0", padding: "24px 5% 20px" }}>
+      <div style={{ background: "var(--bg-secondary)", borderBottom: "1px solid var(--border-color)", padding: "24px 5% 20px" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <button onClick={() => navigate(-1)} style={{
-            display: "flex", alignItems: "center", gap: "4px", background: "none", border: "none",
-            color: "#64748b", fontWeight: 600, fontSize: "14px", cursor: "pointer", padding: "0", marginBottom: "16px"
-          }}>
-            <ChevronLeft size={16} /> Back to hotel
-          </button>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <button onClick={() => navigate(-1)} style={{
+              display: "flex", alignItems: "center", gap: "4px", background: "none", border: "none",
+              color: "var(--text-secondary)", fontWeight: 600, fontSize: "14px", cursor: "pointer", padding: "0"
+            }}>
+              <ChevronLeft size={16} /> Back to hotel
+            </button>
+            <button
+              onClick={handleDownloadPDF}
+              style={{
+                display: "flex", alignItems: "center", gap: "6px", background: "#10b981", color: "#fff",
+                border: "none", padding: "8px 16px", borderRadius: "8px", fontWeight: 600, fontSize: "14px", cursor: "pointer"
+              }}
+            >
+              <Download size={16} /> Download PDF
+            </button>
+          </div>
           
-          <h1 style={{ margin: "0 0 8px", fontSize: "28px", fontWeight: 700, color: "#0f172a" }}>
+          <h1 style={{ margin: "0 0 8px", fontSize: "28px", fontWeight: 700, color: "var(--text-primary)" }}>
             {room.roomName}
           </h1>
-          <p style={{ margin: 0, color: "#475569", fontSize: "15px" }}>
+          <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "15px" }}>
             {hotel.hotelName} • {room.roomType}
           </p>
         </div>
@@ -292,62 +319,62 @@ export default function RoomDetail() {
               <img src={room.images?.[0] || 'https://via.placeholder.com/800x500'} alt="Room" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </div>
 
-            <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "32px", marginBottom: "32px" }}>
-              <h2 style={{ fontSize: "20px", fontWeight: 600, color: "#0f172a", margin: "0 0 16px" }}>Room Details</h2>
-              <p style={{ color: "#475569", lineHeight: "1.6", fontSize: "15px", margin: "0 0 24px" }}>{room.description}</p>
+            <div style={{ background: "var(--bg-secondary)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "32px", marginBottom: "32px" }}>
+              <h2 style={{ fontSize: "20px", fontWeight: 600, color: "var(--text-primary)", margin: "0 0 16px" }}>Room Details</h2>
+              <p style={{ color: "var(--text-secondary)", lineHeight: "1.6", fontSize: "15px", margin: "0 0 24px" }}>{room.description}</p>
               
               <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#0f172a", fontWeight: 500 }}>
-                  <Users size={18} color="#64748b" /> Up to {room.maxGuests} guests
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--text-primary)", fontWeight: 500 }}>
+                  <Users size={18} color="var(--text-secondary)" /> Up to {room.maxGuests} guests
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#0f172a", fontWeight: 500 }}>
-                  <CreditCard size={18} color="#64748b" /> ₹{room.finalPrice || room.price} / night
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--text-primary)", fontWeight: 500 }}>
+                  <CreditCard size={18} color="var(--text-secondary)" /> ₹{room.finalPrice || room.price} / night
                 </div>
               </div>
             </div>
 
             {/* Amenities Section */}
-            <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "32px", marginBottom: "32px" }}>
-              <h2 style={{ fontSize: "20px", fontWeight: 600, color: "#0f172a", margin: "0 0 24px" }}>Room Amenities</h2>
+            <div style={{ background: "var(--bg-secondary)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "32px", marginBottom: "32px" }}>
+              <h2 style={{ fontSize: "20px", fontWeight: 600, color: "var(--text-primary)", margin: "0 0 24px" }}>Room Amenities</h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "20px" }}>
-                {room.wifi && <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#475569" }}><Wifi size={20} color="#2563eb" /> Free WiFi</div>}
-                {room.ac && <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#475569" }}><Wind size={20} color="#2563eb" /> Air Conditioning</div>}
-                {room.smartTV && <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#475569" }}><Tv size={20} color="#2563eb" /> Smart TV</div>}
-                {room.hotWater && <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#475569" }}><Droplets size={20} color="#2563eb" /> Hot Water</div>}
-                {room.attachedBathroom && <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#475569" }}><Bath size={20} color="#2563eb" /> Attached Bathroom</div>}
-                {room.coffeeMachine && <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#475569" }}><Coffee size={20} color="#2563eb" /> Coffee Machine</div>}
-                {room.roomService && <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#475569" }}><Utensils size={20} color="#2563eb" /> Room Service</div>}
+                {room.wifi && <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "var(--text-secondary)" }}><Wifi size={20} color="var(--accent-color)" /> Free WiFi</div>}
+                {room.ac && <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "var(--text-secondary)" }}><Wind size={20} color="var(--accent-color)" /> Air Conditioning</div>}
+                {room.smartTV && <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "var(--text-secondary)" }}><Tv size={20} color="var(--accent-color)" /> Smart TV</div>}
+                {room.hotWater && <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "var(--text-secondary)" }}><Droplets size={20} color="var(--accent-color)" /> Hot Water</div>}
+                {room.attachedBathroom && <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "var(--text-secondary)" }}><Bath size={20} color="var(--accent-color)" /> Attached Bathroom</div>}
+                {room.coffeeMachine && <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "var(--text-secondary)" }}><Coffee size={20} color="var(--accent-color)" /> Coffee Machine</div>}
+                {room.roomService && <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "var(--text-secondary)" }}><Utensils size={20} color="var(--accent-color)" /> Room Service</div>}
               </div>
             </div>
 
             {/* Reviews Section */}
-            <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "32px", marginBottom: "32px" }}>
-              <h2 style={{ fontSize: "20px", fontWeight: 600, color: "#0f172a", margin: "0 0 24px" }}>
+            <div style={{ background: "var(--bg-secondary)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "32px", marginBottom: "32px" }}>
+              <h2 style={{ fontSize: "20px", fontWeight: 600, color: "var(--text-primary)", margin: "0 0 24px" }}>
                 Guest Reviews
               </h2>
               {reviews.length === 0 ? (
-                <p style={{ color: "#64748b", fontStyle: "italic" }}>No reviews yet for this property.</p>
+                <p style={{ color: "var(--text-secondary)", fontStyle: "italic" }}>No reviews yet for this property.</p>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                   {reviews.map(review => (
-                    <div key={review._id} style={{ borderBottom: "1px solid #e2e8f0", paddingBottom: "20px" }}>
+                    <div key={review._id} style={{ borderBottom: "1px solid var(--border-color)", paddingBottom: "20px" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                          <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}>
+                          <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "var(--bg-tertiary)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary)" }}>
                             <User size={20} />
                           </div>
                           <div>
-                            <div style={{ fontWeight: 600, color: "#0f172a" }}>{review.user?.name || "Anonymous"}</div>
-                            <div style={{ fontSize: "12px", color: "#94a3b8" }}>{new Date(review.createdAt).toLocaleDateString()}</div>
+                            <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{review.user?.name || "Anonymous"}</div>
+                            <div style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>{new Date(review.createdAt).toLocaleDateString()}</div>
                           </div>
                         </div>
                         <div style={{ display: "flex", gap: "2px" }}>
                           {[1, 2, 3, 4, 5].map(star => (
-                            <Star key={star} size={16} fill={star <= review.rating ? "#eab308" : "none"} color={star <= review.rating ? "#eab308" : "#cbd5e1"} />
+                            <Star key={star} size={16} fill={star <= review.rating ? "#eab308" : "none"} color={star <= review.rating ? "#eab308" : "var(--border-color)"} />
                           ))}
                         </div>
                       </div>
-                      <p style={{ color: "#475569", lineHeight: "1.6", margin: "8px 0 0" }}>{review.reviewText}</p>
+                      <p style={{ color: "var(--text-secondary)", lineHeight: "1.6", margin: "8px 0 0" }}>{review.reviewText}</p>
                     </div>
                   ))}
                 </div>
@@ -355,8 +382,8 @@ export default function RoomDetail() {
             </div>
 
             {bookingStep === "calendar" && (
-              <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "32px" }}>
-                <h2 style={{ fontSize: "20px", fontWeight: 600, color: "#0f172a", margin: "0 0 24px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <div style={{ background: "var(--bg-secondary)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "32px" }}>
+                <h2 style={{ fontSize: "20px", fontWeight: 600, color: "var(--text-primary)", margin: "0 0 24px", display: "flex", alignItems: "center", gap: "8px" }}>
                   <CalendarIcon size={20} /> Select Dates
                 </h2>
                 {renderCalendar()}
@@ -366,16 +393,16 @@ export default function RoomDetail() {
 
           {/* Right Side: Sticky Checkout */}
           <div style={{ width: "380px", flexShrink: 0 }}>
-            <div style={{ position: "sticky", top: "120px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "32px", boxShadow: "0 10px 40px rgba(0,0,0,0.06)" }}>
+            <div style={{ position: "sticky", top: "120px", background: "var(--bg-secondary)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "32px", boxShadow: "0 10px 40px rgba(0,0,0,0.06)" }}>
               
               {bookingStep === "success" ? (
                 <div style={{ textAlign: "center" }}>
                   <CheckCircle2 size={64} color="#16a34a" style={{ margin: "0 auto 16px" }} />
-                  <h3 style={{ margin: "0 0 8px", fontSize: "24px", color: "#0f172a" }}>Booking Confirmed!</h3>
-                  <p style={{ margin: "0 0 24px", color: "#475569" }}>We've sent the details to {form.email}</p>
+                  <h3 style={{ margin: "0 0 8px", fontSize: "24px", color: "var(--text-primary)" }}>Booking Confirmed!</h3>
+                  <p style={{ margin: "0 0 24px", color: "var(--text-secondary)" }}>We've sent the details to {form.email}</p>
                   <button 
                     onClick={() => navigate("/user/account/bookings")}
-                    style={{ width: "100%", padding: "14px", background: "#0f172a", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer" }}
+                    style={{ width: "100%", padding: "14px", background: "var(--text-primary)", color: "var(--bg-primary)", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer" }}
                   >
                     View My Bookings
                   </button>
@@ -384,22 +411,22 @@ export default function RoomDetail() {
                 <>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px" }}>
                     <div>
-                      <span style={{ fontSize: "24px", fontWeight: 700, color: "#0f172a" }}>₹{room.finalPrice || room.price}</span>
-                      <span style={{ color: "#64748b", fontSize: "15px" }}> / night</span>
+                      <span style={{ fontSize: "24px", fontWeight: 700, color: "var(--text-primary)" }}>₹{room.finalPrice || room.price}</span>
+                      <span style={{ color: "var(--text-secondary)", fontSize: "15px" }}> / night</span>
                     </div>
                   </div>
 
                   {bookingStep === "calendar" && (
                     <>
-                      <div style={{ border: "1px solid #cbd5e1", borderRadius: "12px", overflow: "hidden", marginBottom: "24px" }}>
-                        <div style={{ display: "flex", borderBottom: "1px solid #cbd5e1" }}>
-                          <div style={{ flex: 1, padding: "12px", borderRight: "1px solid #cbd5e1" }}>
-                            <div style={{ fontSize: "10px", fontWeight: 800, textTransform: "uppercase", color: "#0f172a" }}>Check-in</div>
-                            <div style={{ color: checkIn ? "#0f172a" : "#64748b", fontSize: "14px", marginTop: "2px", fontWeight: checkIn ? 600 : 400 }}>{checkIn || "Select date"}</div>
+                      <div style={{ border: "1px solid var(--border-color)", borderRadius: "12px", overflow: "hidden", marginBottom: "24px" }}>
+                        <div style={{ display: "flex", borderBottom: "1px solid var(--border-color)" }}>
+                          <div style={{ flex: 1, padding: "12px", borderRight: "1px solid var(--border-color)" }}>
+                            <div style={{ fontSize: "10px", fontWeight: 800, textTransform: "uppercase", color: "var(--text-primary)" }}>Check-in</div>
+                            <div style={{ color: checkIn ? "var(--text-primary)" : "var(--text-secondary)", fontSize: "14px", marginTop: "2px", fontWeight: checkIn ? 600 : 400 }}>{checkIn || "Select date"}</div>
                           </div>
                           <div style={{ flex: 1, padding: "12px" }}>
-                            <div style={{ fontSize: "10px", fontWeight: 800, textTransform: "uppercase", color: "#0f172a" }}>Checkout</div>
-                            <div style={{ color: checkOut ? "#0f172a" : "#64748b", fontSize: "14px", marginTop: "2px", fontWeight: checkOut ? 600 : 400 }}>{checkOut || "Select date"}</div>
+                            <div style={{ fontSize: "10px", fontWeight: 800, textTransform: "uppercase", color: "var(--text-primary)" }}>Checkout</div>
+                            <div style={{ color: checkOut ? "var(--text-primary)" : "var(--text-secondary)", fontSize: "14px", marginTop: "2px", fontWeight: checkOut ? 600 : 400 }}>{checkOut || "Select date"}</div>
                           </div>
                         </div>
                       </div>
@@ -415,7 +442,7 @@ export default function RoomDetail() {
                         disabled={!checkIn || !checkOut || lockStatus === "locking"}
                         style={{
                           width: "100%", padding: "14px", borderRadius: "8px", border: "none",
-                          background: (!checkIn || !checkOut || lockStatus === "locking") ? "#cbd5e1" : "#2563eb", 
+                          background: (!checkIn || !checkOut || lockStatus === "locking") ? "var(--text-tertiary)" : "var(--accent-color)", 
                           color: "#fff", fontWeight: 600, fontSize: "16px",
                           cursor: (!checkIn || !checkOut || lockStatus === "locking") ? "not-allowed" : "pointer"
                         }}
@@ -427,21 +454,21 @@ export default function RoomDetail() {
 
                   {bookingStep === "form" && (
                     <form onSubmit={handleFinalBook}>
-                      <h3 style={{ margin: "0 0 16px", fontSize: "18px", color: "#0f172a" }}>Guest Details</h3>
+                      <h3 style={{ margin: "0 0 16px", fontSize: "18px", color: "var(--text-primary)" }}>Guest Details</h3>
                       
                       <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "24px" }}>
-                        <input required value={form.name} onChange={e=>setForm({...form, name: e.target.value})} placeholder="Full Name" style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", fontSize: "14px" }} />
-                        <input required type="email" value={form.email} onChange={e=>setForm({...form, email: e.target.value})} placeholder="Email Address" style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", fontSize: "14px" }} />
-                        <input required value={form.phone} onChange={e=>setForm({...form, phone: e.target.value})} placeholder="Phone Number" style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", fontSize: "14px" }} />
-                        <input type="number" min={1} max={room.maxGuests} required value={form.guests} onChange={e=>setForm({...form, guests: e.target.value})} placeholder="Number of Guests" style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", fontSize: "14px" }} />
+                        <input required value={form.name} onChange={e=>setForm({...form, name: e.target.value})} placeholder="Full Name" style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-primary)", color: "var(--text-primary)", outline: "none", fontSize: "14px" }} />
+                        <input required type="email" value={form.email} onChange={e=>setForm({...form, email: e.target.value})} placeholder="Email Address" style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-primary)", color: "var(--text-primary)", outline: "none", fontSize: "14px" }} />
+                        <input required value={form.phone} onChange={e=>setForm({...form, phone: e.target.value})} placeholder="Phone Number" style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-primary)", color: "var(--text-primary)", outline: "none", fontSize: "14px" }} />
+                        <input type="number" min={1} max={room.maxGuests} required value={form.guests} onChange={e=>setForm({...form, guests: e.target.value})} placeholder="Number of Guests" style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-primary)", color: "var(--text-primary)", outline: "none", fontSize: "14px" }} />
                       </div>
 
-                      <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "16px", marginBottom: "24px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "14px", color: "#475569" }}>
+                      <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "16px", marginBottom: "24px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "14px", color: "var(--text-secondary)" }}>
                           <span>₹{room.finalPrice || room.price} x {nights} nights</span>
                           <span>₹{totalCost.toLocaleString()}</span>
                         </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: "18px", color: "#0f172a", marginTop: "16px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: "18px", color: "var(--text-primary)", marginTop: "16px" }}>
                           <span>Total</span>
                           <span>₹{totalCost.toLocaleString()}</span>
                         </div>
@@ -450,7 +477,7 @@ export default function RoomDetail() {
                       <button type="submit" style={{ width: "100%", padding: "14px", background: "#e51d53", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 600, fontSize: "16px", cursor: "pointer", marginBottom: "12px" }}>
                         Confirm Booking
                       </button>
-                      <button type="button" onClick={() => setBookingStep("calendar")} style={{ width: "100%", padding: "14px", background: "none", color: "#475569", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: 600, fontSize: "16px", cursor: "pointer" }}>
+                      <button type="button" onClick={() => setBookingStep("calendar")} style={{ width: "100%", padding: "14px", background: "none", color: "var(--text-secondary)", border: "1px solid var(--border-color)", borderRadius: "8px", fontWeight: 600, fontSize: "16px", cursor: "pointer" }}>
                         Back to Calendar
                       </button>
                     </form>

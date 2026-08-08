@@ -54,7 +54,7 @@ export default function EditHotel() {
             email: hotel.email || "",
             description: hotel.description || "",
           });
-          setCurrentImage(hotel.image || "");
+          setCurrentImage(hotel.images?.[0] || "");
 
           // Resolve location
           if (hotel.location) {

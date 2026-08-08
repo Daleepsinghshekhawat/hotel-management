@@ -65,6 +65,7 @@ import UserLayout from "./User/UserLayout";
 import UserHome from "./User/UserHome";
 import HotelsListing from "./User/HotelsListing";
 import HotelDetail from "./User/HotelDetail";
+import AboutUs from "./User/AboutUs";
 import UserAccountLayout from "./User/UserAccountLayout";
 import UserActiveBookings from "./User/UserActiveBookings";
 import UserBookingHistory from "./User/UserBookingHistory";
@@ -76,7 +77,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Signup />} />
+        <Route path="/" element={<Navigate to="/user" replace />} />
+        <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         
         <Route path="/adminpage" element={<AdminLayout />}>
@@ -114,6 +116,7 @@ function App() {
         {/* User routes — wrapped in UserLayout (navbar + footer) */}
         <Route path="/user" element={<UserLayout />}>
           <Route index element={<UserHome />} />
+          <Route path="about" element={<AboutUs />} />
           <Route path="hotels" element={<HotelsListing />} />
           <Route path="hotel/:id" element={<HotelDetail />} />
           <Route path="hotel/:hotelId/room/:roomId" element={<RoomDetail />} />

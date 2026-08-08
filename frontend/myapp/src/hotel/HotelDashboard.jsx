@@ -506,9 +506,9 @@ export default function HotelDashboard() {
                           overflow: "hidden",
                         }}
                       >
-                        {hotel.image ? (
+                        {hotel.images?.[0] ? (
                           <img
-                            src={hotel.image.startsWith("http") ? hotel.image : `${URL}/${hotel.image.replace(/\\/g, '/')}`}
+                            src={hotel.images?.[0].startsWith("http") ? hotel.images?.[0] : `${URL}/${hotel.images?.[0].replace(/\\/g, '/')}`}
                             alt={hotel.hotelName}
                             style={{ width: "100%", height: "100%", objectFit: "cover" }}
                           />

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import URL from "../api";
+import { Download } from "lucide-react";
 
 export default function UserActiveBookings() {
   const [bookings, setBookings] = useState([]);
@@ -69,6 +70,22 @@ export default function UserActiveBookings() {
     );
   };
 
+  const handleDownloadReceipt = async (bookingId) => {
+    try {
+      const response = await axios.get(`${URL}/api/pdf/booking/${bookingId}`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `receipt-${bookingId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Error downloading receipt", error);
+      alert("Failed to generate PDF Receipt");
+    }
+  };
+
   return (
     <div style={{ fontFamily: "'Inter', sans-serif" }}>
       <h2 style={{ fontSize: "28px", fontWeight: 800, color: "#1e293b", marginBottom: "8px" }}>
@@ -120,7 +137,7 @@ export default function UserActiveBookings() {
             <div key={b._id} style={{ background: "#fff", borderRadius: "16px", padding: "24px", boxShadow: "0 4px 15px rgba(0,0,0,0.03)", display: "flex", gap: "24px", flexWrap: "wrap" }}>
               <div style={{ width: "120px", height: "120px", borderRadius: "12px", overflow: "hidden", flexShrink: 0, background: "#f1f5f9" }}>
                 {b.hotel?.image ? (
-                  <img src={b.hotel.image} alt="Hotel" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <img src={b.hotel.images?.[0]} alt="Hotel" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
                   <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "32px" }}>🏨</div>
                 )}
@@ -152,21 +169,27 @@ export default function UserActiveBookings() {
                       <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", marginBottom: "4px" }}>Total Amount</div>
                       <div style={{ fontWeight: 800, color: "#0f172a", fontSize: "20px" }}>₹{(b.totalAmount || 0).toLocaleString("en-IN")}</div>
                     </div>
-                    <button
-                      onClick={() => navigate(`/user/hotel/${b.hotel?._id}`)}
-                      style={{
-                        padding: "8px 16px",
-                        borderRadius: "8px",
-                        background: "#6366f1",
-                        color: "#fff",
-                        border: "none",
-                        fontWeight: 600,
-                        fontSize: "14px",
-                        cursor: "pointer"
-                      }}
-                    >
-                      View Hotel
-                    </button>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button
+                        onClick={() => handleDownloadReceipt(b._id)}
+                        style={{
+                          padding: "8px 16px", borderRadius: "8px", background: "#10b981", color: "#fff",
+                          border: "none", fontWeight: 600, fontSize: "14px", cursor: "pointer",
+                          display: "flex", alignItems: "center", gap: "6px"
+                        }}
+                      >
+                        <Download size={16} /> Receipt
+                      </button>
+                      <button
+                        onClick={() => navigate(`/user/hotel/${b.hotel?._id}`)}
+                        style={{
+                          padding: "8px 16px", borderRadius: "8px", background: "#6366f1", color: "#fff",
+                          border: "none", fontWeight: 600, fontSize: "14px", cursor: "pointer"
+                        }}
+                      >
+                        View Hotel
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

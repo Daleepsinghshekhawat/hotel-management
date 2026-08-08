@@ -116,42 +116,43 @@ export default function HotelsListing() {
   });
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-primary)", fontFamily: "'Inter', sans-serif" }}>
       
       {/* Header Search Area */}
-      <div style={{ background: "#fff", borderBottom: "1px solid #e2e8f0", padding: "30px 5% 20px" }}>
+      <div style={{ background: "var(--bg-secondary)", borderBottom: "1px solid var(--border-color)", padding: "30px 5% 20px" }}>
         <div style={{ maxWidth: "1400px", margin: "0 auto", display: "flex", gap: "20px", alignItems: "center" }}>
           <div style={{ flex: 1, position: "relative" }}>
-            <Search size={20} color="#64748b" style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)" }} />
+            <Search size={20} color="var(--text-secondary)" style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)" }} />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Where are you going?"
               style={{
                 width: "100%", padding: "16px 16px 16px 48px", borderRadius: "100px",
-                border: "1px solid #cbd5e1", fontSize: "16px", outline: "none",
+                border: "1px solid var(--border-color)", fontSize: "16px", outline: "none",
+                background: "var(--input-bg)", color: "var(--text-primary)",
                 boxShadow: "0 4px 10px rgba(0,0,0,0.03)", transition: "all 0.2s"
               }}
               onFocus={e => {
-                e.target.style.borderColor = "#2563eb";
+                e.target.style.borderColor = "var(--accent-color)";
                 e.target.style.boxShadow = "0 4px 15px rgba(37,99,235,0.1)";
               }}
               onBlur={e => {
-                e.target.style.borderColor = "#cbd5e1";
+                e.target.style.borderColor = "var(--border-color)";
                 e.target.style.boxShadow = "0 4px 10px rgba(0,0,0,0.03)";
               }}
             />
           </div>
           
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ fontSize: "14px", fontWeight: 600, color: "#64748b" }}>Sort by:</span>
+            <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-secondary)" }}>Sort by:</span>
             <select
               value={sortBy}
               onChange={e => setSortBy(e.target.value)}
               style={{
-                padding: "14px 16px", borderRadius: "100px", border: "1px solid #cbd5e1",
-                fontSize: "14px", outline: "none", color: "#0f172a", cursor: "pointer",
-                background: "#fff", fontWeight: 500
+                padding: "14px 16px", borderRadius: "100px", border: "1px solid var(--border-color)",
+                fontSize: "14px", outline: "none", color: "var(--text-primary)", cursor: "pointer",
+                background: "var(--bg-secondary)", fontWeight: 500
               }}
             >
               <option value="default">Our Top Picks</option>
@@ -168,35 +169,35 @@ export default function HotelsListing() {
         {/* Sidebar Filters */}
         <div style={{
           width: "280px", flexShrink: 0,
-          background: "#fff", borderRadius: "16px", padding: "24px",
-          border: "1px solid #e2e8f0", position: "sticky", top: "100px"
+          background: "var(--bg-secondary)", borderRadius: "16px", padding: "24px",
+          border: "1px solid var(--border-color)", position: "sticky", top: "100px"
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "24px" }}>
-            <SlidersHorizontal size={20} color="#0f172a" />
-            <h3 style={{ margin: 0, fontWeight: 700, color: "#0f172a", fontSize: "18px" }}>Filters</h3>
+            <SlidersHorizontal size={20} color="var(--text-primary)" />
+            <h3 style={{ margin: 0, fontWeight: 700, color: "var(--text-primary)", fontSize: "18px" }}>Filters</h3>
           </div>
 
-          <hr style={{ border: "none", borderTop: "1px solid #e2e8f0", margin: "0 0 24px" }} />
+          <hr style={{ border: "none", borderTop: "1px solid var(--border-color)", margin: "0 0 24px" }} />
 
           {/* Price Range */}
           <div style={{ marginBottom: "32px" }}>
-            <h4 style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", margin: "0 0 16px" }}>Your budget (per night)</h4>
+            <h4 style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)", margin: "0 0 16px" }}>Your budget (per night)</h4>
             <input
               type="range" min="500" max="20000" step="500"
               value={priceRange[1]}
               onChange={e => setPriceRange([0, Number(e.target.value)])}
-              style={{ width: "100%", accentColor: "#2563eb", cursor: "pointer" }}
+              style={{ width: "100%", accentColor: "var(--accent-color)", cursor: "pointer" }}
             />
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px", color: "#64748b", marginTop: "8px", fontWeight: 500 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px", color: "var(--text-secondary)", marginTop: "8px", fontWeight: 500 }}>
               <span>₹500</span><span>₹{priceRange[1].toLocaleString()}</span>
             </div>
           </div>
 
-          <hr style={{ border: "none", borderTop: "1px solid #e2e8f0", margin: "0 0 24px" }} />
+          <hr style={{ border: "none", borderTop: "1px solid var(--border-color)", margin: "0 0 24px" }} />
 
           {/* Facilities */}
           <div style={{ marginBottom: "32px" }}>
-            <h4 style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", margin: "0 0 16px" }}>Facilities</h4>
+            <h4 style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)", margin: "0 0 16px" }}>Facilities</h4>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               {FACILITIES.map(fac => (
                 <label key={fac.key} style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}>
@@ -204,9 +205,9 @@ export default function HotelsListing() {
                     type="checkbox"
                     checked={selectedFacilities.includes(fac.key)}
                     onChange={() => toggleFacility(fac.key)}
-                    style={{ accentColor: "#2563eb", width: "18px", height: "18px", cursor: "pointer" }}
+                    style={{ accentColor: "var(--accent-color)", width: "18px", height: "18px", cursor: "pointer" }}
                   />
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "#475569" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "var(--text-secondary)" }}>
                     {fac.icon} {fac.label}
                   </div>
                 </label>
@@ -214,18 +215,18 @@ export default function HotelsListing() {
             </div>
           </div>
 
-          <hr style={{ border: "none", borderTop: "1px solid #e2e8f0", margin: "0 0 24px" }} />
+          <hr style={{ border: "none", borderTop: "1px solid var(--border-color)", margin: "0 0 24px" }} />
 
           {/* Room Type */}
           <div style={{ marginBottom: "32px" }}>
-            <h4 style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", margin: "0 0 16px" }}>Room Type</h4>
+            <h4 style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)", margin: "0 0 16px" }}>Room Type</h4>
             <select
               value={selectedRoomType}
               onChange={e => setSelectedRoomType(e.target.value)}
               style={{
                 width: "100%", padding: "12px", borderRadius: "8px",
-                border: "1px solid #cbd5e1", fontSize: "14px", outline: "none",
-                color: "#0f172a", cursor: "pointer"
+                border: "1px solid var(--border-color)", fontSize: "14px", outline: "none",
+                color: "var(--text-primary)", background: "var(--bg-secondary)", cursor: "pointer"
               }}
             >
               <option value="">All Types</option>
@@ -237,12 +238,12 @@ export default function HotelsListing() {
             onClick={() => { setSearch(""); setSelectedFacilities([]); setSelectedRoomType(""); setPriceRange([0, 20000]); setSortBy("default"); }}
             style={{
               width: "100%", padding: "12px", borderRadius: "8px",
-              border: "1px solid #cbd5e1", background: "#fff",
-              color: "#0f172a", fontWeight: 600, fontSize: "14px", cursor: "pointer",
+              border: "1px solid var(--border-color)", background: "var(--bg-secondary)",
+              color: "var(--text-primary)", fontWeight: 600, fontSize: "14px", cursor: "pointer",
               transition: "background 0.2s"
             }}
-            onMouseEnter={e => e.currentTarget.style.background = "#f1f5f9"}
-            onMouseLeave={e => e.currentTarget.style.background = "#fff"}
+            onMouseEnter={e => e.currentTarget.style.background = "var(--bg-tertiary)"}
+            onMouseLeave={e => e.currentTarget.style.background = "var(--bg-secondary)"}
           >
             Clear all filters
           </button>
@@ -252,16 +253,16 @@ export default function HotelsListing() {
         <div style={{ flex: 1 }}>
           <div style={{ marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <h1 style={{ fontSize: "24px", fontWeight: 700, color: "#0f172a", margin: "0 0 8px" }}>
+              <h1 style={{ fontSize: "24px", fontWeight: 700, color: "var(--text-primary)", margin: "0 0 8px" }}>
                 {search ? `Properties in "${search}"` : "Explore all properties"}
               </h1>
-              <p style={{ margin: 0, color: "#64748b", fontSize: "15px" }}>
+              <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "15px" }}>
                 {loading ? "Searching..." : `${sorted.length} properties on this page`}
               </p>
             </div>
             
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <label style={{ fontSize: "14px", color: "#475569", fontWeight: 600 }}>Items per page:</label>
+              <label style={{ fontSize: "14px", color: "var(--text-secondary)", fontWeight: 600 }}>Items per page:</label>
               <select 
                 value={limit} 
                 onChange={(e) => {
@@ -269,8 +270,8 @@ export default function HotelsListing() {
                   setPage(1); // Reset to page 1 when limit changes
                 }}
                 style={{
-                  padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1",
-                  background: "#fff", color: "#0f172a", outline: "none", cursor: "pointer"
+                  padding: "8px 12px", borderRadius: "8px", border: "1px solid var(--border-color)",
+                  background: "var(--bg-secondary)", color: "var(--text-primary)", outline: "none", cursor: "pointer"
                 }}
               >
                 <option value={5}>5</option>
@@ -286,16 +287,16 @@ export default function HotelsListing() {
               {[1,2,3,4].map(i => (
                 <div key={i} style={{
                   height: "240px", borderRadius: "16px",
-                  background: "linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%)",
+                  background: "linear-gradient(90deg, var(--bg-tertiary) 25%, var(--border-color) 50%, var(--bg-tertiary) 75%)",
                   backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite"
                 }} />
               ))}
             </div>
           ) : sorted.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "100px 20px", background: "#fff", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}><Search size={48} color="#cbd5e1" /></div>
-              <h3 style={{ color: "#0f172a", fontWeight: 700, fontSize: "20px", margin: "0 0 8px" }}>No exact matches found</h3>
-              <p style={{ color: "#64748b", margin: 0 }}>Try changing or removing some of your filters.</p>
+            <div style={{ textAlign: "center", padding: "100px 20px", background: "var(--bg-secondary)", borderRadius: "16px", border: "1px solid var(--border-color)" }}>
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}><Search size={48} color="var(--border-color)" /></div>
+              <h3 style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: "20px", margin: "0 0 8px" }}>No exact matches found</h3>
+              <p style={{ color: "var(--text-secondary)", margin: 0 }}>Try changing or removing some of your filters.</p>
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -310,13 +311,13 @@ export default function HotelsListing() {
               ))}
 
               {/* Pagination Controls */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "32px", padding: "16px", background: "#fff", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "32px", padding: "16px", background: "var(--bg-secondary)", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
                 <button
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
                   style={{
-                    padding: "10px 20px", borderRadius: "8px", border: "1px solid #cbd5e1",
-                    background: page === 1 ? "#f1f5f9" : "#fff", color: page === 1 ? "#94a3b8" : "#0f172a",
+                    padding: "10px 20px", borderRadius: "8px", border: "1px solid var(--border-color)",
+                    background: page === 1 ? "var(--bg-tertiary)" : "var(--bg-secondary)", color: page === 1 ? "var(--text-tertiary)" : "var(--text-primary)",
                     fontWeight: 600, cursor: page === 1 ? "not-allowed" : "pointer",
                     transition: "all 0.2s"
                   }}
@@ -324,16 +325,16 @@ export default function HotelsListing() {
                   Previous
                 </button>
 
-                <span style={{ fontSize: "14px", fontWeight: 600, color: "#475569" }}>
-                  Page <span style={{ color: "#2563eb" }}>{page}</span> of {totalPages}
+                <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-secondary)" }}>
+                  Page <span style={{ color: "var(--accent-color)" }}>{page}</span> of {totalPages}
                 </span>
 
                 <button
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages || totalPages === 0}
                   style={{
-                    padding: "10px 20px", borderRadius: "8px", border: "1px solid #cbd5e1",
-                    background: page === totalPages || totalPages === 0 ? "#f1f5f9" : "#fff", color: page === totalPages || totalPages === 0 ? "#94a3b8" : "#0f172a",
+                    padding: "10px 20px", borderRadius: "8px", border: "1px solid var(--border-color)",
+                    background: page === totalPages || totalPages === 0 ? "var(--bg-tertiary)" : "var(--bg-secondary)", color: page === totalPages || totalPages === 0 ? "var(--text-tertiary)" : "var(--text-primary)",
                     fontWeight: 600, cursor: page === totalPages || totalPages === 0 ? "not-allowed" : "pointer",
                     transition: "all 0.2s"
                   }}
@@ -374,22 +375,22 @@ function HotelHorizontalCard({ hotel, rooms, minPrice, navigate }) {
   return (
     <div
       style={{
-        display: "flex", background: "#fff", borderRadius: "16px", overflow: "hidden",
-        border: "1px solid #e2e8f0", cursor: "pointer", transition: "all 0.2s"
+        display: "flex", background: "var(--bg-secondary)", borderRadius: "16px", overflow: "hidden",
+        border: "1px solid var(--border-color)", cursor: "pointer", transition: "all 0.2s"
       }}
       onMouseEnter={e => {
         e.currentTarget.style.boxShadow = "0 12px 30px rgba(0,0,0,0.08)";
-        e.currentTarget.style.borderColor = "#cbd5e1";
+        e.currentTarget.style.borderColor = "var(--accent-color)";
       }}
       onMouseLeave={e => {
         e.currentTarget.style.boxShadow = "none";
-        e.currentTarget.style.borderColor = "#e2e8f0";
+        e.currentTarget.style.borderColor = "var(--border-color)";
       }}
       onClick={() => navigate(`/user/hotel/${hotel._id}`)}
     >
       <div style={{ width: "280px", flexShrink: 0, position: "relative" }}>
         <img
-          src={hotel.image || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600"}
+          src={hotel.images?.[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600"}
           alt={hotel.hotelName}
           style={{ width: "100%", height: "100%", objectFit: "cover", minHeight: "240px" }}
         />
@@ -401,27 +402,27 @@ function HotelHorizontalCard({ hotel, rooms, minPrice, navigate }) {
       <div style={{ flex: 1, padding: "24px", display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
           <div>
-            <h3 style={{ margin: "0 0 6px", fontSize: "20px", fontWeight: 700, color: "#2563eb" }}>
+            <h3 style={{ margin: "0 0 6px", fontSize: "20px", fontWeight: 700, color: "var(--accent-color)" }}>
               {hotel.hotelName}
             </h3>
-            <p style={{ margin: 0, color: "#475569", fontSize: "14px", display: "flex", alignItems: "center", gap: "4px" }}>
-              <MapPin size={14} color="#64748b" /> {loc}
+            <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "14px", display: "flex", alignItems: "center", gap: "4px" }}>
+              <MapPin size={14} color="var(--text-secondary)" /> {loc}
             </p>
           </div>
           {minPrice !== null && (
             <div style={{ textAlign: "right" }}>
-              <p style={{ margin: "0 0 4px", fontSize: "12px", color: "#64748b", fontWeight: 500 }}>Price from</p>
-              <p style={{ margin: 0, fontSize: "24px", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.5px" }}>
+              <p style={{ margin: "0 0 4px", fontSize: "12px", color: "var(--text-secondary)", fontWeight: 500 }}>Price from</p>
+              <p style={{ margin: 0, fontSize: "24px", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.5px" }}>
                 ₹{Math.round(minPrice).toLocaleString()}
               </p>
-              <p style={{ margin: 0, fontSize: "12px", color: "#64748b" }}>per night</p>
+              <p style={{ margin: 0, fontSize: "12px", color: "var(--text-secondary)" }}>per night</p>
             </div>
           )}
         </div>
 
         <div style={{ flex: 1, marginTop: "12px", paddingRight: "100px" }}>
           <p style={{ 
-            margin: "0 0 16px", color: "#475569", fontSize: "14px", lineHeight: "1.5",
+            margin: "0 0 16px", color: "var(--text-secondary)", fontSize: "14px", lineHeight: "1.5",
             display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" 
           }}>
             {hotel.description}
@@ -431,14 +432,14 @@ function HotelHorizontalCard({ hotel, rooms, minPrice, navigate }) {
             {displayFacilities.map((fac, i) => (
               <span key={i} style={{ 
                 display: "flex", alignItems: "center", gap: "4px",
-                fontSize: "12px", color: "#475569", border: "1px solid #e2e8f0", 
+                fontSize: "12px", color: "var(--text-secondary)", border: "1px solid var(--border-color)", 
                 padding: "4px 8px", borderRadius: "6px", fontWeight: 500 
               }}>
                 {fac.icon} {fac.label}
               </span>
             ))}
             {facilityIcons.length > 4 && (
-              <span style={{ fontSize: "12px", color: "#64748b", padding: "4px 8px", fontWeight: 600 }}>
+              <span style={{ fontSize: "12px", color: "var(--text-tertiary)", padding: "4px 8px", fontWeight: 600 }}>
                 +{facilityIcons.length - 4} more
               </span>
             )}
@@ -450,7 +451,7 @@ function HotelHorizontalCard({ hotel, rooms, minPrice, navigate }) {
             style={{
               display: "flex", alignItems: "center", gap: "6px",
               padding: "10px 20px", borderRadius: "8px", border: "none",
-              background: "#2563eb", color: "#fff", fontWeight: 600, fontSize: "14px",
+              background: "var(--accent-color)", color: "#fff", fontWeight: 600, fontSize: "14px",
               cursor: "pointer"
             }}
           >

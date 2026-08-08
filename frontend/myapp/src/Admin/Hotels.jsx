@@ -184,9 +184,9 @@ export default function Hotels() {
                 }}
               >
                 <div style={{ position: "relative", height: "170px", background: "#0f172a" }}>
-                  {item.image ? (
+                  {item.images?.[0] ? (
                     <img
-                      src={item.image}
+                      src={item.images?.[0]}
                       alt={item.hotelName}
                       style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />

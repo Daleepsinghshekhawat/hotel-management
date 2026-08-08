@@ -41,21 +41,23 @@ exports.submitHotelRequest = async (req, res) => {
       });
     }
 
-    if (!req.files || !req.files.image) {
+    if (!req.files || (!req.files.image && !req.files.images)) {
       return res.status(400).json({
         message: "Hotel image is required",
       });
     }
+    
+    const imageFiles = req.files.images || req.files.image;
 
     const uploadResult = await uploadImage({
-      image: req.files.image,
+      image: imageFiles,
     });
 
     if (!uploadResult || uploadResult.length === 0) {
       return res.status(500).json({ message: "Image upload failed. Please check Cloudinary configuration." });
     }
 
-    const imageUrl = uploadResult[0].secure_url;
+    const imageUrls = uploadResult.map(res => res.secure_url);
     const registrationId = uuidv4();
 
     const hotel = await hotelRequest.create({
@@ -64,7 +66,7 @@ exports.submitHotelRequest = async (req, res) => {
       email,
       location,
       description,
-      image: imageUrl,
+      images: imageUrls,
       registrationId,
       submittedBy: submittedBy || email,
       hotelType: hotelType || "Hotel",
@@ -294,7 +296,7 @@ exports.approveRequest = async (req, res) => {
         email: request.email,
         location: request.location,
         description: request.description,
-        image: request.image,
+        images: request.images,
         registrationId: request.registrationId,
         submittedBy: request.submittedBy,
         requestId: request._id,
@@ -477,19 +479,21 @@ exports.addHotelDirect = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    if (!req.files || !req.files.image) {
+    if (!req.files || (!req.files.image && !req.files.images)) {
       return res.status(400).json({ message: "Hotel image is required" });
     }
+    
+    const imageFiles = req.files.images || req.files.image;
 
     const uploadResult = await uploadImage({
-      image: req.files.image,
+      image: imageFiles,
     });
 
     if (!uploadResult || uploadResult.length === 0) {
       return res.status(500).json({ success: false, message: "Image upload failed. Please check Cloudinary configuration." });
     }
 
-    const imageUrl = uploadResult[0].secure_url;
+    const imageUrls = uploadResult.map(res => res.secure_url);
     const registrationId = uuidv4();
 
     // 1. Create approved hotel request
@@ -499,7 +503,7 @@ exports.addHotelDirect = async (req, res) => {
       email,
       location,
       description,
-      image: imageUrl,
+      images: imageUrls,
       registrationId,
       submittedBy: "superadmin",
       status: "approved",
@@ -514,7 +518,7 @@ exports.addHotelDirect = async (req, res) => {
       email,
       location,
       description,
-      image: imageUrl,
+      images: imageUrls,
       registrationId,
       submittedBy: "superadmin",
       requestId: hotelRequestData._id,

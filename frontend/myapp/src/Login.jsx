@@ -164,7 +164,7 @@ function Login() {
 
           <p style={{ color: "#94a3b8", textAlign: "center", fontSize: "13px", margin: "20px 0 0" }}>
             Don't have an account?{" "}
-            <Link to="/" style={{ color: "#60a5fa", textDecoration: "none", fontWeight: 600 }}>
+            <Link to="/signup" style={{ color: "#60a5fa", textDecoration: "none", fontWeight: 600 }}>
               Sign Up
             </Link>
           </p>

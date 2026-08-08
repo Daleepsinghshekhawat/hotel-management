@@ -1,7 +1,7 @@
 const usermodel = require("../model/usermodel");
 const hotelOwnerModel = require("../model/hotelOwnerModel");
 const AdminAccount = require("../model/adminAccountModel");
-const AdminAccount = require("../model/adminAccountModel");
+
 
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
@@ -105,6 +105,7 @@ exports.signup = async (req, res) => {
     return res.status(500).json({ message: "server error" });
   }
 };
+
 
 exports.login = async (req, res) => {
   try {

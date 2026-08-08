@@ -379,7 +379,7 @@ exports.getAllBookings = async (req, res) => {
     else sortOption.createdAt = -1;
 
     const bookings = await Booking.find(filter)
-      .populate("hotel", "hotelName location image")
+      .populate("hotel", "hotelName location images")
       .populate("room", "roomName roomType images")
       .sort(sortOption);
     return res.status(200).json({ success: true, result: bookings });
@@ -412,7 +412,7 @@ exports.getBookingsByGuest = async (req, res) => {
     const totalPages = Math.ceil(totalDocuments / parseInt(limit));
 
     const bookings = await Booking.find(filter)
-      .populate("hotel", "hotelName location image")
+      .populate("hotel", "hotelName location images")
       .populate("room", "roomName roomType images price")
       .sort({ createdAt: -1 })
       .skip(skip)

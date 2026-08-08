@@ -3,41 +3,6 @@ const AdminRequest = require("../model/adminReqModel");
 const bcrypt = require("bcrypt");
 const { sendEmail } = require("../utils/helper");
 
-exports.createAdminAccount = async (req, res) => {
-    try {
-        const { name, email, password } = req.body;
-
-        const existing = await AdminAccount.findOne({ email });
-
-        if (existing) {
-            return res.status(400).json({
-                success: false,
-                message: "Email already registered.",
-            });
-        }
-
-
-        const admin = await AdminAccount.create({
-            name,
-            email,
-            password: "",
-            role: "user",
-            verified: false,
-            status: "pending",
-        });
-
-        res.status(201).json({
-            success: true,
-            message: "Admin account created successfully.",
-            admin,
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
-    }
-};
 
 exports.getAllAdminAccounts = async (req, res) => {
     try {
@@ -181,7 +146,6 @@ exports.rejectAdmin = async (req, res) => {
         });
     }
 };
-
 
 ///this is for admin registration request from user tosuperadmin
 exports.registerAdmin = async (req, res) => {

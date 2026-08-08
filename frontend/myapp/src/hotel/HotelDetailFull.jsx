@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Search, Filter, MapPin, Building, ArrowLeft, Mail, Info } from "lucide-react";
+import { Search, Filter, MapPin, Building, ArrowLeft, Mail, Info, Download } from "lucide-react";
 import URL from "../api";
 import useDebounce from "../hooks/useDebounce";
 
@@ -61,6 +61,22 @@ export default function HotelDetailFull() {
     }
   };
 
+  const handleDownloadPDF = async () => {
+    try {
+      const response = await axios.get(`${URL}/api/pdf/hotel/${id}`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `hotel-${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Error downloading PDF", error);
+      alert("Failed to generate PDF");
+    }
+  };
+
   if (loading) {
     return <div style={{ padding: "60px", textAlign: "center", color: "#64748b" }}>Loading hotel details...</div>;
   }
@@ -76,18 +92,26 @@ export default function HotelDetailFull() {
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
-      <button 
-        onClick={() => navigate(-1)} 
-        style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: "#64748b", cursor: "pointer", fontWeight: 600, padding: 0, marginBottom: "20px" }}
-      >
-        <ArrowLeft size={18} /> Back
-      </button>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <button 
+          onClick={() => navigate(-1)} 
+          style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", color: "#64748b", cursor: "pointer", fontWeight: 600, padding: 0 }}
+        >
+          <ArrowLeft size={18} /> Back
+        </button>
+        <button
+          onClick={handleDownloadPDF}
+          style={{ display: "flex", alignItems: "center", gap: "6px", background: "#2563eb", color: "#fff", border: "none", padding: "8px 16px", borderRadius: "8px", fontWeight: 600, cursor: "pointer" }}
+        >
+          <Download size={18} /> Download PDF
+        </button>
+      </div>
 
       {/* Hotel Hero Section */}
       <div style={{ background: "#fff", borderRadius: "20px", overflow: "hidden", boxShadow: "0 10px 30px rgba(0,0,0,0.05)", marginBottom: "32px", display: "flex", flexDirection: "column", md: { flexDirection: "row" } }}>
         <div style={{ height: "300px", position: "relative" }}>
-          {hotel.image ? (
-            <img src={hotel.image} alt={hotel.hotelName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          {hotel.images?.[0] ? (
+            <img src={hotel.images?.[0]} alt={hotel.hotelName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           ) : (
             <div style={{ width: "100%", height: "100%", background: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "40px" }}>🏨</div>
           )}

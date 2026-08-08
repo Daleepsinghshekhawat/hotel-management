@@ -282,10 +282,13 @@ exports.updateHotel = async (req, res) => {
       return res.status(404).json({ success: false, message: "Hotel not found" });
     }
 
-    let imageUrl = hotel.image;
-    if (req.files && req.files.image) {
+    let imageUrls = hotel.images || [];
+    if (req.files && req.files.images) {
+      const uploadResult = await uploadImage({ image: req.files.images });
+      imageUrls = uploadResult.map(res => res.secure_url);
+    } else if (req.files && req.files.image) {
       const uploadResult = await uploadImage({ image: req.files.image });
-      imageUrl = uploadResult[0].secure_url;
+      imageUrls = uploadResult.map(res => res.secure_url);
     }
 
     hotel.hotelName = hotelName || hotel.hotelName;
@@ -293,7 +296,7 @@ exports.updateHotel = async (req, res) => {
     hotel.email = email || hotel.email;
     hotel.location = location || hotel.location;
     hotel.description = description || hotel.description;
-    hotel.image = imageUrl;
+    hotel.images = imageUrls;
     if (hotelType) hotel.hotelType = hotelType;
     if (amenities) hotel.amenities = JSON.parse(amenities);
 
@@ -307,7 +310,7 @@ exports.updateHotel = async (req, res) => {
         email: hotel.email,
         location: hotel.location,
         description: hotel.description,
-        image: hotel.image,
+        images: hotel.images,
         hotelType: hotel.hotelType,
         amenities: hotel.amenities
       });

@@ -124,7 +124,7 @@ export default function Dashboard() {
               hotelMap[hotel._id] = { 
                 id: hotel._id,
                 name: hotel.hotelName, 
-                image: hotel.image || "",
+                image: hotel.images?.[0] || "",
                 revenue: 0, 
                 bookings: 0 
               };

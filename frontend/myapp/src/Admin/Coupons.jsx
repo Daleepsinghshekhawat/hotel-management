@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import URL from "../api";
-import { Tags, Search, CheckCircle, XCircle, PlusCircle, X } from "lucide-react";
+import { Tags, Search, CheckCircle, XCircle, PlusCircle, X, Download } from "lucide-react";
 import useDebounce from "../hooks/useDebounce";
 
 export default function Coupons() {
@@ -79,6 +79,22 @@ export default function Coupons() {
     }
   };
 
+  const handleDownloadPDF = async () => {
+    try {
+      const response = await axios.get(`${URL}/api/pdf/coupons`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `coupons-list.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Error downloading PDF", error);
+      alert("Failed to generate PDF");
+    }
+  };
+
   const filteredCoupons = coupons;
 
   return (
@@ -95,18 +111,30 @@ export default function Coupons() {
             Dashboard / Offers & Coupons
           </p>
         </div>
-        <button 
-          onClick={() => setShowModal(true)}
-          style={{
-            display: "flex", alignItems: "center", gap: "8px", background: "#3b82f6", color: "#fff",
-            border: "none", padding: "10px 16px", borderRadius: "8px", fontWeight: 600, cursor: "pointer",
-            boxShadow: "0 4px 6px -1px rgba(59, 130, 246, 0.3)", transition: "all 0.2s"
-          }}
-          onMouseEnter={e => e.currentTarget.style.background = "#2563eb"}
-          onMouseLeave={e => e.currentTarget.style.background = "#3b82f6"}
-        >
-          <PlusCircle size={18} /> Create Coupon
-        </button>
+        <div style={{ display: "flex", gap: "12px" }}>
+          <button 
+            onClick={handleDownloadPDF}
+            style={{
+              display: "flex", alignItems: "center", gap: "8px", background: "#10b981", color: "#fff",
+              border: "none", padding: "10px 16px", borderRadius: "8px", fontWeight: 600, cursor: "pointer",
+              boxShadow: "0 4px 6px -1px rgba(16, 185, 129, 0.3)", transition: "all 0.2s"
+            }}
+          >
+            <Download size={18} /> Download PDF
+          </button>
+          <button 
+            onClick={() => setShowModal(true)}
+            style={{
+              display: "flex", alignItems: "center", gap: "8px", background: "#3b82f6", color: "#fff",
+              border: "none", padding: "10px 16px", borderRadius: "8px", fontWeight: 600, cursor: "pointer",
+              boxShadow: "0 4px 6px -1px rgba(59, 130, 246, 0.3)", transition: "all 0.2s"
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = "#2563eb"}
+            onMouseLeave={e => e.currentTarget.style.background = "#3b82f6"}
+          >
+            <PlusCircle size={18} /> Create Coupon
+          </button>
+        </div>
       </div>
 
       {/* Search */}

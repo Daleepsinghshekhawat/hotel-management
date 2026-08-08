@@ -177,9 +177,9 @@ export default function ApprovedHotels() {
               {filtered.map((hotel) => (
                 <tr key={hotel._id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                   <td style={{ padding: "16px 20px" }}>
-                    {hotel.image ? (
+                    {hotel.images?.[0] ? (
                       <img 
-                        src={hotel.image.startsWith("http") ? hotel.image : `${URL}/${hotel.image.replace(/\\/g, '/')}`} 
+                        src={hotel.images?.[0].startsWith("http") ? hotel.images?.[0] : `${URL}/${hotel.images?.[0].replace(/\\/g, '/')}`} 
                         alt="Hotel" 
                         style={{ width: "60px", height: "45px", objectFit: "cover", borderRadius: "6px" }} 
                       />
@@ -278,9 +278,9 @@ export default function ApprovedHotels() {
               borderTopLeftRadius: "20px", borderTopRightRadius: "20px"
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                {selectedHotel.image ? (
+                {selectedHotel.images?.[0] ? (
                   <img 
-                    src={selectedHotel.image.startsWith("http") ? selectedHotel.image : `${URL}/${selectedHotel.image.replace(/\\/g, '/')}`} 
+                    src={selectedHotel.images?.[0].startsWith("http") ? selectedHotel.images?.[0] : `${URL}/${selectedHotel.images?.[0].replace(/\\/g, '/')}`} 
                     alt="Hotel" 
                     style={{ width: "48px", height: "48px", objectFit: "cover", borderRadius: "8px" }} 
                   />

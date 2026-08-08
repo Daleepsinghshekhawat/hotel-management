@@ -13,7 +13,7 @@ export default function AddHotel() {
   const [selectedState, setSelectedState] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
-  const [image, setImage] = useState(null);
+  const [images, setImages] = useState([]);
 
   const [hotelType, setHotelType] = useState("Hotel");
   const [amenities, setAmenities] = useState([]);
@@ -92,9 +92,9 @@ export default function AddHotel() {
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImage(file);
+    if (e.target.files) {
+      setImages(Array.from(e.target.files));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -104,8 +104,8 @@ export default function AddHotel() {
       alert("Please select a city");
       return;
     }
-    if (!image) {
-      alert("Please upload a hotel image");
+    if (images.length === 0) {
+      alert("Please upload at least one hotel image");
       return;
     }
 
@@ -120,7 +120,10 @@ export default function AddHotel() {
       formData.append("submittedBy", user.email);
       formData.append("hotelType", hotelType);
       formData.append("amenities", JSON.stringify(amenities));
-      formData.append("image", image);
+      
+      images.forEach((img) => {
+        formData.append("image", img);
+      });
 
       await axios.post(`${apiurl}/api/submitHotelRequest`, formData);
 
@@ -295,7 +298,7 @@ export default function AddHotel() {
 
         <div>
           <label style={labelStyle}>Hotel Image *</label>
-          <input type="file" accept="image/*" onChange={handleImageChange} required />
+          <input type="file" accept="image/*" onChange={handleImageChange} multiple required />
         </div>
 
         <button

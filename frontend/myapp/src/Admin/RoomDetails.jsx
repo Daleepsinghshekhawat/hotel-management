@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Edit, Wifi, Wind, Flame, Tv, MonitorPlay, Coffee, Grid, BedDouble, Bath, Droplets, Home, Utensils, Cigarette, Heart, Dog, MapPin, Maximize, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Edit, Wifi, Wind, Flame, Tv, MonitorPlay, Coffee, Grid, BedDouble, Bath, Droplets, Home, Utensils, Cigarette, Heart, Dog, MapPin, Maximize, CheckCircle2, Download } from "lucide-react";
 import URL from "../api";
 
 const API = `${URL}/api`;
@@ -30,6 +30,23 @@ const RoomDetails = () => {
     }
   };
 
+  const handleDownloadPDF = async () => {
+    try {
+      const response = await axios.get(`${URL}/api/pdf/room/${id}`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `room-${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Error downloading PDF", error);
+      alert("Failed to generate PDF");
+    }
+  };
+
+
   if (loading) {
     return <div style={{ padding: "100px", textAlign: "center", color: "#64748b", fontSize: "18px" }}>Loading premium room details...</div>;
   }
@@ -48,15 +65,23 @@ const RoomDetails = () => {
         >
           <ArrowLeft size={20} /> Back to Hotel
         </button>
-        <button
-          onClick={() => {
-            const prefix = window.location.pathname.startsWith("/hotel") ? "/hotel" : "/adminpage";
-            navigate(`${prefix}/edit-room/${room._id}`);
-          }}
-          style={{ display: "flex", alignItems: "center", gap: "8px", background: "#2563eb", color: "#fff", border: "none", padding: "10px 20px", borderRadius: "10px", fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 12px rgba(37,99,235,0.2)" }}
-        >
-          <Edit size={16} /> Edit Room
-        </button>
+        <div style={{ display: "flex", gap: "12px" }}>
+          <button
+            onClick={handleDownloadPDF}
+            style={{ display: "flex", alignItems: "center", gap: "8px", background: "#10b981", color: "#fff", border: "none", padding: "10px 20px", borderRadius: "10px", fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 12px rgba(16,185,129,0.2)" }}
+          >
+            <Download size={16} /> Download PDF
+          </button>
+          <button
+            onClick={() => {
+              const prefix = window.location.pathname.startsWith("/hotel") ? "/hotel" : "/adminpage";
+              navigate(`${prefix}/edit-room/${room._id}`);
+            }}
+            style={{ display: "flex", alignItems: "center", gap: "8px", background: "#2563eb", color: "#fff", border: "none", padding: "10px 20px", borderRadius: "10px", fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 12px rgba(37,99,235,0.2)" }}
+          >
+            <Edit size={16} /> Edit Room
+          </button>
+        </div>
       </div>
 
       {/* All Images Gallery */}

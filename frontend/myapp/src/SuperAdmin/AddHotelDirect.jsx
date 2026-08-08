@@ -12,7 +12,7 @@ export default function AddHotelDirect() {
   const [selectedState, setSelectedState] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
-  const [image, setImage] = useState(null);
+  const [images, setImages] = useState([]);
 
   const [hotelType, setHotelType] = useState("Hotel");
   const [amenities, setAmenities] = useState([]);
@@ -91,9 +91,9 @@ export default function AddHotelDirect() {
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImage(file);
+    if (e.target.files) {
+      setImages(Array.from(e.target.files));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -103,8 +103,8 @@ export default function AddHotelDirect() {
       alert("Please select a city");
       return;
     }
-    if (!image) {
-      alert("Please upload a hotel image");
+    if (images.length === 0) {
+      alert("Please upload at least one hotel image");
       return;
     }
 
@@ -118,7 +118,10 @@ export default function AddHotelDirect() {
       formData.append("description", form.description.trim());
       formData.append("hotelType", hotelType);
       formData.append("amenities", JSON.stringify(amenities));
-      formData.append("image", image);
+      
+      images.forEach((img) => {
+        formData.append("image", img);
+      });
 
       await axios.post(`${apiurl}/api/addHotelDirect`, formData);
 
@@ -345,6 +348,7 @@ export default function AddHotelDirect() {
                 type="file" 
                 accept="image/*" 
                 onChange={handleImageChange} 
+                multiple
                 required 
                 style={{
                   position: "absolute",
@@ -357,7 +361,7 @@ export default function AddHotelDirect() {
               />
               <span style={{ fontSize: "28px", display: "block", marginBottom: "8px" }}>📸</span>
               <span style={{ fontSize: "14px", fontWeight: 600, color: "#475569" }}>
-                {image ? `Selected: ${image.name}` : "Click or drag to upload hotel image"}
+                {images.length > 0 ? `Selected ${images.length} images` : "Click or drag to upload hotel images"}
               </span>
               <span style={{ fontSize: "11px", display: "block", color: "#94a3b8", marginTop: "4px" }}>
                 Supports JPEG, PNG, or GIF formats

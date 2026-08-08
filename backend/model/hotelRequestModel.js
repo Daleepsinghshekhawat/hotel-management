@@ -38,10 +38,9 @@ const hotelRequestSchema = new mongoose.Schema(
       trim: true,
     },
 
-    image: {
+    images: [{
       type: String,
-      required: true,
-    },
+    }],
 
     registrationId: {
       type: String,

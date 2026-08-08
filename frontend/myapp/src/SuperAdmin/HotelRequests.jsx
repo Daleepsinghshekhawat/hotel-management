@@ -317,9 +317,9 @@ export default function HotelRequests() {
                     overflow: "hidden",
                   }}
                 >
-                  {item.image ? (
+                  {item.images?.[0] ? (
                     <img
-                      src={item.image}
+                      src={item.images?.[0]}
                       alt={item.hotelName}
                       style={{
                         width: "100%",
@@ -703,9 +703,9 @@ export default function HotelRequests() {
                 overflow: "hidden",
               }}
             >
-              {viewingRequest.image ? (
+              {viewingRequest.images?.[0] ? (
                 <img
-                  src={viewingRequest.image}
+                  src={viewingRequest.images?.[0]}
                   alt={viewingRequest.hotelName}
                   style={{
                     width: "100%",

@@ -15,8 +15,7 @@ const superAdminController = require("../controller/superAdminController");
 const bookingController = require("../controller/bookingController");
 
 const couponController = require("../controller/couponController");
-
-
+const pdfRoutes = require("./pdfRoutes");
 
 
 
@@ -228,7 +227,7 @@ router.patch("/restoreCity/:id", cityController.restoreCity);
 
 //to create the adminuser and adminaccount req 
 
-router.post("/register", adminController.createAdminRequest);
+router.post("/register", adminController.registerAdmin);
 router.get("/getAllAdminRequests",adminReqController.getAllAdminRequests)
 router.get("/getPaginatedAdminRequests",adminReqController.getPaginatedAdminRequests)
 router.get("/getAdminRequestsByStatus/:status",adminReqController.getAdminRequestsByStatus)
@@ -257,6 +256,8 @@ router.patch("/checkInBooking/:id", bookingController.checkInBooking);
 router.patch("/checkoutBooking/:id", bookingController.checkoutBooking);
 const reviewRoutes = require("./reviewRoutes");
 router.use("/reviews", reviewRoutes);
+
+router.use("/pdf", pdfRoutes);
 
 router.get("/test", (req, res) => {
   res.send("API is working");
