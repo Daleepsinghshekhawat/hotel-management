@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import URL from "../api";
 import useDebounce from "../hooks/useDebounce";
+import useTheme from "../useTheme";
 
 const STATUS_TABS = ["all", "pending", "approved", "rejected", "deleted"];
 
@@ -23,6 +24,8 @@ const formatLocation = (location) => {
 };
 
 export default function Hotels() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [hotels, setHotels] = useState([]);
@@ -35,9 +38,7 @@ export default function Hotels() {
     if (!user.email) return;
     setLoading(true);
     try {
-      const res = await axios.get(`${URL}/api/getRequestsByAdmin/${user.email}`, {
-        params: { search: debouncedSearch }
-      });
+      const res = await axios.get(`${URL}/api/getRequestsByAdmin/${user.email}`);
       setHotels(res.data.result || []);
     } catch (err) {
       console.log(err);
@@ -49,14 +50,30 @@ export default function Hotels() {
 
   useEffect(() => {
     fetchHotels();
-  }, [user.email, debouncedSearch]);
+  }, [user.email]);
 
-  const tabFiltered =
-    tab === "all"
-      ? hotels.filter((h) => h.status !== "inactive")
-      : tab === "deleted"
-      ? hotels.filter((h) => h.status === "inactive")
-      : hotels.filter((h) => h.status === tab);
+  const tabFiltered = hotels.filter((h) => {
+    const matchStatus = tab === "all" 
+      ? h.status !== "inactive" 
+      : tab === "deleted" 
+      ? h.status === "inactive" 
+      : h.status === tab;
+      
+    let matchSearch = true;
+    if (debouncedSearch) {
+      const term = debouncedSearch.toLowerCase();
+      matchSearch = (
+        (h.hotelName && h.hotelName.toLowerCase().includes(term)) ||
+        (h.ownerName && h.ownerName.toLowerCase().includes(term)) ||
+        (h.email && h.email.toLowerCase().includes(term)) ||
+        (h.location?.cityname && h.location.cityname.toLowerCase().includes(term)) ||
+        (h.location?.district?.districtname && h.location.district.districtname.toLowerCase().includes(term)) ||
+        (h.location?.state?.Statename && h.location.state.Statename.toLowerCase().includes(term))
+      );
+    }
+    
+    return matchStatus && matchSearch;
+  });
 
   const handleDeleteHotel = async (id) => {
     if (!window.confirm("Are you sure you want to delete this hotel?")) return;
@@ -137,12 +154,13 @@ export default function Hotels() {
           width: "100%",
           padding: "11px 16px",
           borderRadius: "10px",
-          border: "1px solid #cbd5e1",
+          border: isDark ? "1px solid #cbd5e1" : "1px solid #334155",
           marginBottom: "24px",
           boxSizing: "border-box",
           fontSize: "14px",
           outline: "none",
-          background: "#f8fafc",
+          background: isDark ? "#f8fafc" : "#0f172a",
+          color: isDark ? "#000000" : "#ffffff"
         }}
       />
 
@@ -154,13 +172,13 @@ export default function Hotels() {
             textAlign: "center",
             padding: "60px 20px",
             color: "#94a3b8",
-            background: "#f8fafc",
+            background: isDark ? "#f8fafc" : "#1e293b",
             borderRadius: "16px",
-            border: "1px dashed #cbd5e1",
+            border: isDark ? "1px dashed #cbd5e1" : "1px dashed #475569",
           }}
         >
-          <div style={{ fontSize: "48px", marginBottom: "14px" }}>🏨</div>
-          <p style={{ margin: 0, fontWeight: 600, fontSize: "16px" }}>No hotels found.</p>
+          <div style={{ fontSize: "40px", marginBottom: "12px", opacity: 0.5 }}>🏨</div>
+          <h3 style={{ margin: "0 0 8px", color: isDark ? "#0f172a" : "#f8fafc", fontSize: "18px" }}>No Hotels Found</h3>
         </div>
       ) : (
         <div
@@ -176,11 +194,21 @@ export default function Hotels() {
               <div
                 key={item._id}
                 style={{
-                  background: "#fff",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "18px",
+                  background: isDark ? "#ffffff" : "#1e293b",
+                  borderRadius: "12px",
+                  border: isDark ? "1px solid #e2e8f0" : "1px solid #334155",
                   overflow: "hidden",
-                  boxShadow: "0 4px 16px rgba(0,0,0,0.05)",
+                  transition: "all 0.2s ease",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-4px)";
+                  e.currentTarget.style.boxShadow = "0 10px 15px -3px rgba(0,0,0,0.1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 4px 6px -1px rgba(0,0,0,0.05)";
                 }}
               >
                 <div style={{ position: "relative", height: "170px", background: "#0f172a" }}>
@@ -222,13 +250,13 @@ export default function Hotels() {
                 </div>
 
                 <div style={{ padding: "18px 20px" }}>
-                  <h3 style={{ margin: "0 0 6px", fontSize: "17px", color: "#0f172a" }}>
+                  <h3 style={{ margin: "0 0 6px", fontSize: "17px", color: isDark ? "#0f172a" : "#f8fafc" }}>
                     {item.hotelName}
                   </h3>
-                  <p style={{ margin: "0 0 4px", fontSize: "13px", color: "#64748b" }}>
+                  <p style={{ margin: "0 0 4px", fontSize: "13px", color: isDark ? "#64748b" : "#94a3b8" }}>
                     {formatLocation(item.location)}
                   </p>
-                  <p style={{ margin: "0 0 10px", fontSize: "13px", color: "#64748b" }}>
+                  <p style={{ margin: "0 0 10px", fontSize: "13px", color: isDark ? "#64748b" : "#94a3b8" }}>
                     {item.ownerName} · {item.email}
                   </p>
 

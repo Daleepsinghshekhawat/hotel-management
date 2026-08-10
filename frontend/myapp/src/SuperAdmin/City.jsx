@@ -2,11 +2,15 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import URL from "../api";
 import useDebounce from "../hooks/useDebounce";
+import { useOutletContext } from "react-router-dom";
 
 const City = () => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
   const [tab, setTab] = useState("active");
+  const { theme } = useOutletContext() || { theme: "light" };
+  const isDark = theme !== "dark";
+
   const [states, setStates] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [cities, setCities] = useState([]);
@@ -76,8 +80,13 @@ const City = () => {
   };
 
   useEffect(() => {
+    if (!selectedDistrict) return;
     fetchCities();
   }, [selectedDistrict, debouncedSearch]);
+
+  const totalCount = cities.length;
+  const activeCount = cities.filter((c) => c.status === "active").length;
+  const inactiveCount = cities.filter((c) => c.status === "inactive").length;
 
   const softDeleteCity = async (id) => {
     try {
@@ -206,29 +215,47 @@ const City = () => {
   };
 
   return (
-    <div>
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-        <div>
-          <h2 style={{ margin: 0 }}>City Master</h2>
-          <p style={{ margin: "6px 0 0", color: "#64748b" }}>Manage city records from one place.</p>
+    <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto", fontFamily: "'Inter', sans-serif" }}>
+      {/* KPI Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px", marginBottom: "30px" }}>
+        <div style={{ background: isDark ? "linear-gradient(135deg, #1e3a8a 0%, #172554 100%)" : "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)", padding: "24px", borderRadius: "16px", border: isDark ? "1px solid #1e40af" : "1px solid #bfdbfe", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)", transition: "transform 0.2s", cursor: "default" }} onMouseEnter={(e) => e.currentTarget.style.transform="translateY(-4px)"} onMouseLeave={(e) => e.currentTarget.style.transform="translateY(0)"}>
+          <h3 style={{ margin: "0 0 10px 0", color: isDark ? "#93c5fd" : "#1e3a8a", fontSize: "16px", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }}>🏙️ Total Cities</h3>
+          <p style={{ margin: 0, fontSize: "36px", fontWeight: 700, color: isDark ? "#eff6ff" : "#1d4ed8" }}>{totalCount}</p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          style={{ border: "none", padding: "10px 14px", borderRadius: "8px", background: "#2563eb", color: "#fff", cursor: "pointer", fontWeight: "600" }}
-        >
-          + Add City
-        </button>
+        <div style={{ background: isDark ? "linear-gradient(135deg, #14532d 0%, #064e3b 100%)" : "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)", padding: "24px", borderRadius: "16px", border: isDark ? "1px solid #166534" : "1px solid #bbf7d0", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)", transition: "transform 0.2s", cursor: "default" }} onMouseEnter={(e) => e.currentTarget.style.transform="translateY(-4px)"} onMouseLeave={(e) => e.currentTarget.style.transform="translateY(0)"}>
+          <h3 style={{ margin: "0 0 10px 0", color: isDark ? "#86efac" : "#14532d", fontSize: "16px", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }}>✅ Active Cities</h3>
+          <p style={{ margin: 0, fontSize: "36px", fontWeight: 700, color: isDark ? "#f0fdf4" : "#15803d" }}>{activeCount}</p>
+        </div>
+        <div style={{ background: isDark ? "linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%)" : "linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)", padding: "24px", borderRadius: "16px", border: isDark ? "1px solid #991b1b" : "1px solid #fecaca", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)", transition: "transform 0.2s", cursor: "default" }} onMouseEnter={(e) => e.currentTarget.style.transform="translateY(-4px)"} onMouseLeave={(e) => e.currentTarget.style.transform="translateY(0)"}>
+          <h3 style={{ margin: "0 0 10px 0", color: isDark ? "#fca5a5" : "#7f1d1d", fontSize: "16px", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }}>🚫 Inactive Cities</h3>
+          <p style={{ margin: 0, fontSize: "36px", fontWeight: 700, color: isDark ? "#fef2f2" : "#b91c1c" }}>{inactiveCount}</p>
+        </div>
       </div>
+
+      {/* Main Content Card */}
+      <div style={{ background: isDark ? "#1e293b" : "#fff", borderRadius: "16px", boxShadow: "0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.01)", border: isDark ? "1px solid #334155" : "1px solid #f1f5f9", padding: "28px" }}>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", borderBottom: isDark ? "2px solid #334155" : "2px solid #f8fafc", paddingBottom: "20px" }}>
+          <div>
+            <h2 style={{ margin: 0, color: isDark ? "#f8fafc" : "#0f172a" }}>City Master</h2>
+            <p style={{ margin: "6px 0 0", color: isDark ? "#94a3b8" : "#64748b" }}>Manage city records from one place.</p>
+          </div>
+          <button
+            onClick={() => setShowAddModal(true)}
+            style={{ border: "none", padding: "10px 14px", borderRadius: "8px", background: "#2563eb", color: "#fff", cursor: "pointer", fontWeight: "600" }}
+          >
+            + Add City
+          </button>
+        </div>
 
       {/* Filters: State + District */}
       <div style={{ display: "flex", gap: "16px", marginBottom: "16px", flexWrap: "wrap" }}>
         <div>
-          <label style={{ display: "block", marginBottom: "6px" }}>Select State</label>
+          <label style={{ display: "block", marginBottom: "6px", color: isDark ? "#cbd5e1" : "#0f172a" }}>Select State</label>
           <select
             value={selectedState}
             onChange={(e) => setSelectedState(e.target.value)}
-            style={{ padding: "10px", width: "180px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+            style={{ padding: "10px", width: "180px", borderRadius: "8px", background: isDark ? "#0f172a" : "#fff", color: isDark ? "#f8fafc" : "#0f172a", border: isDark ? "1px solid #475569" : "1px solid #cbd5e1" }}
           >
             {states.map((state) => (
               <option key={state._id} value={state._id}>{state.Statename}</option>
@@ -236,11 +263,11 @@ const City = () => {
           </select>
         </div>
         <div>
-          <label style={{ display: "block", marginBottom: "6px" }}>Select District</label>
+          <label style={{ display: "block", marginBottom: "6px", color: isDark ? "#cbd5e1" : "#0f172a" }}>Select District</label>
           <select
             value={selectedDistrict}
             onChange={(e) => setSelectedDistrict(e.target.value)}
-            style={{ padding: "10px", width: "180px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+            style={{ padding: "10px", width: "180px", borderRadius: "8px", background: isDark ? "#0f172a" : "#fff", color: isDark ? "#f8fafc" : "#0f172a", border: isDark ? "1px solid #475569" : "1px solid #cbd5e1" }}
           >
             {districts.length === 0 && <option value="">No districts</option>}
             {districts.map((d) => (
@@ -254,13 +281,13 @@ const City = () => {
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
         <button
           onClick={() => setTab("active")}
-          style={{ border: "none", padding: "8px 12px", borderRadius: "8px", background: tab === "active" ? "#2563eb" : "#e2e8f0", color: tab === "active" ? "#fff" : "#0f172a", cursor: "pointer" }}
+          style={{ border: "none", padding: "8px 12px", borderRadius: "8px", background: tab === "active" ? "#2563eb" : (isDark ? "#334155" : "#e2e8f0"), color: tab === "active" ? "#fff" : (isDark ? "#cbd5e1" : "#0f172a"), cursor: "pointer" }}
         >
           Active
         </button>
         <button
           onClick={() => setTab("inactive")}
-          style={{ border: "none", padding: "8px 12px", borderRadius: "8px", background: tab === "inactive" ? "#2563eb" : "#e2e8f0", color: tab === "inactive" ? "#fff" : "#0f172a", cursor: "pointer" }}
+          style={{ border: "none", padding: "8px 12px", borderRadius: "8px", background: tab === "inactive" ? "#2563eb" : (isDark ? "#334155" : "#e2e8f0"), color: tab === "inactive" ? "#fff" : (isDark ? "#cbd5e1" : "#0f172a"), cursor: "pointer" }}
         >
           Inactive
         </button>
@@ -272,35 +299,36 @@ const City = () => {
         placeholder="Search City"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", marginBottom: "16px", boxSizing: "border-box" }}
+        style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: isDark ? "1px solid #475569" : "1px solid #cbd5e1", background: isDark ? "#0f172a" : "#fff", color: isDark ? "#f8fafc" : "#0f172a", marginBottom: "16px", boxSizing: "border-box" }}
       />
 
       {/* Table */}
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ background: "#f8fafc" }}>
-            <th style={{ padding: "10px", textAlign: "left" }}>City Name</th>
-            <th style={{ padding: "10px", textAlign: "left" }}>District</th>
-            <th style={{ padding: "10px", textAlign: "left" }}>State</th>
-            <th style={{ padding: "10px", textAlign: "left" }}>Status</th>
-            <th style={{ padding: "10px", textAlign: "left" }}>Action</th>
-          </tr>
-        </thead>
+      <div style={{ overflowX: "auto", borderRadius: "12px", border: isDark ? "1px solid #334155" : "1px solid #e2e8f0" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "15px" }}>
+          <thead>
+            <tr style={{ background: isDark ? "#334155" : "#f8fafc", borderBottom: isDark ? "2px solid #475569" : "2px solid #e2e8f0" }}>
+              <th style={{ padding: "16px", textAlign: "left", color: isDark ? "#e2e8f0" : "#475569", fontWeight: 600 }}>City Name</th>
+              <th style={{ padding: "16px", textAlign: "left", color: isDark ? "#e2e8f0" : "#475569", fontWeight: 600 }}>District</th>
+              <th style={{ padding: "16px", textAlign: "left", color: isDark ? "#e2e8f0" : "#475569", fontWeight: 600 }}>State</th>
+              <th style={{ padding: "16px", textAlign: "left", color: isDark ? "#e2e8f0" : "#475569", fontWeight: 600 }}>Status</th>
+              <th style={{ padding: "16px", textAlign: "left", color: isDark ? "#e2e8f0" : "#475569", fontWeight: 600 }}>Action</th>
+            </tr>
+          </thead>
         <tbody>
           {filteredCities.length === 0 ? (
             <tr>
-              <td colSpan={5} style={{ padding: "20px", textAlign: "center", color: "#94a3b8" }}>
+              <td colSpan={5} style={{ padding: "20px", textAlign: "center", color: isDark ? "#64748b" : "#94a3b8" }}>
                 No {tab} cities found.
               </td>
             </tr>
           ) : (
             filteredCities.map((item, index) => (
-              <tr key={item._id || index} style={{ borderTop: "1px solid #e2e8f0" }}>
-                <td style={{ padding: "10px" }}>{item.cityname || ""}</td>
-                <td style={{ padding: "10px" }}>{item.district?.districtname || ""}</td>
-                <td style={{ padding: "10px" }}>{item.district?.stateId?.Statename || ""}</td>
-                <td style={{ padding: "10px" }}>{item.status || "active"}</td>
-                <td style={{ padding: "10px" }}>
+              <tr key={item._id || index} style={{ borderTop: isDark ? "1px solid #334155" : "1px solid #e2e8f0", color: isDark ? "#f8fafc" : "#0f172a" }}>
+                <td style={{ padding: "16px" }}>{item.cityname || ""}</td>
+                <td style={{ padding: "16px" }}>{item.district?.districtname || ""}</td>
+                <td style={{ padding: "16px" }}>{item.district?.stateId?.Statename || ""}</td>
+                <td style={{ padding: "16px" }}>{item.status || "active"}</td>
+                <td style={{ padding: "16px" }}>
                   {tab === "active" ? (
                     <>
                       <button
@@ -348,8 +376,10 @@ const City = () => {
               </tr>
             ))
           )}
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
       {/* ── View City Modal ── */}
       {showViewModal && viewingCity && (

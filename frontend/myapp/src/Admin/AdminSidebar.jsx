@@ -8,10 +8,12 @@ import {
   Users, 
   Tags,
   LogOut,
-  UserCog
+  UserCog,
+  Moon,
+  Sun
 } from "lucide-react";
 
-function AdminSidebar() {
+function AdminSidebar({ theme, toggleTheme }) {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
@@ -105,6 +107,48 @@ function AdminSidebar() {
         
         {/* Logout */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", margin: "20px 0 10px 0", paddingTop: "10px" }}>
+          <button
+            onClick={toggleTheme}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              width: "100%",
+              padding: "12px 20px",
+              borderRadius: "10px",
+              border: "none",
+              background: "transparent",
+              color: "#94a3b8",
+              cursor: "pointer",
+              fontWeight: 500,
+              fontSize: "14px",
+              transition: "all 0.2s",
+              textAlign: "left",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+              e.currentTarget.style.color = "#ffffff";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.color = "#94a3b8";
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              {theme === "dark" ? <Moon size={20} /> : <Sun size={20} />}
+              <span>{theme === "dark" ? "Dark Mode" : "Light Mode"}</span>
+            </div>
+            <div style={{ 
+              width: "36px", height: "20px", background: theme === "dark" ? "#3b82f6" : "rgba(255,255,255,0.1)", 
+              borderRadius: "20px", position: "relative", transition: "0.3s" 
+            }}>
+              <div style={{
+                width: "16px", height: "16px", background: "#fff", borderRadius: "50%",
+                position: "absolute", top: "2px", left: theme === "dark" ? "18px" : "2px", transition: "0.3s"
+              }}/>
+            </div>
+          </button>
+          
           <button
             onClick={handleLogout}
             style={{

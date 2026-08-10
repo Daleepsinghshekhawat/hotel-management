@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import URL from "../api";
-import { Download } from "lucide-react";
+import { Download, MapPin, Calendar, Users, Moon, ArrowRight } from "lucide-react";
 
 export default function UserActiveBookings() {
   const [bookings, setBookings] = useState([]);
@@ -39,7 +39,7 @@ export default function UserActiveBookings() {
 
   const formatDate = (dateString) => {
     return dateString
-      ? new Date(dateString).toLocaleDateString("en-IN", {
+      ? new Date(dateString).toLocaleDateString("en-US", {
           day: "2-digit",
           month: "short",
           year: "numeric",
@@ -49,20 +49,23 @@ export default function UserActiveBookings() {
 
   const statusBadge = (status) => {
     const styles = {
-      confirmed: { bg: "#dcfce7", color: "#15803d" },
-      pending: { bg: "#fef3c7", color: "#d97706" },
+      confirmed: { bg: "rgba(34, 197, 94, 0.15)", color: "#4ade80", border: "#22c55e" },
+      pending: { bg: "rgba(234, 179, 8, 0.15)", color: "#fde047", border: "#eab308" },
     };
-    const s = styles[status] || { bg: "#f1f5f9", color: "#64748b" };
+    const s = styles[status] || { bg: "rgba(161, 161, 170, 0.15)", color: "#d4d4d8", border: "#a1a1aa" };
     return (
       <span
         style={{
           background: s.bg,
           color: s.color,
-          padding: "4px 10px",
-          borderRadius: "999px",
+          padding: "6px 14px",
+          borderRadius: "100px",
           fontSize: "12px",
           fontWeight: 700,
-          textTransform: "capitalize",
+          textTransform: "uppercase",
+          letterSpacing: "1px",
+          border: `1px solid rgba(${parseInt(s.border.slice(1, 3), 16)}, ${parseInt(s.border.slice(3, 5), 16)}, ${parseInt(s.border.slice(5, 7), 16)}, 0.3)`,
+          boxShadow: `0 0 10px rgba(${parseInt(s.border.slice(1, 3), 16)}, ${parseInt(s.border.slice(3, 5), 16)}, ${parseInt(s.border.slice(5, 7), 16)}, 0.2)`
         }}
       >
         {status || "Unknown"}
@@ -88,15 +91,15 @@ export default function UserActiveBookings() {
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif" }}>
-      <h2 style={{ fontSize: "28px", fontWeight: 800, color: "#1e293b", marginBottom: "8px" }}>
-        🛎️ Active Bookings
+      <h2 style={{ fontSize: "28px", fontWeight: 800, color: "#fff", marginBottom: "8px", display: "flex", alignItems: "center", gap: "10px" }}>
+        <Calendar color="#eab308" /> Active Bookings
       </h2>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
-        <p style={{ color: "#64748b", margin: 0, fontSize: "15px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px", flexWrap: "wrap", gap: "16px" }}>
+        <p style={{ color: "#a1a1aa", margin: 0, fontSize: "15px", fontWeight: 300 }}>
           Your upcoming and current hotel reservations.
         </p>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <label style={{ fontSize: "14px", color: "#475569", fontWeight: 600 }}>Items per page:</label>
+          <label style={{ fontSize: "14px", color: "#a1a1aa", fontWeight: 600 }}>Items per page:</label>
           <select 
             value={limit} 
             onChange={(e) => {
@@ -104,8 +107,8 @@ export default function UserActiveBookings() {
               setPage(1);
             }}
             style={{
-              padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1",
-              background: "#fff", color: "#0f172a", outline: "none", cursor: "pointer"
+              padding: "8px 12px", borderRadius: "8px", border: "1px solid #1f1f22",
+              background: "#0a0a0c", color: "#fff", outline: "none", cursor: "pointer"
             }}
           >
             <option value={5}>5</option>
@@ -116,111 +119,188 @@ export default function UserActiveBookings() {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
-          ⏳ Loading your active bookings...
+        <div style={{ display: "grid", gap: "24px" }}>
+          {[1, 2].map(i => (
+            <div key={i} style={{
+              height: "200px", borderRadius: "24px",
+              background: "linear-gradient(90deg, #111 25%, #222 50%, #111 75%)",
+              backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite"
+            }} />
+          ))}
         </div>
       ) : bookings.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "60px 20px", background: "#fff", borderRadius: "16px", boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
-          <div style={{ fontSize: "48px", marginBottom: "16px" }}>🛎️</div>
-          <h3 style={{ fontSize: "20px", fontWeight: 700, color: "#1e293b", marginBottom: "8px" }}>No Active Bookings</h3>
-          <p style={{ color: "#64748b", fontSize: "15px", marginBottom: "24px" }}>You don't have any upcoming reservations.</p>
+        <div style={{ 
+          textAlign: "center", 
+          padding: "80px 20px", 
+          background: "rgba(10, 10, 12, 0.8)",
+          backdropFilter: "blur(20px)",
+          borderRadius: "32px", 
+          border: "1px solid rgba(234,179,8,0.2)",
+          boxShadow: "0 20px 40px rgba(0,0,0,0.5)"
+        }}>
+          <div style={{ width: "80px", height: "80px", background: "rgba(234, 179, 8, 0.1)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
+            <Calendar size={40} color="#eab308" strokeWidth={1.5} />
+          </div>
+          <h3 style={{ fontSize: "28px", fontWeight: 300, color: "#fff", margin: "0 0 16px", letterSpacing: "1px" }}>No Active Bookings</h3>
+          <p style={{ color: "#a1a1aa", fontSize: "16px", marginBottom: "40px", fontWeight: 300 }}>You don't have any upcoming reservations.</p>
           <button 
             onClick={() => navigate("/user/hotels")}
-            style={{ padding: "10px 24px", borderRadius: "8px", background: "#6366f1", color: "#fff", border: "none", fontWeight: 600, cursor: "pointer" }}
+            style={{
+              padding: "16px 40px",
+              borderRadius: "100px",
+              border: "none",
+              background: "linear-gradient(135deg, #eab308 0%, #ca8a04 100%)",
+              color: "#050505",
+              fontWeight: 800,
+              fontSize: "16px",
+              cursor: "pointer",
+              transition: "transform 0.3s, box-shadow 0.3s"
+            }}
+            onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.05)"; e.currentTarget.style.boxShadow = "0 10px 25px rgba(234,179,8,0.4)"; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "none"; }}
           >
-            Explore Hotels
+            Explore Destinations
           </button>
         </div>
       ) : (
-        <div style={{ display: "grid", gap: "20px" }}>
-          {bookings.map((b) => (
-            <div key={b._id} style={{ background: "#fff", borderRadius: "16px", padding: "24px", boxShadow: "0 4px 15px rgba(0,0,0,0.03)", display: "flex", gap: "24px", flexWrap: "wrap" }}>
-              <div style={{ width: "120px", height: "120px", borderRadius: "12px", overflow: "hidden", flexShrink: 0, background: "#f1f5f9" }}>
-                {b.hotel?.image ? (
-                  <img src={b.hotel.images?.[0]} alt="Hotel" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                ) : (
-                  <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "32px" }}>🏨</div>
-                )}
-              </div>
-              <div style={{ flex: 1, minWidth: "250px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px", flexWrap: "wrap", gap: "10px" }}>
-                  <div>
-                    <h3 style={{ fontSize: "20px", fontWeight: 700, color: "#1e293b", margin: "0 0 4px" }}>{b.hotel?.hotelName || "Hotel"}</h3>
-                    <div style={{ color: "#64748b", fontSize: "14px" }}>{b.room?.roomName} • {b.room?.roomType}</div>
-                  </div>
-                  <div>{statusBadge(b.status)}</div>
+        <div style={{ display: "grid", gap: "32px" }}>
+          {bookings.map((b) => {
+            const location = b.hotel?.location;
+            const city = typeof location === "object"
+              ? [location?.cityname, location?.state?.Statename].filter(Boolean).join(", ")
+              : location || "Premium Location";
+
+            return (
+              <div key={b._id} style={{ 
+                background: "#0a0a0c", 
+                borderRadius: "24px", 
+                padding: "24px", 
+                border: "1px solid #1f1f22",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.5)", 
+                display: "flex", 
+                gap: "32px", 
+                flexWrap: "wrap",
+                transition: "transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s",
+                cursor: "default"
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = "translateY(-8px)";
+                e.currentTarget.style.borderColor = "rgba(234, 179, 8, 0.4)";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.borderColor = "#1f1f22";
+              }}
+              >
+                <div style={{ width: "200px", height: "200px", borderRadius: "16px", overflow: "hidden", flexShrink: 0, position: "relative" }}>
+                  {b.hotel?.image || b.hotel?.images?.[0] ? (
+                    <img src={b.hotel.image || b.hotel.images[0]} alt="Hotel" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    <div style={{ width: "100%", height: "100%", background: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Moon size={40} color="#333" />
+                    </div>
+                  )}
                 </div>
                 
-                <div style={{ display: "flex", gap: "32px", marginTop: "16px", flexWrap: "wrap" }}>
-                  <div>
-                    <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", marginBottom: "4px" }}>Check-In</div>
-                    <div style={{ fontWeight: 600, color: "#334155", fontSize: "15px" }}>{formatDate(b.checkIn)}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", marginBottom: "4px" }}>Check-Out</div>
-                    <div style={{ fontWeight: 600, color: "#334155", fontSize: "15px" }}>{formatDate(b.checkOut)}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", marginBottom: "4px" }}>Guests & Nights</div>
-                    <div style={{ fontWeight: 600, color: "#334155", fontSize: "15px" }}>{b.guests || 1} Guests • {b.nights || 0} Nights</div>
-                  </div>
-                  <div style={{ display: "flex", gap: "16px", marginLeft: "auto", textAlign: "right", alignItems: "center" }}>
+                <div style={{ flex: 1, minWidth: "250px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                  
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px", flexWrap: "wrap", gap: "16px" }}>
                     <div>
-                      <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", marginBottom: "4px" }}>Total Amount</div>
-                      <div style={{ fontWeight: 800, color: "#0f172a", fontSize: "20px" }}>₹{(b.totalAmount || 0).toLocaleString("en-IN")}</div>
+                      <h3 style={{ fontSize: "24px", fontWeight: 300, color: "#fff", margin: "0 0 8px", letterSpacing: "0.5px" }}>{b.hotel?.hotelName || "Exclusive Property"}</h3>
+                      <div style={{ color: "#a1a1aa", fontSize: "14px", display: "flex", alignItems: "center", gap: "6px", fontWeight: 300 }}>
+                        <MapPin size={14} color="#eab308" /> {city}
+                      </div>
+                      <div style={{ color: "#eab308", fontSize: "14px", marginTop: "8px", fontWeight: 500, letterSpacing: "1px", textTransform: "uppercase" }}>
+                        {b.room?.roomName} • {b.room?.roomType}
+                      </div>
                     </div>
-                    <div style={{ display: "flex", gap: "8px" }}>
-                      <button
-                        onClick={() => handleDownloadReceipt(b._id)}
-                        style={{
-                          padding: "8px 16px", borderRadius: "8px", background: "#10b981", color: "#fff",
-                          border: "none", fontWeight: 600, fontSize: "14px", cursor: "pointer",
-                          display: "flex", alignItems: "center", gap: "6px"
-                        }}
-                      >
-                        <Download size={16} /> Receipt
-                      </button>
-                      <button
-                        onClick={() => navigate(`/user/hotel/${b.hotel?._id}`)}
-                        style={{
-                          padding: "8px 16px", borderRadius: "8px", background: "#6366f1", color: "#fff",
-                          border: "none", fontWeight: 600, fontSize: "14px", cursor: "pointer"
-                        }}
-                      >
-                        View Hotel
-                      </button>
+                    <div>{statusBadge(b.status)}</div>
+                  </div>
+                  
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "24px", marginTop: "24px", background: "rgba(255,255,255,0.02)", padding: "20px", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                    <div>
+                      <div style={{ fontSize: "12px", color: "#a1a1aa", fontWeight: 600, textTransform: "uppercase", marginBottom: "8px", letterSpacing: "1px" }}>Check-In</div>
+                      <div style={{ fontWeight: 300, color: "#fff", fontSize: "16px" }}>{formatDate(b.checkIn)}</div>
                     </div>
+                    
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <ArrowRight size={24} color="#333" />
+                    </div>
+
+                    <div>
+                      <div style={{ fontSize: "12px", color: "#a1a1aa", fontWeight: 600, textTransform: "uppercase", marginBottom: "8px", letterSpacing: "1px" }}>Check-Out</div>
+                      <div style={{ fontWeight: 300, color: "#fff", fontSize: "16px" }}>{formatDate(b.checkOut)}</div>
+                    </div>
+
+                    <div>
+                      <div style={{ fontSize: "12px", color: "#a1a1aa", fontWeight: 600, textTransform: "uppercase", marginBottom: "8px", letterSpacing: "1px" }}>Party</div>
+                      <div style={{ fontWeight: 300, color: "#fff", fontSize: "16px", display: "flex", alignItems: "center", gap: "6px" }}>
+                        <Users size={16} /> {b.guests || 1} • <Moon size={16} /> {b.nights || 0}
+                      </div>
+                    </div>
+                    
+                    <div style={{ textAlign: "right", borderLeft: "1px solid rgba(255,255,255,0.1)", paddingLeft: "24px" }}>
+                      <div style={{ fontSize: "12px", color: "#a1a1aa", fontWeight: 600, textTransform: "uppercase", marginBottom: "8px", letterSpacing: "1px" }}>Total Amount</div>
+                      <div style={{ fontWeight: 700, color: "#eab308", fontSize: "24px" }}>₹{(b.totalAmount || 0).toLocaleString("en-IN")}</div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "16px", marginTop: "16px", justifyContent: "flex-end", flexWrap: "wrap" }}>
+                    <button
+                      onClick={() => handleDownloadReceipt(b._id)}
+                      style={{
+                        padding: "10px 24px", borderRadius: "100px", background: "rgba(16, 185, 129, 0.1)", color: "#34d399",
+                        border: "1px solid rgba(16, 185, 129, 0.3)", fontWeight: 600, fontSize: "14px", cursor: "pointer",
+                        display: "flex", alignItems: "center", gap: "8px", transition: "all 0.2s"
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(16, 185, 129, 0.2)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "rgba(16, 185, 129, 0.1)"; }}
+                    >
+                      <Download size={18} /> Receipt
+                    </button>
+                    <button
+                      onClick={() => navigate(`/user/hotel/${b.hotel?._id}`)}
+                      style={{
+                        padding: "10px 24px", borderRadius: "100px", background: "linear-gradient(135deg, #eab308 0%, #ca8a04 100%)", color: "#050505",
+                        border: "none", fontWeight: 800, fontSize: "14px", cursor: "pointer", transition: "all 0.2s",
+                        boxShadow: "0 4px 15px rgba(234, 179, 8, 0.3)"
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.05)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
+                    >
+                      View Hotel
+                    </button>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px", padding: "16px", background: "#fff", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px", padding: "16px", background: "#0a0a0c", borderRadius: "12px", border: "1px solid #1f1f22" }}>
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
                 style={{
-                  padding: "10px 20px", borderRadius: "8px", border: "1px solid #cbd5e1",
-                  background: page === 1 ? "#f1f5f9" : "#fff", color: page === 1 ? "#94a3b8" : "#0f172a",
+                  padding: "10px 20px", borderRadius: "8px", border: "1px solid #1f1f22",
+                  background: page === 1 ? "#111" : "#0a0a0c", color: page === 1 ? "#333" : "#fff",
                   fontWeight: 600, cursor: page === 1 ? "not-allowed" : "pointer"
                 }}
               >
                 Previous
               </button>
 
-              <span style={{ fontSize: "14px", fontWeight: 600, color: "#475569" }}>
-                Page <span style={{ color: "#2563eb" }}>{page}</span> of {totalPages}
+              <span style={{ fontSize: "14px", fontWeight: 600, color: "#a1a1aa" }}>
+                Page <span style={{ color: "#eab308" }}>{page}</span> of {totalPages}
               </span>
 
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages || totalPages === 0}
                 style={{
-                  padding: "10px 20px", borderRadius: "8px", border: "1px solid #cbd5e1",
-                  background: page === totalPages || totalPages === 0 ? "#f1f5f9" : "#fff", color: page === totalPages || totalPages === 0 ? "#94a3b8" : "#0f172a",
+                  padding: "10px 20px", borderRadius: "8px", border: "1px solid #1f1f22",
+                  background: page === totalPages || totalPages === 0 ? "#111" : "#0a0a0c", color: page === totalPages || totalPages === 0 ? "#333" : "#fff",
                   fontWeight: 600, cursor: page === totalPages || totalPages === 0 ? "not-allowed" : "pointer"
                 }}
               >
@@ -230,6 +310,13 @@ export default function UserActiveBookings() {
           )}
         </div>
       )}
+
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+      `}</style>
     </div>
   );
 }

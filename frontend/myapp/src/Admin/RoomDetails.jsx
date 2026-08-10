@@ -87,21 +87,63 @@ const RoomDetails = () => {
       {/* All Images Gallery */}
       <div style={{ maxWidth: "1200px", margin: "0 auto 32px", padding: "0 24px" }}>
         {room.images && room.images.length > 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-            {room.images.map((img, idx) => (
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {/* Main Large Image */}
+            <div style={{
+              width: "100%",
+              height: "450px",
+              borderRadius: "24px",
+              overflow: "hidden",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.06)"
+            }}>
               <img 
-                key={idx} 
-                src={img} 
-                alt={`Room view ${idx + 1}`} 
+                src={room.images[0]} 
+                alt="Room main view" 
                 style={{ 
                   width: "100%", 
-                  height: "auto", 
-                  display: "block", 
-                  borderRadius: "24px", 
-                  boxShadow: "0 10px 30px rgba(0,0,0,0.06)" 
+                  height: "100%", 
+                  objectFit: "cover",
+                  display: "block"
                 }} 
               />
-            ))}
+            </div>
+            
+            {/* Thumbnails for remaining images */}
+            {room.images.length > 1 && (
+              <div style={{ 
+                display: "flex", 
+                gap: "16px", 
+                overflowX: "auto",
+                paddingBottom: "8px",
+                scrollBehavior: "smooth"
+              }}>
+                {room.images.slice(1).map((img, idx) => (
+                  <div key={idx} style={{
+                    minWidth: "220px",
+                    width: "220px",
+                    height: "150px",
+                    borderRadius: "16px",
+                    overflow: "hidden",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                    cursor: "pointer"
+                  }}>
+                    <img 
+                      src={img} 
+                      alt={`Room additional view ${idx + 1}`} 
+                      style={{ 
+                        width: "100%", 
+                        height: "100%", 
+                        objectFit: "cover",
+                        display: "block",
+                        transition: "transform 0.3s ease"
+                      }} 
+                      onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.05)"}
+                      onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <div style={{ width: "100%", padding: "100px 0", borderRadius: "24px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "60px", opacity: 0.5, background: "#e2e8f0" }}>🛏️</div>

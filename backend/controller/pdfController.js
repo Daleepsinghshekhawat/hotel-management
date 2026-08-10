@@ -3,6 +3,9 @@ const Hotel = require("../model/hotelModel");
 const Room = require("../model/room");
 const Coupon = require("../model/couponModel");
 const Booking = require("../model/booking");
+require("../model/citymodel");
+require("../model/districtmodel");
+require("../model/statemodel");
 
 // Helper to format hotel location
 const formatLocation = (loc) => {
@@ -17,7 +20,17 @@ const formatLocation = (loc) => {
 exports.generateHotelPdf = async (req, res) => {
   try {
     const { id } = req.params;
-    const hotel = await Hotel.findById(id).populate("location");
+    let hotel = await Hotel.findById(id).populate("location");
+    
+    if (!hotel) {
+      hotel = await Hotel.findOne({ requestId: id }).populate("location");
+    }
+    
+    if (!hotel) {
+      const HotelRequest = require("../model/hotelRequestModel");
+      hotel = await HotelRequest.findById(id).populate("location");
+    }
+
     if (!hotel) return res.status(404).json({ success: false, message: "Hotel not found" });
 
     res.set({
@@ -130,7 +143,12 @@ exports.generateRoomPdf = async (req, res) => {
 
 exports.generateCouponsPdf = async (req, res) => {
   try {
-    const coupons = await Coupon.find({});
+    const { adminEmail } = req.query;
+    let query = {};
+    if (adminEmail) {
+      query.adminEmail = adminEmail;
+    }
+    const coupons = await Coupon.find(query);
 
     res.set({
       "Content-Type": "application/pdf",
@@ -140,7 +158,7 @@ exports.generateCouponsPdf = async (req, res) => {
     const doc = new PDFDocument({ margin: 50 });
     doc.pipe(res);
 
-    doc.fontSize(24).fillColor("#1e293b").text("Coupons & Offers", { align: "center" });
+    doc.fontSize(24).fillColor("#1e293b").text("Coupons & Offers Receipt Pdf", { align: "center" });
     doc.moveDown(1);
     doc.moveTo(50, doc.y).lineTo(550, doc.y).strokeColor("#e2e8f0").stroke();
     doc.moveDown(1);
@@ -217,6 +235,62 @@ exports.generateBookingReceiptPdf = async (req, res) => {
     
     doc.fontSize(10).fillColor("#94a3b8").text(`Thank you for booking with us! \nGenerated on ${new Date().toLocaleDateString()}`, 50, 700, { align: "center", lineBreak: false });
 
+    doc.end();
+  } catch (error) {
+    console.error(error);
+    if (!res.headersSent) res.status(500).json({ success: false, message: "Error generating PDF" });
+  }
+};
+
+exports.generateBookingsListPdf = async (req, res) => {
+  try {
+    const { adminEmail, type } = req.query;
+    
+    if (!adminEmail) return res.status(400).json({ success: false, message: "adminEmail is required" });
+
+    const hotels = await Hotel.find({ email: adminEmail });
+    const hotelIds = hotels.map(h => h._id);
+
+    let query = { hotel: { $in: hotelIds } };
+    if (type === 'active') {
+      query.status = { $in: ['pending', 'confirmed', 'checked_in'] };
+    } else if (type === 'history') {
+      query.status = { $in: ['completed', 'cancelled'] };
+    }
+
+    const bookings = await Booking.find(query).populate('hotel').populate('room').sort({ createdAt: -1 });
+
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename="bookings-list.pdf"`,
+    });
+
+    const doc = new PDFDocument({ margin: 40 });
+    doc.pipe(res);
+
+    const title = type === 'active' ? "Active Bookings Report" : type === 'history' ? "Booking History Report" : "All Bookings Report";
+    doc.fontSize(22).fillColor("#1e293b").text(title, { align: "center" });
+    doc.moveDown(1);
+    doc.moveTo(40, doc.y).lineTo(570, doc.y).strokeColor("#e2e8f0").stroke();
+    doc.moveDown(1);
+
+    if (bookings.length === 0) {
+      doc.fontSize(14).fillColor("#64748b").text("No bookings found.", { align: "center" });
+    } else {
+      bookings.forEach((b, index) => {
+        doc.fontSize(14).fillColor("#0f172a").text(`Booking ID: ${b.bookingId || b._id}`);
+        doc.fontSize(11).fillColor("#475569");
+        doc.text(`Guest: ${b.guestName} (${b.guestEmail})`);
+        doc.text(`Hotel: ${b.hotel?.hotelName || 'N/A'}`);
+        doc.text(`Room: ${b.room?.roomName || 'N/A'}`);
+        doc.text(`Dates: ${new Date(b.checkIn).toLocaleDateString()} to ${new Date(b.checkOut).toLocaleDateString()}`);
+        doc.text(`Status: ${(b.status || 'confirmed').toUpperCase()}`);
+        doc.fillColor("#0284c7").text(`Amount: Rs. ${b.totalAmount || 0}`);
+        doc.moveDown(1);
+      });
+    }
+
+    doc.fontSize(10).fillColor("#94a3b8").text(`Generated on ${new Date().toLocaleDateString()}`, 40, 750, { align: "center", lineBreak: false });
     doc.end();
   } catch (error) {
     console.error(error);

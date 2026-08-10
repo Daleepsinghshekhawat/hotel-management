@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import URL from "../api";
 import useDebounce from "../hooks/useDebounce";
+import useTheme from "../useTheme";
 
 const ROLE_TABS = ["all", "hotelOwner", "user"];
 
@@ -17,6 +18,8 @@ const ROLE_BADGES = {
 };
 
 export default function AdminUsersAndOwners() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const [users, setUsers] = useState([]);
   const [roleFilter, setRoleFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -62,7 +65,7 @@ export default function AdminUsersAndOwners() {
     }
   };
 
-  const filteredUsers = users; // The backend now handles the filtering using excludeAdmins
+  const filteredUsers = users;
 
   const formatDate = (dateString) => {
     return dateString
@@ -77,15 +80,14 @@ export default function AdminUsersAndOwners() {
   return (
     <div style={{ fontFamily: "'Segoe UI', sans-serif" }}>
       <div style={{ marginBottom: "28px" }}>
-        <h2 style={{ margin: "0 0 4px", fontSize: "22px", color: "#0f172a", fontWeight: 700 }}>
+        <h2 style={{ margin: "0 0 4px", fontSize: "22px", color: isDark ? "#0f172a" : "#f8fafc", fontWeight: 700 }}>
           👥 Registered Accounts
         </h2>
-        <p style={{ margin: 0, color: "#64748b", fontSize: "14px" }}>
+        <p style={{ margin: 0, color: isDark ? "#64748b" : "#94a3b8", fontSize: "14px" }}>
           View and manage user accounts and hotel owners registered on the platform.
         </p>
       </div>
 
-      {/* Role Filter Tabs */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "20px", flexWrap: "wrap" }}>
         {ROLE_TABS.map((tab) => (
           <button
@@ -95,8 +97,8 @@ export default function AdminUsersAndOwners() {
               border: "none",
               padding: "10px 20px",
               borderRadius: "999px",
-              background: roleFilter === tab ? "#2563eb" : "#e2e8f0",
-              color: roleFilter === tab ? "#fff" : "#475569",
+              background: roleFilter === tab ? "#2563eb" : (isDark ? "#e2e8f0" : "#334155"),
+              color: roleFilter === tab ? "#fff" : (isDark ? "#475569" : "#cbd5e1"),
               cursor: "pointer",
               fontWeight: 600,
               fontSize: "13px",
@@ -119,16 +121,18 @@ export default function AdminUsersAndOwners() {
             style={{
               padding: "10px 10px 10px 36px",
               borderRadius: "999px",
-              border: "1px solid #cbd5e1",
+              border: isDark ? "1px solid #cbd5e1" : "1px solid #475569",
               fontSize: "14px",
               width: "100%",
-              outline: "none"
+              outline: "none",
+              background: isDark ? "#fff" : "#1e293b",
+              color: isDark ? "#0f172a" : "#f8fafc"
             }}
           />
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <label style={{ fontSize: "14px", color: "#475569", fontWeight: 600 }}>Items per page:</label>
+          <label style={{ fontSize: "14px", color: isDark ? "#475569" : "#cbd5e1", fontWeight: 600 }}>Items per page:</label>
           <select 
             value={limit} 
             onChange={(e) => {
@@ -136,8 +140,8 @@ export default function AdminUsersAndOwners() {
               setPage(1);
             }}
             style={{
-              padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1",
-              background: "#fff", color: "#0f172a", outline: "none", cursor: "pointer"
+              padding: "8px 12px", borderRadius: "8px", border: isDark ? "1px solid #cbd5e1" : "1px solid #475569",
+              background: isDark ? "#fff" : "#1e293b", color: isDark ? "#0f172a" : "#f8fafc", outline: "none", cursor: "pointer"
             }}
           >
             <option value={5}>5</option>
@@ -148,7 +152,7 @@ export default function AdminUsersAndOwners() {
         </div>
       </div>
       {loading ? (
-        <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
+        <div style={{ textAlign: "center", padding: "60px", color: isDark ? "#94a3b8" : "#64748b" }}>
           ⏳ Loading accounts...
         </div>
       ) : filteredUsers.length === 0 ? (
@@ -156,17 +160,17 @@ export default function AdminUsersAndOwners() {
           style={{
             textAlign: "center",
             padding: "60px 20px",
-            color: "#94a3b8",
-            background: "#f8fafc",
+            color: isDark ? "#94a3b8" : "#64748b",
+            background: isDark ? "#f8fafc" : "#1e293b",
             borderRadius: "16px",
-            border: "1px dashed #cbd5e1",
+            border: isDark ? "1px dashed #cbd5e1" : "1px dashed #475569",
           }}
         >
           <div style={{ fontSize: "48px", marginBottom: "14px" }}>👥</div>
           <p style={{ margin: 0, fontWeight: 600 }}>No accounts found matching search.</p>
         </div>
       ) : (
-        <div style={{ overflowX: "auto", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+        <div style={{ overflowX: "auto", borderRadius: "12px", border: isDark ? "1px solid #e2e8f0" : "1px solid #334155", background: isDark ? "#fff" : "#1e293b" }}>
           <table
             style={{
               width: "100%",
@@ -176,17 +180,17 @@ export default function AdminUsersAndOwners() {
             }}
           >
             <thead>
-              <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
-                <th style={{ padding: "16px 20px", color: "#475569", fontWeight: 600 }}>Name</th>
-                <th style={{ padding: "16px 20px", color: "#475569", fontWeight: 600 }}>Email Address</th>
-                <th style={{ padding: "16px 20px", color: "#475569", fontWeight: 600 }}>Role</th>
-                <th style={{ padding: "16px 20px", color: "#475569", fontWeight: 600 }}>Joined Date</th>
-                <th style={{ padding: "16px 20px", color: "#475569", fontWeight: 600, textAlign: "center" }}>Actions</th>
+              <tr style={{ background: isDark ? "#f8fafc" : "#334155", borderBottom: isDark ? "2px solid #e2e8f0" : "2px solid #475569" }}>
+                <th style={{ padding: "16px 20px", color: isDark ? "#475569" : "#94a3b8", fontWeight: 600 }}>Name</th>
+                <th style={{ padding: "16px 20px", color: isDark ? "#475569" : "#94a3b8", fontWeight: 600 }}>Email Address</th>
+                <th style={{ padding: "16px 20px", color: isDark ? "#475569" : "#94a3b8", fontWeight: 600 }}>Role</th>
+                <th style={{ padding: "16px 20px", color: isDark ? "#475569" : "#94a3b8", fontWeight: 600 }}>Joined Date</th>
+                <th style={{ padding: "16px 20px", color: isDark ? "#475569" : "#94a3b8", fontWeight: 600, textAlign: "center" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredUsers.map((user) => {
-                const badge = ROLE_BADGES[user.role] || { bg: "#f1f5f9", color: "#475569", label: user.role };
+                const badge = ROLE_BADGES[user.role] || { bg: isDark ? "#f1f5f9" : "#334155", color: isDark ? "#475569" : "#e2e8f0", label: user.role };
                 const isBusy = actionLoading === user._id;
 
                 return (

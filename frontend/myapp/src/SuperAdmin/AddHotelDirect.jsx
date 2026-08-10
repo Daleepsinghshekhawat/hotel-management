@@ -92,7 +92,11 @@ export default function AddHotelDirect() {
 
   const handleImageChange = (e) => {
     if (e.target.files) {
-      setImages(Array.from(e.target.files));
+      const newFiles = Array.from(e.target.files);
+      setImages(prev => {
+        const uniqueNew = newFiles.filter(nf => !prev.some(pf => pf.name === nf.name));
+        return [...prev, ...uniqueNew];
+      });
     }
   };
 
@@ -120,7 +124,7 @@ export default function AddHotelDirect() {
       formData.append("amenities", JSON.stringify(amenities));
       
       images.forEach((img) => {
-        formData.append("image", img);
+        formData.append("images", img);
       });
 
       await axios.post(`${apiurl}/api/addHotelDirect`, formData);

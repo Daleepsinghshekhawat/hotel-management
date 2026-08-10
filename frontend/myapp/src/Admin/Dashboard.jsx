@@ -53,15 +53,15 @@ export default function Dashboard() {
   const [monthlyRevData, setMonthlyRevData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Theme Constants based on Reference Image
+  // Theme Constants based on Reference Image (Inverted as per user request)
   const colors = {
     bg: isDark ? "#0f172a" : "#f8fafc",
-    cardBg: isDark ? "#1e293b" : "#ffffff",
-    textMain: isDark ? "#f8fafc" : "#0f172a",
-    textMuted: isDark ? "#94a3b8" : "#64748b",
-    border: isDark ? "#334155" : "#f1f5f9",
-    shadow: isDark ? "none" : "0 4px 12px rgba(0,0,0,0.02)",
-    gridLine: isDark ? "#334155" : "#f1f5f9",
+    cardBg: isDark ? "#ffffff" : "#1e293b",
+    textMain: isDark ? "#0f172a" : "#f8fafc",
+    textMuted: isDark ? "#64748b" : "#94a3b8",
+    border: isDark ? "#f1f5f9" : "#334155",
+    shadow: isDark ? "0 4px 12px rgba(0,0,0,0.02)" : "none",
+    gridLine: isDark ? "#f1f5f9" : "#334155",
   };
 
   useEffect(() => {
@@ -266,11 +266,14 @@ export default function Dashboard() {
       {/* Top Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px" }}>
         <div>
-          <h2 style={{ margin: "0 0 4px", fontSize: "28px", fontWeight: 700, color: colors.textMain }}>
+          <h1 style={{ margin: "0 0 12px", fontSize: "42px", fontWeight: 800, color: isDark ? "#f8fafc" : "#0f172a" }}>
+            Welcome {user.name || "Admin"} 👋
+          </h1>
+          <h2 style={{ margin: "0 0 4px", fontSize: "20px", fontWeight: 600, color: isDark ? "#cbd5e1" : "#475569" }}>
             Admin Overview
           </h2>
-          <p style={{ margin: 0, color: colors.textMuted, fontSize: "14px" }}>
-            Welcome back, {user.name || "Admin"}! Here's what's happening with your business today.
+          <p style={{ margin: 0, color: isDark ? "#94a3b8" : "#64748b", fontSize: "14px" }}>
+            Here's what's happening with your business today.
           </p>
         </div>
         <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>

@@ -1,5 +1,6 @@
 const Coupon = require("../model/couponModel");
 const Hotel = require("../model/hotelModel");
+const HotelRequest = require("../model/hotelRequestModel");
 
 
 exports.createCoupon = async (req, res) => {
@@ -26,7 +27,10 @@ exports.createCoupon = async (req, res) => {
 
     // Check hotel exists if provided
     if (hotel) {
-      const hotelExists = await Hotel.findById(hotel);
+      let hotelExists = await Hotel.findById(hotel);
+      if (!hotelExists) {
+        hotelExists = await HotelRequest.findById(hotel);
+      }
       if (!hotelExists) {
         return res.status(404).json({
           success: false,
@@ -75,25 +79,34 @@ exports.createCoupon = async (req, res) => {
   }
 };
 
-exports.getAllCoupons = async (req, res) => {
-  try {
-    const { search } = req.query;
-    let query = {};
-    if (search) {
-      query.$or = [
-        { couponCode: { $regex: search, $options: "i" } }
-      ];
-    }
+  exports.getAllCoupons = async (req, res) => {
+    try {
+      const { search } = req.query;
+      let query = {};
+      if (search) {
+        query.$or = [
+          { couponCode: { $regex: search, $options: "i" } }
+        ];
+      }
+  
+      const couponsRaw = await Coupon.find(query).sort({ createdAt: -1 }).lean();
 
-    const coupons = await Coupon.find(query)
-      .populate("hotel", "hotelname ownerName")
-      .sort({ createdAt: -1 });
-
-    return res.json({
-      success: true,
-      coupons,
-    });
-  } catch (error) {
+      // Manually populate hotel to support HotelRequest fallback
+      for (let c of couponsRaw) {
+        if (c.hotel) {
+          let h = await Hotel.findById(c.hotel).select("hotelName ownerName").lean();
+          if (!h) {
+            h = await HotelRequest.findById(c.hotel).select("hotelName ownerName").lean();
+          }
+          c.hotel = h || null;
+        }
+      }
+  
+      return res.json({
+        success: true,
+        coupons: couponsRaw,
+      });
+    } catch (error) {
     console.log(error);
 
     return res.status(500).json({
@@ -112,18 +125,27 @@ exports.getCouponsByAdmin = async (req, res) => {
     const adminHotels = await Hotel.find({ email: adminEmail });
     const hotelIds = adminHotels.map(h => h._id);
 
-    const coupons = await Coupon.find({
+    const couponsRaw = await Coupon.find({
       $or: [
         { hotel: { $in: hotelIds } },
         { adminEmail: adminEmail }
       ]
-    })
-      .populate("hotel", "hotelName ownerName")
-      .sort({ createdAt: -1 });
+    }).sort({ createdAt: -1 }).lean();
+
+    // Manually populate hotel to support HotelRequest fallback
+    for (let c of couponsRaw) {
+      if (c.hotel) {
+        let h = await Hotel.findById(c.hotel).select("hotelName ownerName").lean();
+        if (!h) {
+          h = await HotelRequest.findById(c.hotel).select("hotelName ownerName").lean();
+        }
+        c.hotel = h || null;
+      }
+    }
 
     return res.json({
       success: true,
-      coupons,
+      coupons: couponsRaw,
     });
   } catch (error) {
     console.log(error);

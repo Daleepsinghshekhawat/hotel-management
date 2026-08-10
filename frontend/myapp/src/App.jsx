@@ -5,7 +5,7 @@ import Login from "./Login";
 import ForgotPassword from "./ForgotPassword";
 import VerifyOtp from "./VerifyOtp";
 import ResetPassword from "./ResetPassword";
-
+import ProtectedRoute from "./ProtectedRoute";
 
 
 
@@ -81,36 +81,40 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         
-        <Route path="/adminpage" element={<AdminLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="add-hotel" element={<AddHotel />} />
-          <Route path="hotels" element={<Hotels />} />
-          <Route path="hotel-detail/:id" element={<HotelDetailFull />} />
-          <Route path="hotels/edit/:id" element={<EditHotel/>}/>
-          <Route path="bookings" element={<HotelActiveBooking/>}/>
-          <Route path="booking-history" element={<HotelBookingHistory/>}/>
-          
-          {/* Room Routes */}
-          <Route path="add-room" element={<AddRoom />} />
-          <Route path="edit-room/:id" element={<EditRoom />} />
-          <Route path="room/:id" element={<RoomDetails />} />
-          <Route path="users-owners" element={<AdminUsersAndOwners />} />
-          <Route path="coupons" element={<AdminCoupons />} />
+        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+          <Route path="/adminpage" element={<AdminLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="add-hotel" element={<AddHotel />} />
+            <Route path="hotels" element={<Hotels />} />
+            <Route path="hotel-detail/:id" element={<HotelDetailFull />} />
+            <Route path="hotels/edit/:id" element={<EditHotel/>}/>
+            <Route path="bookings" element={<HotelActiveBooking/>}/>
+            <Route path="booking-history" element={<HotelBookingHistory/>}/>
+            
+            {/* Room Routes */}
+            <Route path="add-room" element={<AddRoom />} />
+            <Route path="edit-room/:id" element={<EditRoom />} />
+            <Route path="room/:id" element={<RoomDetails />} />
+            <Route path="users-owners" element={<AdminUsersAndOwners />} />
+            <Route path="coupons" element={<AdminCoupons />} />
+          </Route>
         </Route>
 
-        <Route path="/hotel" element={<HotelLayout />}>
-          <Route index element={<HotelDashboard />} />
-          <Route path="add-hotel" element={<AddHotel />} />
-          <Route path="hotels" element={<Hotels />} />
-          <Route path="hotel-detail/:id" element={<HotelDetailFull />} />
-          <Route path="add-room" element={<AddRoom />} />
-          <Route path="edit-room/:id" element={<EditRoom />} />
-          <Route path="room/:id" element={<RoomDetails />} />
-          <Route path="hotelsidebar" element={<HotelSidebar />} />
-          <Route path="bookings" element={<HotelActiveBooking />} />
-          <Route path="booking-history" element={<HotelBookingHistory />} />
-          <Route path="edit/:id" from element={<EditOneHotel/>}/>
-          <Route path="coupons" element={<AdminCoupons />} />
+        <Route element={<ProtectedRoute allowedRoles={["hotelOwner"]} />}>
+          <Route path="/hotel" element={<HotelLayout />}>
+            <Route index element={<HotelDashboard />} />
+            <Route path="add-hotel" element={<AddHotel />} />
+            <Route path="hotels" element={<Hotels />} />
+            <Route path="hotel-detail/:id" element={<HotelDetailFull />} />
+            <Route path="add-room" element={<AddRoom />} />
+            <Route path="edit-room/:id" element={<EditRoom />} />
+            <Route path="room/:id" element={<RoomDetails />} />
+            <Route path="hotelsidebar" element={<HotelSidebar />} />
+            <Route path="bookings" element={<HotelActiveBooking />} />
+            <Route path="booking-history" element={<HotelBookingHistory />} />
+            <Route path="edit/:id" from element={<EditOneHotel/>}/>
+            <Route path="coupons" element={<AdminCoupons />} />
+          </Route>
         </Route>
 
         {/* User routes — wrapped in UserLayout (navbar + footer) */}
@@ -120,9 +124,12 @@ function App() {
           <Route path="hotels" element={<HotelsListing />} />
           <Route path="hotel/:id" element={<HotelDetail />} />
           <Route path="hotel/:hotelId/room/:roomId" element={<RoomDetail />} />
-          <Route path="account" element={<UserAccountLayout />}>
-            <Route path="bookings" element={<UserActiveBookings />} />
-            <Route path="history" element={<UserBookingHistory />} />
+          
+          <Route element={<ProtectedRoute allowedRoles={["user", "admin", "superadmin", "hotelOwner"]} />}>
+            <Route path="account" element={<UserAccountLayout />}>
+              <Route path="bookings" element={<UserActiveBookings />} />
+              <Route path="history" element={<UserBookingHistory />} />
+            </Route>
           </Route>
         </Route>
 
@@ -130,25 +137,27 @@ function App() {
         <Route path="/verifyotp" element={<VerifyOtp />} />
         <Route path="/resetpassword" element={<ResetPassword />} />
 
-        <Route path="/superadmin" element={<SuperAdmin />}>
-          <Route index element={<SuperAdminDashboard />} />
-          <Route path="dashboard" element={<SuperAdminDashboard />} />
-          <Route path="state" element={<State />} />
-          <Route path="district" element={<District />} />
-          <Route path="city" element={<City />} />
-          <Route path="hotel-requests" element={<HotelRequests />} />
-          <Route path="admins/requests" element={<AdminRequests />} />
-          <Route path="approved" element={<ApprovedHotels/>}/>
-          <Route path="add-hotel" element={<AddHotelDirect />} />
-          <Route path="all-admins" element={<AllAdmins/>}/>
-          <Route path="admins/add" element={<AddAdmin />} />
-          <Route path="admins/requests" element={<AdminRequests />} />
-          <Route path="admins/all" element={<AllAdmins />} />
-          <Route path="coupons" element={<Coupons />} />
-          <Route path="reviews" element={<Reviews />} />
-          <Route path="hotels/edit/:id" element={<EditHotel/>}/>
-          <Route path="sidebar" element={<Sidebar/>}/>
-          <Route path="settings" element={<Setting/>}/>
+        <Route element={<ProtectedRoute allowedRoles={["superadmin"]} />}>
+          <Route path="/superadmin" element={<SuperAdmin />}>
+            <Route index element={<SuperAdminDashboard />} />
+            <Route path="dashboard" element={<SuperAdminDashboard />} />
+            <Route path="state" element={<State />} />
+            <Route path="district" element={<District />} />
+            <Route path="city" element={<City />} />
+            <Route path="hotel-requests" element={<HotelRequests />} />
+            <Route path="admins/requests" element={<AdminRequests />} />
+            <Route path="approved" element={<ApprovedHotels/>}/>
+            <Route path="add-hotel" element={<AddHotelDirect />} />
+            <Route path="all-admins" element={<AllAdmins/>}/>
+            <Route path="admins/add" element={<AddAdmin />} />
+            <Route path="admins/requests" element={<AdminRequests />} />
+            <Route path="admins/all" element={<AllAdmins />} />
+            <Route path="coupons" element={<Coupons />} />
+            <Route path="reviews" element={<Reviews />} />
+            <Route path="hotels/edit/:id" element={<EditHotel/>}/>
+            <Route path="sidebar" element={<Sidebar/>}/>
+            <Route path="settings" element={<Setting/>}/>
+          </Route>
         </Route>
 
         <Route path="/become-admin" element={<AdminRequestForm />} />

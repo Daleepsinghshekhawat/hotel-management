@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useNavigate } from "react-router-dom";
 import URL from "../api";
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
@@ -16,6 +16,7 @@ const COLORS = ["#10b981", "#ef4444", "#f59e0b"]; // Confirmed, Cancelled, Pendi
 
 export default function SuperAdminDashboard() {
   const { theme } = useOutletContext() || { theme: "light" };
+  const navigate = useNavigate();
   const isDark = theme === "dark";
 
   const [loading, setLoading] = useState(true);
@@ -280,32 +281,57 @@ export default function SuperAdminDashboard() {
   }
 
   // --- Styling Constants ---
-  const chartTextColor = isDark ? "#94a3b8" : "#64748b";
-  const chartGridColor = isDark ? "#334155" : "#e2e8f0";
-  const cardBg = isDark ? "#1e293b" : "#ffffff";
-  const borderColor = isDark ? "#334155" : "#f1f5f9";
-  const textPrimary = isDark ? "#f8fafc" : "#0f172a";
-  const textSecondary = isDark ? "#94a3b8" : "#64748b";
+  const chartTextColor = isDark ? "#64748b" : "#94a3b8";
+  const chartGridColor = isDark ? "#e2e8f0" : "#1e40af";
+  const cardBg = isDark ? "#ffffff" : "#1e3a8a";
+  const cardGradient = isDark 
+    ? "linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%)" 
+    : "linear-gradient(145deg, #1e3a8a 0%, #172554 100%)";
+  const borderColor = isDark ? "#e2e8f0" : "#1e40af";
+  const textPrimary = isDark ? "#0f172a" : "#f8fafc";
+  const textSecondary = isDark ? "#475569" : "#93c5fd";
+  const pageTextPrimary = isDark ? "#f8fafc" : "#0f172a";
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", padding: "20px", minHeight: "100vh" }}>
       <style>{`
         .dash-card {
-          background: ${cardBg};
+          background: ${cardGradient};
           border: 1px solid ${borderColor};
-          border-radius: 12px;
-          padding: 20px;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, ${isDark ? "0.3" : "0.05"});
+          border-radius: 16px;
+          padding: 24px;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, ${isDark ? "0.4" : "0.04"});
         }
         .kpi-card {
           display: flex;
           align-items: center;
           gap: 16px;
-          background: ${cardBg};
+          background: ${cardGradient};
           border: 1px solid ${borderColor};
-          border-radius: 12px;
-          padding: 16px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, ${isDark ? "0.2" : "0.02"});
+          border-radius: 16px;
+          padding: 20px;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, ${isDark ? "0.3" : "0.03"});
+          transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
+        }
+        .kpi-card::before {
+          content: "";
+          position: absolute;
+          top: 0; left: 0; width: 4px; height: 100%;
+          background: linear-gradient(to bottom, #6366f1, #8b5cf6);
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+        .kpi-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 28px rgba(0, 0, 0, ${isDark ? "0.5" : "0.08"});
+        }
+        .kpi-card:hover::before {
+          opacity: 1;
+        }
+        .kpi-card.clickable {
+          cursor: pointer;
         }
         .kpi-icon {
           width: 48px;
@@ -334,14 +360,14 @@ export default function SuperAdminDashboard() {
         }
       `}</style>
 
-      <h1 style={{ color: textPrimary, fontSize: "24px", fontWeight: 700, margin: "0 0 24px 0" }}>
+      <h1 style={{ color: pageTextPrimary, fontSize: "24px", fontWeight: 700, margin: "0 0 24px 0" }}>
         SuperAdmin Overview
       </h1>
 
       {/* KPI Section - 8 Cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "24px" }}>
         
-        <div className="kpi-card">
+        <div className="kpi-card clickable" onClick={() => navigate('/superadmin/approved')}>
           <div className="kpi-icon" style={{ background: "rgba(59, 130, 246, 0.1)", color: "#3b82f6" }}><Building2 size={24} /></div>
           <div>
             <div style={{ color: textSecondary, fontSize: "13px", fontWeight: 500 }}>Total Hotels</div>
@@ -349,7 +375,7 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
 
-        <div className="kpi-card">
+        <div className="kpi-card clickable" onClick={() => navigate('/superadmin/approved')}>
           <div className="kpi-icon" style={{ background: "rgba(16, 185, 129, 0.1)", color: "#10b981" }}><CheckCircle size={24} /></div>
           <div>
             <div style={{ color: textSecondary, fontSize: "13px", fontWeight: 500 }}>Active Hotels</div>
@@ -357,7 +383,7 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
 
-        <div className="kpi-card">
+        <div className="kpi-card clickable" onClick={() => navigate('/superadmin/hotel-requests')}>
           <div className="kpi-icon" style={{ background: "rgba(245, 158, 11, 0.1)", color: "#f59e0b" }}><Clock size={24} /></div>
           <div>
             <div style={{ color: textSecondary, fontSize: "13px", fontWeight: 500 }}>Pending Hotels</div>
@@ -373,21 +399,7 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
 
-        <div className="kpi-card">
-          <div className="kpi-icon" style={{ background: "rgba(139, 92, 246, 0.1)", color: "#8b5cf6" }}><Calendar size={24} /></div>
-          <div>
-            <div style={{ color: textSecondary, fontSize: "13px", fontWeight: 500 }}>Today's Bookings</div>
-            <div style={{ color: textPrimary, fontSize: "24px", fontWeight: 700 }}>{kpis.todaysBookings}</div>
-          </div>
-        </div>
 
-        <div className="kpi-card">
-          <div className="kpi-icon" style={{ background: "rgba(99, 102, 241, 0.1)", color: "#6366f1" }}><Package size={24} /></div>
-          <div>
-            <div style={{ color: textSecondary, fontSize: "13px", fontWeight: 500 }}>Total Bookings</div>
-            <div style={{ color: textPrimary, fontSize: "24px", fontWeight: 700 }}>{kpis.totalBookings}</div>
-          </div>
-        </div>
 
         <div className="kpi-card">
           <div className="kpi-icon" style={{ background: "rgba(34, 197, 94, 0.1)", color: "#22c55e" }}><IndianRupee size={24} /></div>
@@ -397,7 +409,7 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
 
-        <div className="kpi-card">
+        <div className="kpi-card clickable" onClick={() => navigate('/superadmin/reviews')}>
           <div className="kpi-icon" style={{ background: "rgba(234, 179, 8, 0.1)", color: "#eab308" }}><Star size={24} /></div>
           <div>
             <div style={{ color: textSecondary, fontSize: "13px", fontWeight: 500 }}>Average Rating</div>
@@ -405,7 +417,7 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
 
-        <div className="kpi-card">
+        <div className="kpi-card clickable" onClick={() => navigate('/superadmin/all-admins')}>
           <div className="kpi-icon" style={{ background: "rgba(99, 102, 241, 0.1)", color: "#6366f1" }}><Users size={24} /></div>
           <div>
             <div style={{ color: textSecondary, fontSize: "13px", fontWeight: 500 }}>Total Admins</div>
@@ -413,7 +425,7 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
 
-        <div className="kpi-card">
+        <div className="kpi-card clickable" onClick={() => navigate('/superadmin/all-admins')}>
           <div className="kpi-icon" style={{ background: "rgba(16, 185, 129, 0.1)", color: "#10b981" }}><UserCheck size={24} /></div>
           <div>
             <div style={{ color: textSecondary, fontSize: "13px", fontWeight: 500 }}>Approved Admins</div>
@@ -421,7 +433,7 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
 
-        <div className="kpi-card">
+        <div className="kpi-card clickable" onClick={() => navigate('/superadmin/admins/requests')}>
           <div className="kpi-icon" style={{ background: "rgba(245, 158, 11, 0.1)", color: "#f59e0b" }}><UserSearch size={24} /></div>
           <div>
             <div style={{ color: textSecondary, fontSize: "13px", fontWeight: 500 }}>Pending Admins</div>
@@ -429,7 +441,7 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
 
-        <div className="kpi-card">
+        <div className="kpi-card clickable" onClick={() => navigate('/superadmin/admins/requests')}>
           <div className="kpi-icon" style={{ background: "rgba(239, 68, 68, 0.1)", color: "#ef4444" }}><UserX size={24} /></div>
           <div>
             <div style={{ color: textSecondary, fontSize: "13px", fontWeight: 500 }}>Rejected Admins</div>

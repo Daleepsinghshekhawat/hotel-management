@@ -3,21 +3,30 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import URL from "../api";
 import useDebounce from "../hooks/useDebounce";
+import useTheme from "../useTheme";
 
 export default function BookingHistory() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [contactModal, setContactModal] = useState(null);
+  const [copied, setCopied] = useState("");
+
+  const handleCopy = (text, type) => {
+    navigator.clipboard.writeText(text);
+    setCopied(type);
+    setTimeout(() => setCopied(""), 2000);
+  };
 
   const fetchBookings = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${URL}/api/getAllBookings`, {
-        params: { search: debouncedSearch }
-      });
+      const res = await axios.get(`${URL}/api/getAllBookings`);
       // Filter for past bookings only
       const history = (res.data.result || []).filter(b => 
         b.status === "completed" || b.status === "cancelled"
@@ -33,7 +42,7 @@ export default function BookingHistory() {
 
   useEffect(() => {
     fetchBookings();
-  }, [debouncedSearch]);
+  }, []);
 
   const formatDate = (dateString) => {
     return dateString
@@ -74,7 +83,18 @@ export default function BookingHistory() {
     const matchesStatus =
       statusFilter === "all" || b.status === statusFilter;
 
-    return matchesStatus;
+    let matchesSearch = true;
+    if (debouncedSearch) {
+      const term = debouncedSearch.toLowerCase();
+      matchesSearch = (
+        (b.guestName && b.guestName.toLowerCase().includes(term)) ||
+        (b.guestEmail && b.guestEmail.toLowerCase().includes(term)) ||
+        (b.hotel?.hotelName && b.hotel.hotelName.toLowerCase().includes(term)) ||
+        (b.room?.roomName && b.room.roomName.toLowerCase().includes(term))
+      );
+    }
+
+    return matchesStatus && matchesSearch;
   });
 
   // Group bookings by hotel for summary stats
@@ -94,10 +114,10 @@ export default function BookingHistory() {
     <div style={{ fontFamily: "'Segoe UI', sans-serif" }}>
       {/* Header */}
       <div style={{ marginBottom: "28px" }}>
-        <h2 style={{ margin: "0 0 4px", fontSize: "22px", color: "#0f172a", fontWeight: 700 }}>
+        <h2 style={{ margin: "0 0 4px", fontSize: "22px", color: isDark ? "#0f172a" : "#f8fafc", fontWeight: 700 }}>
           📋 Booking History
         </h2>
-        <p style={{ margin: 0, color: "#64748b", fontSize: "14px" }}>
+        <p style={{ margin: 0, color: isDark ? "#64748b" : "#94a3b8", fontSize: "14px" }}>
           Past booking records across all hotels — completed stays and cancelled reservations.
         </p>
       </div>
@@ -114,61 +134,46 @@ export default function BookingHistory() {
         >
           <div
             style={{
-              background: "linear-gradient(135deg, #eff6ff, #dbeafe)",
+              background: isDark ? "linear-gradient(135deg, #eff6ff, #dbeafe)" : "#1e293b",
               borderRadius: "12px",
               padding: "20px",
-              border: "1px solid #bfdbfe",
+              border: isDark ? "1px solid #bfdbfe" : "1px solid #334155",
             }}
           >
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "#3b82f6", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            <div style={{ fontSize: "11px", fontWeight: 700, color: isDark ? "#3b82f6" : "#60a5fa", textTransform: "uppercase", letterSpacing: "0.5px" }}>
               Total Bookings
             </div>
-            <div style={{ fontSize: "28px", fontWeight: 800, color: "#1e40af", marginTop: "4px" }}>
+            <div style={{ fontSize: "28px", fontWeight: 800, color: isDark ? "#1e40af" : "#f8fafc", marginTop: "4px" }}>
               {bookings.length}
             </div>
           </div>
           <div
             style={{
-              background: "linear-gradient(135deg, #eff6ff, #e0f2fe)",
+              background: isDark ? "linear-gradient(135deg, #eff6ff, #e0f2fe)" : "#1e293b",
               borderRadius: "12px",
               padding: "20px",
-              border: "1px solid #bae6fd",
+              border: isDark ? "1px solid #bae6fd" : "1px solid #334155",
             }}
           >
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "#0284c7", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            <div style={{ fontSize: "11px", fontWeight: 700, color: isDark ? "#0284c7" : "#38bdf8", textTransform: "uppercase", letterSpacing: "0.5px" }}>
               Completed
             </div>
-            <div style={{ fontSize: "28px", fontWeight: 800, color: "#0369a1", marginTop: "4px" }}>
+            <div style={{ fontSize: "28px", fontWeight: 800, color: isDark ? "#0369a1" : "#f8fafc", marginTop: "4px" }}>
               {bookings.filter((b) => b.status === "completed").length}
             </div>
           </div>
           <div
             style={{
-              background: "linear-gradient(135deg, #eff6ff, #e0f2fe)",
+              background: isDark ? "linear-gradient(135deg, #fef2f2, #fee2e2)" : "#1e293b",
               borderRadius: "12px",
               padding: "20px",
-              border: "1px solid #bae6fd",
+              border: isDark ? "1px solid #fecaca" : "1px solid #334155",
             }}
           >
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "#0284c7", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-              Completed
-            </div>
-            <div style={{ fontSize: "28px", fontWeight: 800, color: "#0369a1", marginTop: "4px" }}>
-              {bookings.filter((b) => b.status === "completed").length}
-            </div>
-          </div>
-          <div
-            style={{
-              background: "linear-gradient(135deg, #fef2f2, #fee2e2)",
-              borderRadius: "12px",
-              padding: "20px",
-              border: "1px solid #fecaca",
-            }}
-          >
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "#dc2626", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            <div style={{ fontSize: "11px", fontWeight: 700, color: isDark ? "#dc2626" : "#fb7185", textTransform: "uppercase", letterSpacing: "0.5px" }}>
               Cancelled
             </div>
-            <div style={{ fontSize: "28px", fontWeight: 800, color: "#b91c1c", marginTop: "4px" }}>
+            <div style={{ fontSize: "28px", fontWeight: 800, color: isDark ? "#b91c1c" : "#f8fafc", marginTop: "4px" }}>
               {bookings.filter((b) => b.status === "cancelled").length}
             </div>
           </div>
@@ -176,15 +181,7 @@ export default function BookingHistory() {
       )}
 
       {/* Filters */}
-      <div
-        style={{
-          display: "flex",
-          gap: "12px",
-          marginBottom: "24px",
-          flexWrap: "wrap",
-          alignItems: "center",
-        }}
-      >
+      <div style={{ marginBottom: "24px", display: "flex", gap: "16px", flexWrap: "wrap" }}>
         <input
           type="text"
           placeholder="🔍 Search by guest, hotel, or room..."
@@ -195,10 +192,11 @@ export default function BookingHistory() {
             minWidth: "250px",
             padding: "12px 16px",
             borderRadius: "10px",
-            border: "1px solid #cbd5e1",
+            border: isDark ? "1px solid #cbd5e1" : "1px solid #334155",
             fontSize: "14px",
             outline: "none",
-            background: "#f8fafc",
+            background: isDark ? "#f8fafc" : "#0f172a",
+            color: isDark ? "#000000" : "#ffffff",
             boxSizing: "border-box",
           }}
         />
@@ -208,10 +206,11 @@ export default function BookingHistory() {
           style={{
             padding: "12px 16px",
             borderRadius: "10px",
-            border: "1px solid #cbd5e1",
+            border: isDark ? "1px solid #cbd5e1" : "1px solid #334155",
             fontSize: "14px",
             outline: "none",
-            background: "#f8fafc",
+            background: isDark ? "#f8fafc" : "#0f172a",
+            color: isDark ? "#000000" : "#ffffff",
             cursor: "pointer",
             minWidth: "160px",
           }}
@@ -226,7 +225,7 @@ export default function BookingHistory() {
 
       {/* Table */}
       {loading ? (
-        <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
+        <div style={{ textAlign: "center", padding: "60px", color: isDark ? "#64748b" : "#94a3b8" }}>
           ⏳ Loading booking history...
         </div>
       ) : filtered.length === 0 ? (
@@ -234,16 +233,16 @@ export default function BookingHistory() {
           style={{
             textAlign: "center",
             padding: "60px 40px",
-            background: "#ffffff",
+            background: isDark ? "#ffffff" : "#1e293b",
             borderRadius: "16px",
-            border: "1px solid #e2e8f0",
+            border: isDark ? "1px solid #e2e8f0" : "1px solid #334155",
           }}
         >
           <div style={{ fontSize: "48px", marginBottom: "12px" }}>📋</div>
-          <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b", margin: "0 0 8px" }}>
+          <h3 style={{ fontSize: "18px", fontWeight: 700, color: isDark ? "#1e293b" : "#f8fafc", margin: "0 0 8px" }}>
             No Bookings Found
           </h3>
-          <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>
+          <p style={{ color: isDark ? "#64748b" : "#94a3b8", fontSize: "14px", margin: 0 }}>
             {search || statusFilter !== "all"
               ? "No bookings match your current search or filter."
               : "There are no booking records yet. Bookings will appear here when guests make reservations."}
@@ -254,7 +253,8 @@ export default function BookingHistory() {
           style={{
             overflowX: "auto",
             borderRadius: "12px",
-            border: "1px solid #e2e8f0",
+            border: isDark ? "1px solid #e2e8f0" : "1px solid #334155",
+            background: isDark ? "#fff" : "#1e293b",
           }}
         >
           <table
@@ -266,45 +266,45 @@ export default function BookingHistory() {
             }}
           >
             <thead>
-              <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
-                <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600 }}>Hotel</th>
-                <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600 }}>Room</th>
-                <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600 }}>Guest</th>
-                <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600 }}>Check-In</th>
-                <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600 }}>Check-Out</th>
-                <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600 }}>Nights</th>
-                <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600 }}>Amount</th>
-                <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600, textAlign: "center" }}>Status</th>
-                <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600, textAlign: "center" }}>Action</th>
+              <tr style={{ background: isDark ? "#f8fafc" : "#334155", borderBottom: isDark ? "2px solid #e2e8f0" : "2px solid #475569" }}>
+                <th style={{ padding: "14px 16px", color: isDark ? "#475569" : "#94a3b8", fontWeight: 600 }}>Hotel</th>
+                <th style={{ padding: "14px 16px", color: isDark ? "#475569" : "#94a3b8", fontWeight: 600 }}>Room</th>
+                <th style={{ padding: "14px 16px", color: isDark ? "#475569" : "#94a3b8", fontWeight: 600 }}>Guest</th>
+                <th style={{ padding: "14px 16px", color: isDark ? "#475569" : "#94a3b8", fontWeight: 600 }}>Check-In</th>
+                <th style={{ padding: "14px 16px", color: isDark ? "#475569" : "#94a3b8", fontWeight: 600 }}>Check-Out</th>
+                <th style={{ padding: "14px 16px", color: isDark ? "#475569" : "#94a3b8", fontWeight: 600 }}>Nights</th>
+                <th style={{ padding: "14px 16px", color: isDark ? "#475569" : "#94a3b8", fontWeight: 600 }}>Amount</th>
+                <th style={{ padding: "14px 16px", color: isDark ? "#475569" : "#94a3b8", fontWeight: 600, textAlign: "center" }}>Status</th>
+                <th style={{ padding: "14px 16px", color: isDark ? "#475569" : "#94a3b8", fontWeight: 600, textAlign: "center" }}>Contact</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((b) => (
-                <tr key={b._id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                  <td style={{ padding: "14px 16px", fontWeight: 600, color: "#1e293b" }}>
+                <tr key={b._id} style={{ borderBottom: isDark ? "1px solid #f1f5f9" : "1px solid #334155" }}>
+                  <td style={{ padding: "14px 16px", fontWeight: 600, color: isDark ? "#1e293b" : "#f8fafc" }}>
                     {b.hotel?.hotelName || "N/A"}
                   </td>
-                  <td style={{ padding: "14px 16px", color: "#475569" }}>
+                  <td style={{ padding: "14px 16px", color: isDark ? "#475569" : "#cbd5e1" }}>
                     <div>{b.room?.roomName || "N/A"}</div>
-                    <div style={{ fontSize: "11px", color: "#94a3b8" }}>
+                    <div style={{ fontSize: "11px", color: isDark ? "#94a3b8" : "#64748b" }}>
                       {b.room?.roomType || ""}
                     </div>
                   </td>
-                  <td style={{ padding: "14px 16px", color: "#475569" }}>
-                    <div style={{ fontWeight: 600, color: "#1e293b" }}>{b.guestName || "N/A"}</div>
-                    <div style={{ fontSize: "11px", color: "#94a3b8" }}>{b.guestEmail || ""}</div>
-                    <div style={{ fontSize: "11px", color: "#94a3b8" }}>{b.guestPhone || ""}</div>
+                  <td style={{ padding: "14px 16px", color: isDark ? "#475569" : "#cbd5e1" }}>
+                    <div style={{ fontWeight: 600, color: isDark ? "#1e293b" : "#f8fafc" }}>{b.guestName || "N/A"}</div>
+                    <div style={{ fontSize: "11px", color: isDark ? "#94a3b8" : "#64748b" }}>{b.guestEmail || ""}</div>
+                    <div style={{ fontSize: "11px", color: isDark ? "#94a3b8" : "#64748b" }}>{b.guestPhone || ""}</div>
                   </td>
-                  <td style={{ padding: "14px 16px", color: "#475569", whiteSpace: "nowrap" }}>
+                  <td style={{ padding: "14px 16px", color: isDark ? "#475569" : "#cbd5e1", whiteSpace: "nowrap" }}>
                     {formatDate(b.checkIn)}
                   </td>
-                  <td style={{ padding: "14px 16px", color: "#475569", whiteSpace: "nowrap" }}>
+                  <td style={{ padding: "14px 16px", color: isDark ? "#475569" : "#cbd5e1", whiteSpace: "nowrap" }}>
                     {formatDate(b.checkOut)}
                   </td>
-                  <td style={{ padding: "14px 16px", color: "#475569", textAlign: "center" }}>
+                  <td style={{ padding: "14px 16px", color: isDark ? "#475569" : "#cbd5e1", textAlign: "center" }}>
                     {b.nights || "—"}
                   </td>
-                  <td style={{ padding: "14px 16px", fontWeight: 700, color: "#0f172a", fontFamily: "monospace" }}>
+                  <td style={{ padding: "14px 16px", fontWeight: 700, color: isDark ? "#0f172a" : "#f8fafc", fontFamily: "monospace" }}>
                     ₹{(b.totalAmount || 0).toLocaleString("en-IN")}
                   </td>
                   <td style={{ padding: "14px 16px", textAlign: "center" }}>
@@ -312,8 +312,9 @@ export default function BookingHistory() {
                   </td>
                   <td style={{ padding: "14px 16px", textAlign: "center" }}>
                     <button
-                      onClick={() => navigate(`/adminpage/room/${b.room?._id}`)}
+                      onClick={() => setContactModal(b)}
                       style={{
+                        display: "inline-block",
                         padding: "6px 12px",
                         borderRadius: "6px",
                         background: "#3b82f6",
@@ -321,10 +322,10 @@ export default function BookingHistory() {
                         border: "none",
                         fontWeight: 600,
                         fontSize: "12px",
-                        cursor: "pointer"
+                        cursor: "pointer",
                       }}
                     >
-                      View Room
+                      ✉️ Contact
                     </button>
                   </td>
                 </tr>
@@ -378,6 +379,68 @@ export default function BookingHistory() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Contact Modal */}
+      {contactModal && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15, 23, 42, 0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
+          <div style={{ background: isDark ? "#1e293b" : "#fff", width: "100%", maxWidth: "400px", borderRadius: "16px", padding: "24px", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h3 style={{ margin: 0, fontSize: "18px", color: isDark ? "#f8fafc" : "#0f172a", fontWeight: 700 }}>Contact Guest</h3>
+              <button onClick={() => setContactModal(null)} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "18px", color: isDark ? "#94a3b8" : "#64748b" }}>✖</button>
+            </div>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: isDark ? "#94a3b8" : "#64748b", textTransform: "uppercase", marginBottom: "6px" }}>Guest Name</label>
+                <div style={{ padding: "10px 14px", background: isDark ? "#0f172a" : "#f1f5f9", borderRadius: "8px", color: isDark ? "#f8fafc" : "#1e293b", fontWeight: 600, fontSize: "14px" }}>
+                  {contactModal.guestName || "N/A"}
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: isDark ? "#94a3b8" : "#64748b", textTransform: "uppercase", marginBottom: "6px" }}>Email Address</label>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <div style={{ flex: 1, padding: "10px 14px", background: isDark ? "#0f172a" : "#f1f5f9", borderRadius: "8px", color: isDark ? "#f8fafc" : "#1e293b", fontSize: "14px" }}>
+                    {contactModal.guestEmail || "N/A"}
+                  </div>
+                  {contactModal.guestEmail && (
+                    <button onClick={() => handleCopy(contactModal.guestEmail, "email")} style={{ padding: "0 14px", background: isDark ? "#334155" : "#e2e8f0", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "14px" }}>
+                      {copied === "email" ? "✅" : "📋"}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: isDark ? "#94a3b8" : "#64748b", textTransform: "uppercase", marginBottom: "6px" }}>Phone Number</label>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <div style={{ flex: 1, padding: "10px 14px", background: isDark ? "#0f172a" : "#f1f5f9", borderRadius: "8px", color: isDark ? "#f8fafc" : "#1e293b", fontSize: "14px" }}>
+                    {contactModal.guestPhone || "N/A"}
+                  </div>
+                  {contactModal.guestPhone && (
+                    <button onClick={() => handleCopy(contactModal.guestPhone, "phone")} style={{ padding: "0 14px", background: isDark ? "#334155" : "#e2e8f0", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "14px" }}>
+                      {copied === "phone" ? "✅" : "📋"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {contactModal.guestEmail && (
+              <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
+                <a 
+                  href={`https://mail.google.com/mail/?view=cm&fs=1&to=${contactModal.guestEmail}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ flex: 1, display: "block", textAlign: "center", padding: "12px", background: "#ea4335", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", textDecoration: "none", boxSizing: "border-box" }}
+                >
+                  Compose in Gmail
+                </a>
+              </div>
+            )}
           </div>
         </div>
       )}

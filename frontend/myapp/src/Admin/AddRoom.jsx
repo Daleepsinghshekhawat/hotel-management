@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import useTheme from "../useTheme";
 import axios from "axios";
 import apiurl from "../api";
 
 const API = `${apiurl}/api`;
 
 const AddRoom = () => {
+    const { theme } = useTheme();
+    const isDark = theme === "dark";
+    const styles = getStyles(isDark);
+
     const location = useLocation();
     const [loading, setLoading] = useState(false);
 
@@ -281,16 +286,16 @@ const AddRoom = () => {
                 h1 {
                     font-size: 26px;
                     font-weight: 800;
-                    color: #0f172a;
+                    color: ${isDark ? '#f8fafc' : '#0f172a'};
                     margin-bottom: 24px;
-                    border-bottom: 2px solid #f1f5f9;
+                    border-bottom: 2px solid ${isDark ? '#334155' : '#f1f5f9'};
                     padding-bottom: 12px;
                     margin-top: 0;
                 }
                 h2 {
                     font-size: 18px;
                     font-weight: 700;
-                    color: #1e293b;
+                    color: ${isDark ? '#f1f5f9' : '#1e293b'};
                     margin-top: 36px;
                     margin-bottom: 16px;
                     display: flex;
@@ -301,18 +306,18 @@ const AddRoom = () => {
                     content: "";
                     flex: 1;
                     height: 1px;
-                    background: #e2e8f0;
+                    background: ${isDark ? '#334155' : '#e2e8f0'};
                 }
                 label {
                     font-size: 13.5px;
                     font-weight: 600;
-                    color: #475569;
+                    color: ${isDark ? '#94a3b8' : '#475569'};
                     display: block;
                     margin-bottom: 6px;
                 }
                 input:focus, select:focus, textarea:focus {
                     border-color: #2563eb !important;
-                    background-color: #ffffff !important;
+                    background-color: ${isDark ? '#1e293b' : '#ffffff'} !important;
                     box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
                 }
                 .checkbox-grid label {
@@ -321,18 +326,18 @@ const AddRoom = () => {
                     gap: 10px;
                     margin: 0;
                     font-weight: 500;
-                    color: #334155;
+                    color: ${isDark ? '#cbd5e1' : '#334155'};
                     cursor: pointer;
                     padding: 10px 14px;
-                    background: #ffffff;
+                    background: ${isDark ? '#1e293b' : '#ffffff'};
                     border-radius: 8px;
-                    border: 1px solid #e2e8f0;
+                    border: 1px solid ${isDark ? '#334155' : '#e2e8f0'};
                     transition: all 0.15s ease;
                     user-select: none;
                 }
                 .checkbox-grid label:hover {
-                    border-color: #cbd5e1;
-                    background: #f8fafc;
+                    border-color: ${isDark ? '#475569' : '#cbd5e1'};
+                    background: ${isDark ? '#0f172a' : '#f8fafc'};
                     transform: translateY(-1px);
                     box-shadow: 0 2px 8px rgba(0,0,0,0.02);
                 }
@@ -344,20 +349,20 @@ const AddRoom = () => {
                     margin: 0;
                 }
                 input[type="file"] {
-                    background: #f8fafc;
-                    border: 2px dashed #cbd5e1;
+                    background: ${isDark ? '#0f172a' : '#f8fafc'};
+                    border: 2px dashed ${isDark ? '#475569' : '#cbd5e1'};
                     padding: 24px;
                     border-radius: 12px;
                     width: 100%;
                     cursor: pointer;
                     box-sizing: border-box;
                     transition: all 0.2s ease;
-                    color: #64748b;
+                    color: ${isDark ? '#cbd5e1' : '#64748b'};
                     font-weight: 500;
                 }
                 input[type="file"]:hover {
                     border-color: #2563eb;
-                    background: #f1f5f9;
+                    background: ${isDark ? '#1e293b' : '#f1f5f9'};
                 }
             `}</style>
             <h1>Add New Room</h1>
@@ -604,10 +609,11 @@ const AddRoom = () => {
                         style={styles.input}
                     />
                 </div>
+            </div>
 
-                <h2 style={{ marginTop: 40 }}>Amenities</h2>
+            <h2 style={{ marginTop: 40 }}>Amenities</h2>
 
-                <div className="checkbox-grid" style={styles.checkboxGrid}>
+            <div className="checkbox-grid" style={styles.checkboxGrid}>
 
                     <label><input type="checkbox" name="wifi" checked={roomData.wifi} onChange={handleCheckbox} /> WiFi</label>
 
@@ -772,22 +778,21 @@ const AddRoom = () => {
                         {loading ? "Adding Room..." : "Add Room"}
                     </button>
                 </div>
-            </div>
         </form>
 
     )
 };
 
-const styles = {
+const getStyles = (isDark) => ({
     container: {
         width: "100%",
         maxWidth: "1000px",
         margin: "20px auto",
         padding: "40px",
-        background: "#ffffff",
+        background: isDark ? "#1e293b" : "#ffffff",
         borderRadius: "16px",
         boxShadow: "0 10px 30px rgba(0, 0, 0, 0.04)",
-        border: "1px solid #e2e8f0",
+        border: `1px solid ${isDark ? "#334155" : "#e2e8f0"}`,
         fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
         boxSizing: "border-box",
     },
@@ -797,10 +802,6 @@ const styles = {
         gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
         gap: "14px",
         marginTop: "15px",
-        padding: "20px",
-        background: "#f8fafc",
-        borderRadius: "12px",
-        border: "1px solid #e2e8f0",
     },
 
     formGroup: {
@@ -817,11 +818,11 @@ const styles = {
         width: "100%",
         padding: "12px 16px",
         marginTop: "6px",
-        border: "1px solid #cbd5e1",
+        border: `1px solid ${isDark ? "#475569" : "#cbd5e1"}`,
         borderRadius: "8px",
         fontSize: "14px",
-        color: "#1e293b",
-        backgroundColor: "#f8fafc",
+        color: isDark ? "#f1f5f9" : "#1e293b",
+        backgroundColor: isDark ? "#0f172a" : "#f8fafc",
         outline: "none",
         transition: "all 0.2s ease-in-out",
         boxSizing: "border-box",
@@ -832,15 +833,15 @@ const styles = {
         padding: "12px 16px",
         marginTop: "6px",
         borderRadius: "8px",
-        border: "1px solid #cbd5e1",
+        border: `1px solid ${isDark ? "#475569" : "#cbd5e1"}`,
         fontSize: "14px",
-        color: "#1e293b",
-        backgroundColor: "#f8fafc",
+        color: isDark ? "#f1f5f9" : "#1e293b",
+        backgroundColor: isDark ? "#0f172a" : "#f8fafc",
         outline: "none",
         transition: "all 0.2s ease-in-out",
         boxSizing: "border-box",
         resize: "vertical",
     },
-};
+});
 
 export default AddRoom;

@@ -14,7 +14,7 @@ export default function EditHotel() {
   const [selectedState, setSelectedState] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
-  const [image, setImage] = useState(null);
+  const [images, setImages] = useState([]);
   const [currentImage, setCurrentImage] = useState("");
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -25,6 +25,17 @@ export default function EditHotel() {
     email: "",
     description: "",
   });
+
+  const [hotelType, setHotelType] = useState("Hotel");
+  const [amenities, setAmenities] = useState([]);
+  const availableAmenities = ["WiFi", "Parking", "Restaurant", "Swimming Pool", "AC", "Room Service"];
+
+  const handleAmenityChange = (e) => {
+    const value = e.target.value;
+    setAmenities(prev => 
+      prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]
+    );
+  };
 
   // Fetch all states
   useEffect(() => {
@@ -55,6 +66,8 @@ export default function EditHotel() {
             description: hotel.description || "",
           });
           setCurrentImage(hotel.images?.[0] || "");
+          if (hotel.hotelType) setHotelType(hotel.hotelType);
+          if (hotel.amenities) setAmenities(hotel.amenities);
 
           // Resolve location
           if (hotel.location) {
@@ -110,9 +123,13 @@ export default function EditHotel() {
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImage(file);
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setImages(prev => {
+        const uniqueNew = newFiles.filter(nf => !prev.some(pf => pf.name === nf.name));
+        return [...prev, ...uniqueNew];
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -131,8 +148,12 @@ export default function EditHotel() {
       formData.append("email", form.email.trim());
       formData.append("location", selectedCity);
       formData.append("description", form.description.trim());
-      if (image) {
-        formData.append("image", image);
+      formData.append("hotelType", hotelType);
+      formData.append("amenities", JSON.stringify(amenities));
+      if (images && images.length > 0) {
+        images.forEach((img) => {
+          formData.append("images", img);
+        });
       }
 
       await axios.patch(`${apiurl}/api/updateHotel/${id}`, formData, {
@@ -318,6 +339,39 @@ export default function EditHotel() {
           </div>
 
           <div>
+            <label style={labelStyle}>Property Type</label>
+            <select
+              style={inputStyle}
+              value={hotelType}
+              onChange={(e) => setHotelType(e.target.value)}
+            >
+              <option value="Hotel">Hotel</option>
+              <option value="Resort">Resort</option>
+              <option value="Villa">Villa</option>
+              <option value="Homestay">Homestay</option>
+              <option value="Hostel">Hostel</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Amenities (Optional)</label>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", padding: "10px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #cbd5e1" }}>
+              {availableAmenities.map((amenity) => (
+                <label key={amenity} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "#475569", cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    value={amenity}
+                    checked={amenities.includes(amenity)}
+                    onChange={handleAmenityChange}
+                    style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                  />
+                  {amenity}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
             <label style={labelStyle}>Current Hotel Banner</label>
             {currentImage && (
               <img 
@@ -345,6 +399,7 @@ export default function EditHotel() {
                 type="file" 
                 accept="image/*" 
                 onChange={handleImageChange} 
+                multiple
                 style={{
                   position: "absolute",
                   inset: 0,
@@ -356,10 +411,10 @@ export default function EditHotel() {
               />
               <span style={{ fontSize: "28px", display: "block", marginBottom: "8px" }}>📸</span>
               <span style={{ fontSize: "14px", fontWeight: 600, color: "#475569" }}>
-                {image ? `Selected: ${image.name}` : "Click or drag to select new banner image"}
+                {images.length > 0 ? `Selected: ${images.length} images` : "Click or drag to select new banner images"}
               </span>
               <span style={{ fontSize: "11px", display: "block", color: "#94a3b8", marginTop: "4px" }}>
-                Leave empty to retain current banner image
+                Leave empty to retain current banner images
               </span>
             </div>
           </div>

@@ -240,7 +240,7 @@ router.post("/addAdminDirect", adminReqController.addAdminDirect)
 router.get("/getUsersByRole/:role", superAdminController.getUsersByRole);
 router.get("/getPaginatedUsersByRole/:role", superAdminController.getPaginatedUsersByRole);
 router.delete("/deleteUser/:id", superAdminController.deleteUser);
-
+router.patch("/updateUserRole/:id", superAdminController.updateUserRole);
 
 // ── Booking Routes ──────────────────────────────────────────
 router.post("/createBooking", bookingController.createBooking);

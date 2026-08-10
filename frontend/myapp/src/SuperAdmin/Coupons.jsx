@@ -1,19 +1,41 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useOutletContext } from "react-router-dom";
 import URL from "../api";
 import useDebounce from "../hooks/useDebounce";
-import { Tags, Search, CheckCircle, XCircle, PlusCircle, X } from "lucide-react";
+import { Tags, Search, CheckCircle, XCircle, PlusCircle, X, ArrowUpDown } from "lucide-react";
 
 export default function Coupons() {
+  const { theme } = useOutletContext() || { theme: "light" };
+  const isDark = theme !== "dark";
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 500);
+  const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
   const [showModal, setShowModal] = useState(false);
+  const [editCoupon, setEditCoupon] = useState(null);
   const [form, setForm] = useState({
     couponCode: "", discountType: "fixed", discount: "",
     maximumDiscount: "0", minimumBookingAmount: "0", maxUsage: "100", expiryDate: ""
   });
+
+  const handleUpdateCoupon = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.patch(`${URL}/api/updateCoupon/${editCoupon._id}`, editCoupon);
+      if (res.data.success) {
+        alert("Coupon updated successfully");
+        setEditCoupon(null);
+        fetchCoupons();
+      } else {
+        alert(res.data.message || "Failed to update coupon");
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Error updating coupon");
+    }
+  };
 
   const fetchCoupons = async () => {
     setLoading(true);
@@ -65,7 +87,40 @@ export default function Coupons() {
     }
   };
 
-  const filteredCoupons = coupons;
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const filteredCoupons = [...coupons]
+    .filter(coupon => {
+      if (!debouncedSearch) return true;
+      const term = debouncedSearch.toLowerCase();
+      const codeMatch = coupon.couponCode?.toLowerCase().includes(term);
+      const hotelName = coupon.hotel?.hotelName || (coupon.adminEmail && !coupon.hotel ? "Admin-Wide" : "GLOBAL (Platform-Wide)");
+      const hotelMatch = hotelName.toLowerCase().includes(term);
+      return codeMatch || hotelMatch;
+    })
+    .sort((a, b) => {
+      if (!sortConfig.key) return 0;
+      let valA = a[sortConfig.key];
+      let valB = b[sortConfig.key];
+
+      if (sortConfig.key === 'hotelName') {
+        valA = a.hotel?.hotelName || (a.adminEmail && !a.hotel ? "Admin-Wide" : "GLOBAL (Platform-Wide)");
+        valB = b.hotel?.hotelName || (b.adminEmail && !b.hotel ? "Admin-Wide" : "GLOBAL (Platform-Wide)");
+      } else if (sortConfig.key === 'expiryDate' || sortConfig.key === 'createdAt') {
+        valA = new Date(valA).getTime();
+        valB = new Date(valB).getTime();
+      }
+
+      if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", padding: "10px" }}>
@@ -123,13 +178,13 @@ export default function Coupons() {
             <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
               <thead>
                 <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
-                  <th style={thStyle}>Code</th>
-                  <th style={thStyle}>Scope / Hotel</th>
-                  <th style={thStyle}>Discount</th>
-                  <th style={thStyle}>Min Booking</th>
-                  <th style={thStyle}>Usage</th>
-                  <th style={thStyle}>Expiry</th>
-                  <th style={thStyle}>Status</th>
+                  <th onClick={() => handleSort('couponCode')} style={{...thStyle, cursor: "pointer"}}>Code <ArrowUpDown size={12} style={{ marginLeft: "4px" }} /></th>
+                  <th onClick={() => handleSort('hotelName')} style={{...thStyle, cursor: "pointer"}}>Scope / Hotel <ArrowUpDown size={12} style={{ marginLeft: "4px" }} /></th>
+                  <th onClick={() => handleSort('discount')} style={{...thStyle, cursor: "pointer"}}>Discount <ArrowUpDown size={12} style={{ marginLeft: "4px" }} /></th>
+                  <th onClick={() => handleSort('minimumBookingAmount')} style={{...thStyle, cursor: "pointer"}}>Min Booking <ArrowUpDown size={12} style={{ marginLeft: "4px" }} /></th>
+                  <th onClick={() => handleSort('maxUsage')} style={{...thStyle, cursor: "pointer"}}>Usage <ArrowUpDown size={12} style={{ marginLeft: "4px" }} /></th>
+                  <th onClick={() => handleSort('expiryDate')} style={{...thStyle, cursor: "pointer"}}>Expiry <ArrowUpDown size={12} style={{ marginLeft: "4px" }} /></th>
+                  <th onClick={() => handleSort('status')} style={{...thStyle, cursor: "pointer"}}>Status <ArrowUpDown size={12} style={{ marginLeft: "4px" }} /></th>
                   <th style={{...thStyle, textAlign: "center"}}>Action</th>
                 </tr>
               </thead>
@@ -184,19 +239,33 @@ export default function Coupons() {
                       </span>
                     </td>
                     <td style={{...tdStyle, textAlign: "center"}}>
-                      <button 
-                        onClick={() => handleStatusChange(coupon._id, coupon.status)}
-                        style={{
-                          background: "transparent", border: "1px solid #e2e8f0", cursor: "pointer",
-                          color: coupon.status === "Active" ? "#dc2626" : "#10b981", 
-                          padding: "6px 12px", borderRadius: "6px", fontSize: "12px", fontWeight: 600,
-                          transition: "all 0.2s"
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = "#f1f5f9"}
-                        onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
-                      >
-                        {coupon.status === "Active" ? "Deactivate" : "Activate"}
-                      </button>
+                      <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                        <button
+                          onClick={() => setEditCoupon(coupon)}
+                          style={{
+                            background: "transparent", border: "1px solid #3b82f6", cursor: "pointer",
+                            color: "#3b82f6", padding: "6px 12px", borderRadius: "6px", fontSize: "12px", fontWeight: 600,
+                            transition: "all 0.2s"
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "#3b82f6"; e.currentTarget.style.color = "#fff"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#3b82f6"; }}
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button 
+                          onClick={() => handleStatusChange(coupon._id, coupon.status)}
+                          style={{
+                            background: "transparent", border: "1px solid #e2e8f0", cursor: "pointer",
+                            color: coupon.status === "Active" ? "#dc2626" : "#10b981", 
+                            padding: "6px 12px", borderRadius: "6px", fontSize: "12px", fontWeight: 600,
+                            transition: "all 0.2s"
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = "#f1f5f9"}
+                          onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                        >
+                          {coupon.status === "Active" ? "Deactivate" : "Activate"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 )) : (
@@ -259,6 +328,58 @@ export default function Coupons() {
                 </div>
               </div>
               <button type="submit" style={{ background: "#3b82f6", color: "#fff", padding: "12px", borderRadius: "8px", border: "none", fontWeight: 600, cursor: "pointer", marginTop: "10px" }}>Create Global Coupon</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editCoupon && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15, 23, 42, 0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+          <div style={{ background: "#fff", width: "100%", maxWidth: "500px", borderRadius: "16px", padding: "24px", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)", maxHeight: "90vh", overflowY: "auto" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h3 style={{ margin: 0, fontSize: "18px", color: "#0f172a", fontWeight: 700 }}>Edit Coupon Info</h3>
+              <button onClick={() => setEditCoupon(null)} style={{ background: "transparent", border: "none", cursor: "pointer" }}><X size={20} color="#64748b" /></button>
+            </div>
+            <form onSubmit={handleUpdateCoupon} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={labelStyle}>Coupon Code *</label>
+                <input style={inputStyle} required value={editCoupon.couponCode} onChange={e => setEditCoupon({...editCoupon, couponCode: e.target.value})} />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div>
+                  <label style={labelStyle}>Discount Type</label>
+                  <select style={inputStyle} value={editCoupon.discountType} onChange={e => setEditCoupon({...editCoupon, discountType: e.target.value})}>
+                    <option value="fixed">Fixed Amount (₹)</option>
+                    <option value="percentage">Percentage (%)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Discount Value *</label>
+                  <input style={inputStyle} type="number" required value={editCoupon.discount} onChange={e => setEditCoupon({...editCoupon, discount: e.target.value})} />
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div>
+                  <label style={labelStyle}>Max Discount (₹)</label>
+                  <input style={inputStyle} type="number" value={editCoupon.maximumDiscount} onChange={e => setEditCoupon({...editCoupon, maximumDiscount: e.target.value})} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Min Booking (₹) *</label>
+                  <input style={inputStyle} type="number" required value={editCoupon.minimumBookingAmount} onChange={e => setEditCoupon({...editCoupon, minimumBookingAmount: e.target.value})} />
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div>
+                  <label style={labelStyle}>Max Usage *</label>
+                  <input style={inputStyle} type="number" required value={editCoupon.maxUsage} onChange={e => setEditCoupon({...editCoupon, maxUsage: e.target.value})} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Expiry Date *</label>
+                  <input style={inputStyle} type="date" required value={editCoupon.expiryDate ? new Date(editCoupon.expiryDate).toISOString().split('T')[0] : ''} onChange={e => setEditCoupon({...editCoupon, expiryDate: e.target.value})} />
+                </div>
+              </div>
+              <button type="submit" style={{ background: "#eab308", color: "#fff", padding: "12px", borderRadius: "8px", border: "none", fontWeight: 600, cursor: "pointer", marginTop: "10px" }}>Save Changes</button>
             </form>
           </div>
         </div>

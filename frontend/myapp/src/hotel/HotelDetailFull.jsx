@@ -61,21 +61,6 @@ export default function HotelDetailFull() {
     }
   };
 
-  const handleDownloadPDF = async () => {
-    try {
-      const response = await axios.get(`${URL}/api/pdf/hotel/${id}`, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `hotel-${id}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (error) {
-      console.error("Error downloading PDF", error);
-      alert("Failed to generate PDF");
-    }
-  };
 
   if (loading) {
     return <div style={{ padding: "60px", textAlign: "center", color: "#64748b" }}>Loading hotel details...</div>;
@@ -99,12 +84,14 @@ export default function HotelDetailFull() {
         >
           <ArrowLeft size={18} /> Back
         </button>
-        <button
-          onClick={handleDownloadPDF}
-          style={{ display: "flex", alignItems: "center", gap: "6px", background: "#2563eb", color: "#fff", border: "none", padding: "8px 16px", borderRadius: "8px", fontWeight: 600, cursor: "pointer" }}
+        <a
+          href={`${URL}/api/pdf/hotel/${id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ display: "flex", alignItems: "center", gap: "6px", background: "#2563eb", color: "#fff", border: "none", padding: "8px 16px", borderRadius: "8px", fontWeight: 600, cursor: "pointer", textDecoration: "none", boxSizing: "border-box" }}
         >
           <Download size={18} /> Download PDF
-        </button>
+        </a>
       </div>
 
       {/* Hotel Hero Section */}

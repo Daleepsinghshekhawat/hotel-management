@@ -7,4 +7,5 @@ router.get("/room/:id", pdfController.generateRoomPdf);
 router.get("/coupons", pdfController.generateCouponsPdf);
 router.get("/booking/:id", pdfController.generateBookingReceiptPdf);
 
+router.get('/bookings', pdfController.generateBookingsListPdf);
 module.exports = router;

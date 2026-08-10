@@ -50,12 +50,19 @@ export default function HotelDetail() {
 
   const [hotel, setHotel] = useState(null);
   const [rooms, setRooms] = useState([]);
-  const [roomStatuses, setRoomStatuses] = useState({});
   const [reviews, setReviews] = useState([]);
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState("");
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [loading, setLoading] = useState(true);
+  
+  // Filtering States
+  const [checkInDate, setCheckInDate] = useState("");
+  const [checkOutDate, setCheckOutDate] = useState("");
+  const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
+  const [availableRoomIds, setAvailableRoomIds] = useState(null);
+  const [selectedRoomAmenities, setSelectedRoomAmenities] = useState([]);
+
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
   const fetchAll = useCallback(async () => {
@@ -72,15 +79,6 @@ export default function HotelDetail() {
       if (reviewsRes.data.success) {
         setReviews(reviewsRes.data.result || []);
       }
-
-      const statusMap = {};
-      await Promise.all(roomList.map(async (r) => {
-        try {
-          const s = await axios.get(`${URL}/api/getRoomBookingStatus/${r._id}`);
-          statusMap[r._id] = s.data;
-        } catch { statusMap[r._id] = { isCurrentlyBooked: false }; }
-      }));
-      setRoomStatuses(statusMap);
     } catch (err) {
       console.error(err);
     } finally {
@@ -97,6 +95,55 @@ export default function HotelDetail() {
       return;
     }
     navigate(`/user/hotel/${id}/room/${room._id}`);
+  };
+
+  const handleCheckAvailability = async () => {
+    if (!checkInDate || !checkOutDate) {
+      alert("Please select both check-in and check-out dates.");
+      return;
+    }
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    if (new Date(checkInDate) < today) {
+      alert("Check-in date cannot be in the past.");
+      return;
+    }
+    if (new Date(checkOutDate) <= new Date(checkInDate)) {
+      alert("Check-out date must be after check-in date.");
+      return;
+    }
+    
+    setIsCheckingAvailability(true);
+    try {
+      const availabilities = await Promise.all(rooms.map(async (r) => {
+        try {
+          const res = await axios.get(`${URL}/api/checkAvailability/${r._id}?checkIn=${checkInDate}&checkOut=${checkOutDate}`);
+          return { roomId: r._id, available: res.data.available };
+        } catch (error) {
+          console.error(`Error checking room ${r._id}`, error);
+          return { roomId: r._id, available: false };
+        }
+      }));
+      const availableIds = availabilities.filter(a => a.available).map(a => a.roomId);
+      setAvailableRoomIds(availableIds);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to check availability");
+    } finally {
+      setIsCheckingAvailability(false);
+    }
+  };
+
+  const clearDates = () => {
+    setCheckInDate("");
+    setCheckOutDate("");
+    setAvailableRoomIds(null);
+  };
+  
+  const toggleRoomAmenity = (key) => {
+    setSelectedRoomAmenities(prev => 
+      prev.includes(key) ? prev.filter(a => a !== key) : [...prev, key]
+    );
   };
 
   const handleSubmitReview = async (e) => {
@@ -292,22 +339,74 @@ export default function HotelDetail() {
               <h2 style={{ fontSize: "22px", fontWeight: 600, color: "var(--text-primary)", margin: "0 0 24px" }}>
                 Choose your room
               </h2>
-              {rooms.length === 0 ? (
-                <div style={{ padding: "40px", background: "var(--bg-tertiary)", borderRadius: "16px", color: "var(--text-secondary)", textAlign: "center" }}>
-                  <p style={{ margin: 0 }}>No rooms currently available.</p>
+
+              {/* Date Filter & Room Amenities Filter */}
+              <div style={{ background: "var(--bg-secondary)", border: "1px solid var(--border-color)", borderRadius: "12px", padding: "20px", marginBottom: "24px" }}>
+                <h3 style={{ margin: "0 0 16px", fontSize: "16px", color: "var(--text-primary)" }}>Check Availability</h3>
+                <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "flex-end", marginBottom: "20px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <label style={{ fontSize: "14px", fontWeight: 500, color: "var(--text-secondary)" }}>Check-in</label>
+                    <input type="date" value={checkInDate} onChange={(e) => setCheckInDate(e.target.value)} style={{ padding: "10px", borderRadius: "8px", border: "1px solid var(--border-color)", outline: "none", color: "var(--text-primary)", background: "var(--bg-primary)" }} />
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <label style={{ fontSize: "14px", fontWeight: 500, color: "var(--text-secondary)" }}>Check-out</label>
+                    <input type="date" value={checkOutDate} onChange={(e) => setCheckOutDate(e.target.value)} style={{ padding: "10px", borderRadius: "8px", border: "1px solid var(--border-color)", outline: "none", color: "var(--text-primary)", background: "var(--bg-primary)" }} />
+                  </div>
+                  <button onClick={handleCheckAvailability} disabled={isCheckingAvailability} style={{ padding: "10px 20px", borderRadius: "8px", background: "var(--accent-color)", color: "#fff", border: "none", cursor: "pointer", fontWeight: 600, height: "42px", opacity: isCheckingAvailability ? 0.7 : 1 }}>
+                    {isCheckingAvailability ? "Checking..." : "Check Availability"}
+                  </button>
+                  {availableRoomIds !== null && (
+                    <button onClick={clearDates} style={{ padding: "10px 20px", borderRadius: "8px", background: "var(--bg-tertiary)", color: "var(--text-primary)", border: "1px solid var(--border-color)", cursor: "pointer", fontWeight: 600, height: "42px" }}>
+                      Clear Dates
+                    </button>
+                  )}
                 </div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-                  {rooms.map(room => (
-                    <RoomCard
-                      key={room._id}
-                      room={room}
-                      status={roomStatuses[room._id]}
-                      onBook={() => openBookModal(room)}
-                    />
-                  ))}
-                </div>
-              )}
+
+                {allAmenities.size > 0 && (
+                  <>
+                    <h3 style={{ margin: "0 0 16px", fontSize: "16px", borderTop: "1px solid var(--border-color)", paddingTop: "16px", color: "var(--text-primary)" }}>Filter by Room Amenities</h3>
+                    <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                      {amenityGroups[0].items.filter(item => allAmenities.has(item.key)).map(item => (
+                        <label key={item.key} style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", background: selectedRoomAmenities.includes(item.key) ? "rgba(37, 99, 235, 0.1)" : "var(--bg-tertiary)", padding: "6px 12px", borderRadius: "20px", border: selectedRoomAmenities.includes(item.key) ? "1px solid var(--accent-color)" : "1px solid var(--border-color)", color: selectedRoomAmenities.includes(item.key) ? "var(--accent-color)" : "var(--text-secondary)", fontSize: "14px", transition: "all 0.2s" }}>
+                          <input type="checkbox" checked={selectedRoomAmenities.includes(item.key)} onChange={() => toggleRoomAmenity(item.key)} style={{ display: "none" }} />
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            {React.cloneElement(item.icon, { size: 16 })} {item.label}
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {(() => {
+                const filteredRooms = rooms.filter(r => {
+                  if (availableRoomIds !== null && !availableRoomIds.includes(r._id)) return false;
+                  if (selectedRoomAmenities.length > 0) {
+                    const hasAll = selectedRoomAmenities.every(amen => r[amen] === true);
+                    if (!hasAll) return false;
+                  }
+                  return true;
+                });
+
+                return (
+                  filteredRooms.length === 0 ? (
+                    <div style={{ padding: "40px", background: "var(--bg-tertiary)", borderRadius: "16px", color: "var(--text-secondary)", textAlign: "center" }}>
+                      <p style={{ margin: 0 }}>No rooms currently available matching your criteria.</p>
+                    </div>
+                  ) : (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "24px" }}>
+                      {filteredRooms.map(room => (
+                        <RoomCard
+                          key={room._id}
+                          room={room}
+                          onBook={() => openBookModal(room)}
+                        />
+                      ))}
+                    </div>
+                  )
+                );
+              })()}
             </div>
 
             {/* Reviews Section */}
@@ -404,52 +503,7 @@ export default function HotelDetail() {
             </div>
           </div>
 
-          {/* Sticky Sidebar (Right) */}
-          <div style={{ width: "360px", flexShrink: 0 }}>
-            <div style={{ position: "sticky", top: "120px", background: "var(--bg-secondary)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "24px", boxShadow: "0 10px 40px rgba(0,0,0,0.06)" }}>
-              
-              {minPrice !== null && (
-                <div style={{ marginBottom: "24px" }}>
-                  <span style={{ fontSize: "24px", fontWeight: 700, color: "var(--text-primary)" }}>₹{Math.round(minPrice).toLocaleString()}</span>
-                  <span style={{ color: "var(--text-secondary)", fontSize: "16px" }}> / night</span>
-                </div>
-              )}
 
-              <div style={{ border: "1px solid var(--border-color)", borderRadius: "12px", overflow: "hidden", marginBottom: "16px" }}>
-                <div style={{ display: "flex", borderBottom: "1px solid var(--border-color)" }}>
-                  <div style={{ flex: 1, padding: "12px", borderRight: "1px solid var(--border-color)" }}>
-                    <div style={{ fontSize: "10px", fontWeight: 800, textTransform: "uppercase", color: "var(--text-primary)" }}>Check-in</div>
-                    <div style={{ color: "var(--text-secondary)", fontSize: "14px", marginTop: "2px" }}>Select date</div>
-                  </div>
-                  <div style={{ flex: 1, padding: "12px" }}>
-                    <div style={{ fontSize: "10px", fontWeight: 800, textTransform: "uppercase", color: "var(--text-primary)" }}>Checkout</div>
-                    <div style={{ color: "var(--text-secondary)", fontSize: "14px", marginTop: "2px" }}>Select date</div>
-                  </div>
-                </div>
-                <div style={{ padding: "12px" }}>
-                  <div style={{ fontSize: "10px", fontWeight: 800, textTransform: "uppercase", color: "var(--text-primary)" }}>Guests</div>
-                  <div style={{ color: "var(--text-secondary)", fontSize: "14px", marginTop: "2px" }}>1 guest</div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => document.getElementById("rooms-section")?.scrollIntoView({ behavior: "smooth" })}
-                style={{
-                  width: "100%", padding: "16px", borderRadius: "10px", border: "none",
-                  background: "#e51d53", color: "#fff", fontWeight: 600, fontSize: "16px",
-                  cursor: "pointer", transition: "background 0.2s"
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = "#d8164b"}
-                onMouseLeave={e => e.currentTarget.style.background = "#e51d53"}
-              >
-                Check availability
-              </button>
-
-              <div style={{ textAlign: "center", marginTop: "16px" }}>
-                <span style={{ color: "var(--text-secondary)", fontSize: "14px" }}>You won't be charged yet</span>
-              </div>
-            </div>
-          </div>
 
         </div>
       </div>
@@ -457,94 +511,76 @@ export default function HotelDetail() {
   );
 }
 
-function RoomCard({ room, status, onBook }) {
-  const isBooked = room.bookingStatus === "Booked" || status?.isCurrentlyBooked;
+function RoomCard({ room, onBook }) {
+  const isBooked = room.bookingStatus === "Booked";
   const isMaintenance = room.bookingStatus === "Maintenance";
   
-  const amenities = [
-    room.wifi && { icon: <Wifi size={14}/>, label: "WiFi" },
-    room.ac && { icon: <Wind size={14}/>, label: "AC" },
-    room.swimmingPool && { icon: <Waves size={14}/>, label: "Pool" },
-    room.gym && { icon: <Dumbbell size={14}/>, label: "Gym" },
-    room.parking && { icon: <ParkingCircle size={14}/>, label: "Parking" },
-  ].filter(Boolean);
-
   return (
-    <div style={{
-      display: "flex", flexDirection: "column", padding: "24px",
-      border: "1px solid var(--border-color)", borderRadius: "16px",
-      background: "var(--bg-secondary)", gap: "20px"
+    <div style={{ 
+      background: "var(--bg-secondary)", 
+      borderRadius: "16px", 
+      border: "1px solid var(--border-color)", 
+      overflow: "hidden", 
+      boxShadow: "0 4px 12px rgba(0,0,0,0.03)", 
+      display: "flex", 
+      flexDirection: "column" 
     }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px" }}>
-        
-        <div style={{ flex: 1, minWidth: "250px" }}>
-          <h3 style={{ margin: "0 0 8px", fontSize: "18px", fontWeight: 600, color: "var(--text-primary)" }}>
-            {room.roomName}
-          </h3>
-          <p style={{ margin: "0 0 16px", color: "var(--text-secondary)", fontSize: "15px" }}>{room.roomType}</p>
-          
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", color: "var(--text-secondary)", fontSize: "14px", marginBottom: "16px" }}>
-            <span style={{ display: "flex", alignItems: "center", gap: "6px" }}><Users size={16} /> {room.maxGuests || room.adults || 2} Guests Max</span>
-            <span style={{ display: "flex", alignItems: "center", gap: "6px" }}><BedDouble size={16} /> {room.beds || 1} Bed{(room.beds || 1) > 1 ? "s" : ""}</span>
-            {room.roomSize && <span style={{ display: "flex", alignItems: "center", gap: "6px" }}><Expand size={16} /> {room.roomSize} sqft</span>}
-          </div>
-
-          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            {amenities.map((am, i) => (
-              <span key={i} style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "13px", color: "var(--text-primary)", background: "var(--bg-tertiary)", padding: "4px 8px", borderRadius: "6px", fontWeight: 500 }}>
-                {am.icon} {am.label}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Right side Image & Price */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "12px" }}>
-          <div style={{ width: "160px", height: "120px", borderRadius: "12px", overflow: "hidden", background: "var(--bg-tertiary)" }}>
-            {room.images?.length > 0 ? (
-              <img src={room.images[0]} alt={room.roomName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            ) : (
-              <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--border-color)" }}><BedDouble size={32} /></div>
-            )}
-          </div>
-          
-          <div style={{ textAlign: "right", marginTop: "auto" }}>
-            {room.discount > 0 && (
-              <p style={{ margin: "0", fontSize: "13px", color: "var(--text-secondary)", textDecoration: "line-through" }}>
-                ₹{Math.round(room.price).toLocaleString()}
-              </p>
-            )}
-            <p style={{ margin: "0", fontSize: "20px", fontWeight: 700, color: "var(--text-primary)" }}>
-              ₹{Math.round(room.finalPrice || room.price).toLocaleString()}
-              <span style={{ fontSize: "14px", color: "var(--text-secondary)", fontWeight: 400 }}> / night</span>
-            </p>
-          </div>
+      <div style={{ height: "180px", background: "var(--bg-tertiary)", position: "relative" }}>
+        {room.images && room.images.length > 0 ? (
+          <img src={room.images[0]} alt={room.roomName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : (
+          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "32px", opacity: 0.3 }}>🛏️</div>
+        )}
+        <div style={{ position: "absolute", bottom: "12px", right: "12px", background: "rgba(0,0,0,0.75)", color: "#fff", padding: "4px 10px", borderRadius: "6px", fontSize: "12px", fontWeight: 700 }}>
+          Room {room.roomNumber}
         </div>
       </div>
-
-      <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          {isBooked ? (
-            <span style={{ color: "#dc2626", fontWeight: 600, fontSize: "14px" }}>Not available for your dates</span>
-          ) : isMaintenance ? (
-            <span style={{ color: "#d97706", fontWeight: 600, fontSize: "14px" }}>Under Maintenance</span>
-          ) : (
-            <span style={{ color: "#16a34a", fontWeight: 600, fontSize: "14px" }}>Available</span>
-          )}
+      
+      <div style={{ padding: "20px", display: "flex", flexDirection: "column", flex: 1 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+          <h3 style={{ margin: 0, fontSize: "18px", color: "var(--text-primary)", fontWeight: 700 }}>{room.roomName}</h3>
+          <div style={{ textAlign: "right" }}>
+            {room.discount > 0 && (
+              <div style={{ fontSize: "12px", color: "var(--text-secondary)", textDecoration: "line-through" }}>
+                ₹{Math.round(room.price).toLocaleString()}
+              </div>
+            )}
+            <div style={{ fontSize: "16px", fontWeight: 800, color: "var(--accent-color)" }}>
+              ₹{Math.round(room.finalPrice || room.price).toLocaleString()}
+            </div>
+          </div>
         </div>
         
-        <button
-          onClick={onBook}
-          style={{
-            padding: "10px 24px", borderRadius: "8px", border: "none",
-            background: "var(--text-primary)", color: "var(--bg-primary)", fontWeight: 600, fontSize: "14px",
-            cursor: "pointer", transition: "opacity 0.2s"
-          }}
-          onMouseEnter={e => e.currentTarget.style.opacity = "0.9"}
-          onMouseLeave={e => e.currentTarget.style.opacity = "1"}
-        >
-          View & Book
-        </button>
+        <p style={{ margin: "0 0 16px", color: "var(--text-secondary)", fontSize: "13px", fontWeight: 500 }}>
+          {room.roomType} · {room.bedType || "Standard"} Bed · Max {room.maxGuests || room.adults || 2} Guests
+        </p>
+        
+        <div style={{ marginTop: "auto", display: "flex", gap: "12px", alignItems: "center" }}>
+          <div style={{ flex: 1 }}>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "var(--text-tertiary)", textTransform: "uppercase", marginBottom: "4px" }}>Status</label>
+            <div style={{ 
+              width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid var(--border-color)", fontSize: "13px", fontWeight: 600,
+              background: isBooked ? 'rgba(59, 130, 246, 0.1)' : isMaintenance ? 'rgba(217, 119, 6, 0.1)' : 'rgba(22, 163, 74, 0.1)',
+              color: isBooked ? '#2563eb' : isMaintenance ? '#d97706' : '#16a34a',
+            }}>
+              {isBooked ? "Booked" : isMaintenance ? "Maintenance" : "Available"}
+            </div>
+          </div>
+          
+          <button 
+            onClick={onBook}
+            style={{ 
+              flex: 1, height: "37px", marginTop: "17px", padding: "0", 
+              background: "var(--bg-tertiary)", border: "1px solid var(--border-color)", 
+              borderRadius: "8px", color: "var(--text-primary)", fontWeight: 600, 
+              fontSize: "13px", cursor: "pointer", transition: "all 0.2s" 
+            }}
+            onMouseOver={(e) => e.currentTarget.style.filter = "brightness(0.95)"}
+            onMouseOut={(e) => e.currentTarget.style.filter = "none"}
+          >
+            View & Book
+          </button>
+        </div>
       </div>
     </div>
   );

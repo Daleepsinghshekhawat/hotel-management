@@ -2,8 +2,11 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import URL from "../api";
 import useDebounce from "../hooks/useDebounce";
+import useTheme from "../useTheme";
 
 export default function ActiveBookings() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -101,55 +104,82 @@ export default function ActiveBookings() {
         </div>
       )}
 
-      <div style={{ marginBottom: "24px" }}>
-        <input
-          type="text"
-          placeholder="🔍 Search by guest, hotel, or room..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ width: "100%", maxWidth: "400px", padding: "12px 16px", borderRadius: "10px", border: "1px solid #cbd5e1", fontSize: "14px", outline: "none", background: "#f8fafc", boxSizing: "border-box" }}
-        />
-      </div>
+      <input
+        type="text"
+        placeholder="Search by hotel, room, or guest name..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        style={{
+          width: "100%",
+          padding: "11px 16px",
+          borderRadius: "10px",
+          border: isDark ? "1px solid #cbd5e1" : "1px solid #334155",
+          marginBottom: "24px",
+          boxSizing: "border-box",
+          fontSize: "14px",
+          outline: "none",
+          background: isDark ? "#f8fafc" : "#0f172a",
+          color: isDark ? "#000000" : "#ffffff"
+        }}
+      />
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>⏳ Loading active bookings...</div>
+        <div style={{ textAlign: "center", padding: "60px", color: isDark ? "#64748b" : "#94a3b8" }}>Loading bookings...</div>
       ) : bookings.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "60px 40px", background: "#ffffff", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-          <div style={{ fontSize: "48px", marginBottom: "12px" }}>🛎️</div>
-          <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b", margin: "0 0 8px" }}>No Active Bookings</h3>
-          <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>There are no upcoming or current reservations.</p>
+        <div
+          style={{
+            textAlign: "center",
+            padding: "60px 20px",
+            color: isDark ? "#94a3b8" : "#64748b",
+            background: isDark ? "#f8fafc" : "#1e293b",
+            borderRadius: "16px",
+            border: isDark ? "1px dashed #cbd5e1" : "1px dashed #334155",
+          }}
+        >
+          <div style={{ fontSize: "48px", marginBottom: "14px" }}>📅</div>
+          <p style={{ margin: 0, fontWeight: 600, fontSize: "16px" }}>No active bookings found.</p>
         </div>
       ) : (
-        <div style={{ overflowX: "auto", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", textAlign: "left" }}>
+        <div
+          style={{
+            background: isDark ? "#fff" : "#1e293b",
+            borderRadius: "12px",
+            border: isDark ? "1px solid #e2e8f0" : "1px solid #334155",
+            overflowX: "auto",
+            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
+          }}
+        >
+          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "14px" }}>
             <thead>
-              <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
-                <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600 }}>Hotel</th>
-                <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600 }}>Room</th>
-                <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600 }}>Guest</th>
-                <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600 }}>Check-In</th>
-                <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600 }}>Check-Out</th>
-                <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600 }}>Amount</th>
-                <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600, textAlign: "center" }}>Status</th>
-                <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600, textAlign: "center" }}>Action</th>
+              <tr style={{ background: isDark ? "#f8fafc" : "#334155", borderBottom: isDark ? "1px solid #e2e8f0" : "1px solid #475569" }}>
+                <th style={{ padding: "16px", fontWeight: 600, color: isDark ? "#64748b" : "#94a3b8" }}>ID</th>
+                <th style={{ padding: "16px", fontWeight: 600, color: isDark ? "#64748b" : "#94a3b8" }}>Hotel</th>
+                <th style={{ padding: "16px", fontWeight: 600, color: isDark ? "#64748b" : "#94a3b8" }}>Room</th>
+                <th style={{ padding: "16px", fontWeight: 600, color: isDark ? "#64748b" : "#94a3b8" }}>Guest</th>
+                <th style={{ padding: "16px", fontWeight: 600, color: isDark ? "#64748b" : "#94a3b8", whiteSpace: "nowrap" }}>Check-in</th>
+                <th style={{ padding: "16px", fontWeight: 600, color: isDark ? "#64748b" : "#94a3b8", whiteSpace: "nowrap" }}>Check-out</th>
+                <th style={{ padding: "16px", fontWeight: 600, color: isDark ? "#64748b" : "#94a3b8" }}>Total</th>
+                <th style={{ padding: "16px", fontWeight: 600, color: isDark ? "#64748b" : "#94a3b8", textAlign: "center" }}>Status</th>
+                <th style={{ padding: "16px", fontWeight: 600, color: isDark ? "#64748b" : "#94a3b8", textAlign: "center" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {bookings.map((b) => (
-                <tr key={b._id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                  <td style={{ padding: "14px 16px", fontWeight: 600, color: "#1e293b" }}>{b.hotel?.hotelName || "N/A"}</td>
-                  <td style={{ padding: "14px 16px", color: "#475569" }}>
+                <tr key={b._id} style={{ borderBottom: isDark ? "1px solid #f1f5f9" : "1px solid #334155" }}>
+                  <td style={{ padding: "14px 16px", fontWeight: 500, color: isDark ? "#3b82f6" : "#60a5fa" }}>#{b._id.slice(-6).toUpperCase()}</td>
+                  <td style={{ padding: "14px 16px", fontWeight: 600, color: isDark ? "#1e293b" : "#f8fafc" }}>{b.hotel?.hotelName || "N/A"}</td>
+                  <td style={{ padding: "14px 16px", color: isDark ? "#475569" : "#cbd5e1" }}>
                     <div>{b.room?.roomName || "N/A"}</div>
-                    <div style={{ fontSize: "11px", color: "#94a3b8" }}>{b.room?.roomType || ""}</div>
+                    <div style={{ fontSize: "11px", color: isDark ? "#94a3b8" : "#64748b" }}>{b.room?.roomType || ""}</div>
                   </td>
-                  <td style={{ padding: "14px 16px", color: "#475569" }}>
-                    <div style={{ fontWeight: 600, color: "#1e293b" }}>{b.guestName || "N/A"}</div>
-                    <div style={{ fontSize: "11px", color: "#94a3b8" }}>{b.guestEmail || ""}</div>
-                    <div style={{ fontSize: "11px", color: "#94a3b8" }}>{b.guestPhone || ""}</div>
+                  <td style={{ padding: "14px 16px", color: isDark ? "#475569" : "#cbd5e1" }}>
+                    <div style={{ fontWeight: 600, color: isDark ? "#1e293b" : "#f8fafc" }}>{b.guestName || "N/A"}</div>
+                    <div style={{ fontSize: "11px", color: isDark ? "#94a3b8" : "#64748b" }}>{b.guestEmail || ""}</div>
+                    <div style={{ fontSize: "11px", color: isDark ? "#94a3b8" : "#64748b" }}>{b.guestPhone || ""}</div>
                   </td>
-                  <td style={{ padding: "14px 16px", color: "#475569", whiteSpace: "nowrap" }}>{formatDate(b.checkIn)}</td>
-                  <td style={{ padding: "14px 16px", color: "#475569", whiteSpace: "nowrap" }}>{formatDate(b.checkOut)}</td>
-                  <td style={{ padding: "14px 16px", fontWeight: 700, color: "#0f172a", fontFamily: "monospace" }}>₹{(b.totalAmount || 0).toLocaleString("en-IN")}</td>
+                  <td style={{ padding: "14px 16px", color: isDark ? "#475569" : "#cbd5e1", whiteSpace: "nowrap" }}>{formatDate(b.checkIn)}</td>
+                  <td style={{ padding: "14px 16px", color: isDark ? "#475569" : "#cbd5e1", whiteSpace: "nowrap" }}>{formatDate(b.checkOut)}</td>
+                  <td style={{ padding: "14px 16px", fontWeight: 700, color: isDark ? "#0f172a" : "#f8fafc", fontFamily: "monospace" }}>₹{(b.totalAmount || 0).toLocaleString("en-IN")}</td>
                   <td style={{ padding: "14px 16px", textAlign: "center" }}>{statusBadge(b.status)}</td>
                   <td style={{ padding: "14px 16px", textAlign: "center" }}>
                     {b.status === "confirmed" && (

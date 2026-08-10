@@ -8,32 +8,10 @@ const Admin = () => {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: theme === "dark" ? "#111827" : "#f8fafc" }}>
-      <AdminSidebar />
-      <div style={{ flex: 1, padding: "24px", color: theme === "dark" ? "#ffffff" : "#000000" }}>
-        <div
-          style={{
-            background: theme === "dark" ? "#1f2937" : "#ffffff",
-            borderRadius: "16px",
-            padding: "24px",
-            boxShadow: "0 6px 20px rgba(0,0,0,0.06)",
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-            <button
-              onClick={toggleTheme}
-              style={{
-                padding: "8px 16px",
-                cursor: "pointer",
-                backgroundColor: theme === "dark" ? "#ffffff" : "#1e293b",
-                color: theme === "dark" ? "#000000" : "#ffffff",
-                border: "none",
-                borderRadius: "4px"
-              }}
-            >
-              Switch to {theme === "dark" ? "Light" : "Dark"} Mode
-            </button>
-          </div>
-          <Outlet />
+      <AdminSidebar theme={theme} toggleTheme={toggleTheme} />
+      <div style={{ flex: 1, padding: "0px", color: theme === "dark" ? "#f8fafc" : "#0f172a" }}>
+        <div style={{ padding: "24px", width: "100%", boxSizing: "border-box" }}>
+          <Outlet context={{ theme }} />
         </div>
       </div>
     </div>

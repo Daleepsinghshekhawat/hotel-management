@@ -11,6 +11,21 @@ export default function HotelBookingHistory() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [contactModal, setContactModal] = useState(null);
+  const [copied, setCopied] = useState("");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, statusFilter]);
+
+  const handleCopy = (text, type) => {
+    navigator.clipboard.writeText(text);
+    setCopied(type);
+    setTimeout(() => setCopied(""), 2000);
+  };
   
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
@@ -23,7 +38,7 @@ export default function HotelBookingHistory() {
       
       // 2. Fetch bookings for each hotel concurrently
       const bookingPromises = hotels.map(hotel => 
-        axios.get(`${URL}/api/getBookingsByHotel/${hotel._id}`, { params: { search: debouncedSearch } })
+        axios.get(`${URL}/api/getBookingsByHotel/${hotel._id}`)
       );
       
       const responses = await Promise.all(bookingPromises);
@@ -33,9 +48,17 @@ export default function HotelBookingHistory() {
       responses.forEach((res, index) => {
         const hotelBookings = res.data.result || [];
         const hotelInfo = hotels[index];
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
         // Inject hotel info into booking for easy access in the UI since it is returned as a string ID
         const enrichedBookings = hotelBookings
-          .filter(b => b.status === "completed" || b.status === "cancelled")
+          .filter(b => {
+            const checkOutDate = new Date(b.checkOut);
+            const isPast = checkOutDate < today;
+            return b.status === "completed" || b.status === "cancelled" || isPast;
+          })
           .map(b => ({
             ...b,
             hotel: { _id: hotelInfo._id, hotelName: hotelInfo.hotelName }
@@ -59,7 +82,7 @@ export default function HotelBookingHistory() {
     if (user.email) {
       fetchBookings();
     }
-  }, [user.email, debouncedSearch]);
+  }, [user.email]);
 
   const formatDate = (dateString) => {
     return dateString
@@ -100,18 +123,48 @@ export default function HotelBookingHistory() {
     const matchesStatus =
       statusFilter === "all" || b.status === statusFilter;
 
-    return matchesStatus;
+    let matchesSearch = true;
+    if (debouncedSearch) {
+      const term = debouncedSearch.toLowerCase();
+      matchesSearch = (
+        (b.guestName && b.guestName.toLowerCase().includes(term)) ||
+        (b.guestEmail && b.guestEmail.toLowerCase().includes(term)) ||
+        (b.hotel?.hotelName && b.hotel.hotelName.toLowerCase().includes(term)) ||
+        (b.room?.roomName && b.room.roomName.toLowerCase().includes(term))
+      );
+    }
+
+    return matchesStatus && matchesSearch;
   });
+
+  const indexOfLastRow = currentPage * rowsPerPage;
+  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+  const currentRows = filtered.slice(indexOfFirstRow, indexOfLastRow);
+  const totalPages = Math.ceil(filtered.length / rowsPerPage);
 
   return (
     <div style={{ fontFamily: "'Segoe UI', sans-serif" }}>
-      <div style={{ marginBottom: "28px" }}>
-        <h2 style={{ margin: "0 0 4px", fontSize: "22px", color: "#0f172a", fontWeight: 700 }}>
-          📋 My Hotels Bookings
-        </h2>
-        <p style={{ margin: 0, color: "#64748b", fontSize: "14px" }}>
-          Track and manage past room reservations for all your owned hotels.
-        </p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "28px", flexWrap: "wrap", gap: "16px" }}>
+        <div>
+          <h2 style={{ margin: "0 0 4px", fontSize: "22px", color: "#0f172a", fontWeight: 700 }}>
+            📅 My Hotels Bookings
+          </h2>
+          <p style={{ margin: 0, color: "#64748b", fontSize: "14px" }}>
+            Track and manage past room reservations for all your owned hotels.
+          </p>
+        </div>
+        <a
+          href={`${URL}/api/pdf/bookings?adminEmail=${user.email}&type=history`}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            padding: "10px 16px", background: "#10b981", color: "#fff", border: "none",
+            borderRadius: "8px", fontWeight: 600, fontSize: "14px", textDecoration: "none",
+            display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 4px 6px -1px rgba(16, 185, 129, 0.3)"
+          }}
+        >
+          📄 Download Booking History (PDF)
+        </a>
       </div>
 
       {bookings.length > 0 && (
@@ -169,6 +222,7 @@ export default function HotelBookingHistory() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", textAlign: "left" }}>
             <thead>
               <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
+                <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600 }}>Booking ID</th>
                 <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600 }}>Hotel</th>
                 <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600 }}>Room</th>
                 <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600 }}>Guest</th>
@@ -176,12 +230,15 @@ export default function HotelBookingHistory() {
                 <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600 }}>Check-Out</th>
                 <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600 }}>Amount</th>
                 <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600, textAlign: "center" }}>Status</th>
-                <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600, textAlign: "center" }}>Action</th>
+                <th style={{ padding: "14px 16px", color: "#475569", fontWeight: 600, textAlign: "center" }}>Contact</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((b) => (
+              {currentRows.map((b) => (
                 <tr key={b._id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                  <td style={{ padding: "14px 16px", fontWeight: 600, color: "#1e293b" }}>
+                    <code>{b.bookingId || "N/A"}</code>
+                  </td>
                   <td style={{ padding: "14px 16px", fontWeight: 600, color: "#1e293b" }}>{b.hotel?.hotelName || "N/A"}</td>
                   <td style={{ padding: "14px 16px", color: "#475569" }}>
                     <div>{b.room?.roomName || "N/A"}</div>
@@ -199,26 +256,165 @@ export default function HotelBookingHistory() {
                   </td>
                   <td style={{ padding: "14px 16px", textAlign: "center" }}>{statusBadge(b.status)}</td>
                   <td style={{ padding: "14px 16px", textAlign: "center" }}>
-                    <button
-                      onClick={() => navigate(`/hotel/room/${b.room?._id}`)}
-                      style={{
-                        padding: "6px 12px",
-                        borderRadius: "6px",
-                        background: "#3b82f6",
-                        color: "#fff",
-                        border: "none",
-                        fontWeight: 600,
-                        fontSize: "12px",
-                        cursor: "pointer"
-                      }}
-                    >
-                      View Room
-                    </button>
+                    <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                      <button
+                        onClick={() => setContactModal(b)}
+                        style={{
+                          display: "inline-block",
+                          padding: "6px 12px",
+                          borderRadius: "6px",
+                          background: "#3b82f6",
+                          color: "#fff",
+                          border: "none",
+                          fontWeight: 600,
+                          fontSize: "12px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        ✉️ Contact
+                      </button>
+                      <a
+                        href={`${URL}/api/pdf/booking/${b._id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: "inline-block",
+                          padding: "6px 12px",
+                          borderRadius: "6px",
+                          background: "#10b981",
+                          color: "#fff",
+                          border: "none",
+                          fontWeight: 600,
+                          fontSize: "12px",
+                          cursor: "pointer",
+                          textDecoration: "none"
+                        }}
+                      >
+                        PDF
+                      </a>
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {filtered.length > 0 && !loading && (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 0", marginTop: "16px", flexWrap: "wrap", gap: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <span style={{ fontSize: "14px", color: "#64748b" }}>
+              Showing {indexOfFirstRow + 1} to {Math.min(indexOfLastRow, filtered.length)} of {filtered.length} entries
+            </span>
+            <select
+              value={rowsPerPage}
+              onChange={(e) => {
+                setRowsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              style={{ padding: "6px", borderRadius: "6px", border: "1px solid #cbd5e1", outline: "none", color: "#334155" }}
+            >
+              <option value={5}>5 per page</option>
+              <option value={10}>10 per page</option>
+              <option value={20}>20 per page</option>
+              <option value={50}>50 per page</option>
+            </select>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              style={{
+                padding: "6px 12px", borderRadius: "6px", border: "1px solid #cbd5e1",
+                background: currentPage === 1 ? "#f1f5f9" : "#fff",
+                color: currentPage === 1 ? "#94a3b8" : "#334155",
+                cursor: currentPage === 1 ? "not-allowed" : "pointer"
+              }}
+            >
+              Previous
+            </button>
+            
+            <span style={{ fontSize: "14px", color: "#334155", fontWeight: 600 }}>
+              Page {currentPage} of {totalPages || 1}
+            </span>
+
+            <button
+              disabled={currentPage === totalPages || totalPages === 0}
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              style={{
+                padding: "6px 12px", borderRadius: "6px", border: "1px solid #cbd5e1",
+                background: currentPage === totalPages || totalPages === 0 ? "#f1f5f9" : "#fff",
+                color: currentPage === totalPages || totalPages === 0 ? "#94a3b8" : "#334155",
+                cursor: currentPage === totalPages || totalPages === 0 ? "not-allowed" : "pointer"
+              }}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Contact Modal */}
+      {contactModal && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15, 23, 42, 0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
+          <div style={{ background: "#fff", width: "100%", maxWidth: "400px", borderRadius: "16px", padding: "24px", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h3 style={{ margin: 0, fontSize: "18px", color: "#0f172a", fontWeight: 700 }}>Contact Guest</h3>
+              <button onClick={() => setContactModal(null)} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "18px", color: "#64748b" }}>✖</button>
+            </div>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748b", textTransform: "uppercase", marginBottom: "6px" }}>Guest Name</label>
+                <div style={{ padding: "10px 14px", background: "#f1f5f9", borderRadius: "8px", color: "#1e293b", fontWeight: 600, fontSize: "14px" }}>
+                  {contactModal.guestName || "N/A"}
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748b", textTransform: "uppercase", marginBottom: "6px" }}>Email Address</label>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <div style={{ flex: 1, padding: "10px 14px", background: "#f1f5f9", borderRadius: "8px", color: "#1e293b", fontSize: "14px" }}>
+                    {contactModal.guestEmail || "N/A"}
+                  </div>
+                  {contactModal.guestEmail && (
+                    <button onClick={() => handleCopy(contactModal.guestEmail, "email")} style={{ padding: "0 14px", background: "#e2e8f0", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "14px" }}>
+                      {copied === "email" ? "✅" : "📋"}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748b", textTransform: "uppercase", marginBottom: "6px" }}>Phone Number</label>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <div style={{ flex: 1, padding: "10px 14px", background: "#f1f5f9", borderRadius: "8px", color: "#1e293b", fontSize: "14px" }}>
+                    {contactModal.guestPhone || "N/A"}
+                  </div>
+                  {contactModal.guestPhone && (
+                    <button onClick={() => handleCopy(contactModal.guestPhone, "phone")} style={{ padding: "0 14px", background: "#e2e8f0", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "14px" }}>
+                      {copied === "phone" ? "✅" : "📋"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {contactModal.guestEmail && (
+              <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
+                <a 
+                  href={`https://mail.google.com/mail/?view=cm&fs=1&to=${contactModal.guestEmail}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ flex: 1, display: "block", textAlign: "center", padding: "12px", background: "#ea4335", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", textDecoration: "none", boxSizing: "border-box" }}
+                >
+                  Compose in Gmail
+                </a>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import URL from "../api";
 import RoomList from "../Admin/RoomList";
 import { IndianRupee, BedDouble, BookOpen, Building2, TrendingUp, Hotel, Users, CheckCircle2, Key, Wrench, Sparkles } from "lucide-react";
@@ -16,6 +16,7 @@ const formatLocation = (location) => {
 };
 
 export default function HotelDashboard() {
+  const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -185,7 +186,7 @@ export default function HotelDashboard() {
       <div style={{ marginBottom: "28px" }}>
         <h2 style={{ margin: "0 0 4px", fontSize: "24px", color: "#0f172a", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}>
           <Building2 size={24} color="#3b82f6" />
-          Hotel Owner Dashboard
+          Welcome {user.name || "Owner"}, to your Hotel Dashboard
         </h2>
         <p style={{ margin: 0, color: "#64748b", fontSize: "14px" }}>
           Welcome back, {user.name || "Owner"}! Manage your hotels, view revenue, and control inventory.
@@ -201,7 +202,12 @@ export default function HotelDashboard() {
           {/* KPI Cards */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px", marginBottom: "32px" }}>
             
-            <div style={kpiCardStyle}>
+            <div 
+              style={{...kpiCardStyle, cursor: "pointer"}} 
+              onClick={() => navigate("/hotel/booking-history")}
+              onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-4px)"}
+              onMouseOut={(e) => e.currentTarget.style.transform = "none"}
+            >
               <div style={kpiIconWrapper("#dcfce7", "#16a34a")}><IndianRupee size={20} /></div>
               <div>
                 <div style={kpiLabelStyle}>Total Revenue</div>
@@ -209,7 +215,12 @@ export default function HotelDashboard() {
               </div>
             </div>
 
-            <div style={kpiCardStyle}>
+            <div 
+              style={{...kpiCardStyle, cursor: "pointer"}} 
+              onClick={() => navigate("/hotel/booking-history")}
+              onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-4px)"}
+              onMouseOut={(e) => e.currentTarget.style.transform = "none"}
+            >
               <div style={kpiIconWrapper("#e0e7ff", "#4f46e5")}><BookOpen size={20} /></div>
               <div>
                 <div style={kpiLabelStyle}>Total Bookings</div>
@@ -217,7 +228,12 @@ export default function HotelDashboard() {
               </div>
             </div>
 
-            <div style={kpiCardStyle}>
+            <div 
+              style={{...kpiCardStyle, cursor: "pointer"}} 
+              onClick={() => navigate("/hotel/hotels")}
+              onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-4px)"}
+              onMouseOut={(e) => e.currentTarget.style.transform = "none"}
+            >
               <div style={kpiIconWrapper("#dbeafe", "#2563eb")}><Building2 size={20} /></div>
               <div>
                 <div style={kpiLabelStyle}>Active Hotels</div>
@@ -225,42 +241,77 @@ export default function HotelDashboard() {
               </div>
             </div>
 
-            <div style={kpiCardStyle}>
+            <div 
+              style={{...kpiCardStyle, cursor: "pointer"}} 
+              onClick={() => navigate("/hotel/hotels")}
+              onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-4px)"}
+              onMouseOut={(e) => e.currentTarget.style.transform = "none"}
+            >
               <div style={kpiIconWrapper("#f3e8ff", "#9333ea")}><BedDouble size={20} /></div>
               <div>
                 <div style={kpiLabelStyle}>Total Rooms</div>
                 <div style={kpiValueStyle}>{stats.totalRooms}</div>
               </div>
             </div>
-            <div style={kpiCardStyle}>
+            
+            <div 
+              style={{...kpiCardStyle, cursor: "pointer"}} 
+              onClick={() => navigate("/hotel/booking-history")}
+              onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-4px)"}
+              onMouseOut={(e) => e.currentTarget.style.transform = "none"}
+            >
               <div style={kpiIconWrapper("#ffedd5", "#ea580c")}><Users size={20} /></div>
               <div>
                 <div style={kpiLabelStyle}>Total Users</div>
                 <div style={kpiValueStyle}>{stats.totalUsers.toLocaleString()}</div>
               </div>
             </div>
-            <div style={kpiCardStyle}>
+            
+            <div 
+              style={{...kpiCardStyle, cursor: "pointer"}} 
+              onClick={() => navigate("/hotel/bookings")}
+              onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-4px)"}
+              onMouseOut={(e) => e.currentTarget.style.transform = "none"}
+            >
               <div style={kpiIconWrapper("#fce7f3", "#db2777")}><Key size={20} /></div>
               <div>
                 <div style={kpiLabelStyle}>Occupied Rooms</div>
                 <div style={kpiValueStyle}>{stats.occupiedRooms}</div>
               </div>
             </div>
-            <div style={kpiCardStyle}>
+            
+            <div 
+              style={{...kpiCardStyle, cursor: "pointer"}} 
+              onClick={() => navigate("/hotel/hotels")}
+              onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-4px)"}
+              onMouseOut={(e) => e.currentTarget.style.transform = "none"}
+            >
               <div style={kpiIconWrapper("#ecfdf5", "#059669")}><CheckCircle2 size={20} /></div>
               <div>
                 <div style={kpiLabelStyle}>Available Rooms</div>
                 <div style={kpiValueStyle}>{stats.availableRooms}</div>
               </div>
             </div>
-            <div style={kpiCardStyle}>
+            
+            <div 
+              style={{...kpiCardStyle, cursor: "pointer"}} 
+              onClick={() => navigate("/hotel/hotels")}
+              onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-4px)"}
+              onMouseOut={(e) => e.currentTarget.style.transform = "none"}
+            >
               <div style={kpiIconWrapper("#f1f5f9", "#475569")}><Wrench size={20} /></div>
               <div>
                 <div style={kpiLabelStyle}>Maintenance</div>
                 <div style={kpiValueStyle}>{stats.maintenanceRooms}</div>
               </div>
             </div>
-            <div style={kpiCardStyle}>
+            
+            <div 
+              style={{...kpiCardStyle, cursor: "pointer"}} 
+              onClick={() => navigate("/hotel/hotels")}
+              onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-4px)"}
+              onMouseOut={(e) => e.currentTarget.style.transform = "none"}
+            >
               <div style={kpiIconWrapper("#e0f2fe", "#0284c7")}><Sparkles size={20} /></div>
               <div>
                 <div style={kpiLabelStyle}>To Be Cleaned</div>
@@ -584,7 +635,8 @@ const kpiCardStyle = {
   boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)",
   display: "flex",
   alignItems: "center",
-  gap: "16px"
+  gap: "16px",
+  transition: "all 0.2s ease"
 };
 
 const kpiIconWrapper = (bg, color) => ({

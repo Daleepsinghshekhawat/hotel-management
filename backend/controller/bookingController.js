@@ -4,6 +4,42 @@ const Hotel = require("../model/hotelModel");
 const TempBooking = require("../model/tempBooking");
 const Coupon = require("../model/couponModel");
 
+// ------------------------------------------------------------------
+// IN-MEMORY ROOM LOCKING SYSTEM
+// Prevents race conditions when multiple users try to book the same room
+// at the exact same millisecond.
+// ------------------------------------------------------------------
+class RoomMutex {
+  constructor() {
+    this.locked = false;
+    this.queue = [];
+  }
+  async acquire() {
+    if (!this.locked) {
+      this.locked = true;
+      return;
+    }
+    return new Promise(resolve => this.queue.push(resolve));
+  }
+  release() {
+    if (this.queue.length > 0) {
+      const nextResolve = this.queue.shift();
+      nextResolve();
+    } else {
+      this.locked = false;
+    }
+  }
+}
+const roomLocks = new Map();
+const getRoomMutex = (roomId) => {
+  const idStr = String(roomId);
+  if (!roomLocks.has(idStr)) {
+    roomLocks.set(idStr, new RoomMutex());
+  }
+  return roomLocks.get(idStr);
+};
+// ------------------------------------------------------------------
+
 
 const isRoomBooked = async (roomId, checkIn, checkOut, excludeBookingId = null, userId = null) => {
   const query = {
@@ -54,13 +90,16 @@ const autoCompleteExpiredBookings = async (roomId) => {
 
 
 exports.createBooking = async (req, res) => {
-  try {
-    const { hotelId, roomId, guestName, guestEmail, guestPhone, guests, checkIn, checkOut, userId, couponCode } = req.body;
+  const { hotelId, roomId, guestName, guestEmail, guestPhone, guests, checkIn, checkOut, userId, couponCode } = req.body;
 
-  
-    if (!hotelId || !roomId || !guestName || !guestEmail || !guestPhone || !checkIn || !checkOut) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
-    }
+  if (!hotelId || !roomId || !guestName || !guestEmail || !guestPhone || !checkIn || !checkOut) {
+    return res.status(400).json({ success: false, message: "All fields are required" });
+  }
+
+  const lock = getRoomMutex(roomId);
+  await lock.acquire();
+
+  try {
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
 
@@ -177,6 +216,8 @@ exports.createBooking = async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ success: false, message: "Server error", error: err.message });
+  } finally {
+    lock.release();
   }
 };
 
@@ -244,14 +285,17 @@ exports.getRoomCalendarAvailability = async (req, res) => {
 // ACQUIRE TEMP LOCK
 
 exports.acquireTempLock = async (req, res) => {
+  const { roomId } = req.params;
+  const { checkIn, checkOut, userId } = req.body;
+  
+  if (!checkIn || !checkOut || !userId) {
+    return res.status(400).json({ success: false, message: "checkIn, checkOut, and userId are required" });
+  }
+
+  const lock = getRoomMutex(roomId);
+  await lock.acquire();
+
   try {
-    const { roomId } = req.params;
-    const { checkIn, checkOut, userId } = req.body;
-    
-    if (!checkIn || !checkOut || !userId) {
-      return res.status(400).json({ success: false, message: "checkIn, checkOut, and userId are required" });
-    }
-    
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
     
@@ -284,6 +328,8 @@ exports.acquireTempLock = async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ success: false, message: "Server error" });
+  } finally {
+    lock.release();
   }
 };
 
@@ -366,9 +412,20 @@ exports.getAllBookings = async (req, res) => {
     const { search, sort } = req.query;
     let filter = {};
     if (search) {
+      const Hotel = require('../model/hotelModel');
+      const Room = require('../model/room');
+
+      const matchedHotels = await Hotel.find({ hotelName: { $regex: search, $options: "i" } }).select('_id');
+      const hotelIds = matchedHotels.map(h => h._id);
+
+      const matchedRooms = await Room.find({ roomName: { $regex: search, $options: "i" } }).select('_id');
+      const roomIds = matchedRooms.map(r => r._id);
+
       filter.$or = [
         { guestName: { $regex: search, $options: "i" } },
-        { guestEmail: { $regex: search, $options: "i" } }
+        { guestEmail: { $regex: search, $options: "i" } },
+        { hotel: { $in: hotelIds } },
+        { room: { $in: roomIds } }
       ];
     }
 

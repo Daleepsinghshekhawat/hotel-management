@@ -12,6 +12,8 @@ export default function AllAdmins() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [viewAdmin, setViewAdmin] = useState(null);
+  const [editAdmin, setEditAdmin] = useState(null);
 
   const fetchAdmins = async () => {
     setLoading(true);
@@ -42,6 +44,20 @@ export default function AllAdmins() {
       fetchAdmins();
     } catch (err) {
       alert("Error deleting administrator account.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRoleChange = async (id, newRole) => {
+    setActionLoading(id);
+    try {
+      await axios.patch(`${URL}/api/updateUserRole/${id}`, { role: newRole });
+      alert("Role updated successfully.");
+      fetchAdmins();
+    } catch (err) {
+      alert("Error updating role.");
+      console.error(err);
     } finally {
       setActionLoading(null);
     }
@@ -137,38 +153,85 @@ export default function AllAdmins() {
                   <td style={{ padding: "16px 20px", fontWeight: 600, color: "#1e293b" }}>{user.name || "N/A"}</td>
                   <td style={{ padding: "16px 20px", color: "#475569" }}>{user.email}</td>
                   <td style={{ padding: "16px 20px" }}>
-                    <span style={{
-                      background: "#faf5ff",
-                      color: "#6b21a8",
-                      padding: "4px 10px",
-                      borderRadius: "999px",
-                      fontSize: "12px",
-                      fontWeight: 700,
-                    }}>
-                      Admin
-                    </span>
-                  </td>
-                  <td style={{ padding: "16px 20px", color: "#64748b" }}>{formatDate(user.createdAt)}</td>
-                  <td style={{ padding: "16px 20px", textAlign: "center" }}>
-                    <button
-                      onClick={() => handleDelete(user._id, user.name || user.email)}
+                    <select
+                      value={user.role || "admin"}
+                      onChange={(e) => handleRoleChange(user._id, e.target.value)}
                       disabled={actionLoading === user._id}
                       style={{
-                        padding: "6px 12px",
-                        borderRadius: "6px",
-                        border: "1px solid #dc2626",
-                        background: "transparent",
-                        color: "#dc2626",
-                        cursor: "pointer",
+                        padding: "4px 8px",
+                        borderRadius: "8px",
+                        border: "1px solid #cbd5e1",
+                        background: "#faf5ff",
+                        color: "#6b21a8",
                         fontSize: "12px",
-                        fontWeight: 600,
-                        transition: "all 0.2s"
+                        fontWeight: 700,
+                        outline: "none",
+                        cursor: "pointer"
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "#dc2626"; e.currentTarget.style.color = "#fff"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#dc2626"; }}
                     >
-                      {actionLoading === user._id ? "Deleting..." : "🗑️ Delete"}
-                    </button>
+                      <option value="admin">Admin</option>
+                      <option value="superadmin">Superadmin</option>
+                    </select>
+                  </td>
+                  <td style={{ padding: "16px 20px", color: "#64748b" }}>{formatDate(user.createdAt)}</td>
+                  <td style={{ padding: "16px 20px" }}>
+                    <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                      <button
+                        onClick={() => setViewAdmin(user)}
+                        style={{
+                          padding: "6px 12px",
+                          borderRadius: "6px",
+                          border: "1px solid #3b82f6",
+                          background: "transparent",
+                          color: "#3b82f6",
+                          cursor: "pointer",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          transition: "all 0.2s"
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "#3b82f6"; e.currentTarget.style.color = "#fff"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#3b82f6"; }}
+                      >
+                        👁️ View
+                      </button>
+                      <button
+                        onClick={() => setEditAdmin(user)}
+                        style={{
+                          padding: "6px 12px",
+                          borderRadius: "6px",
+                          border: "1px solid #eab308",
+                          background: "transparent",
+                          color: "#eab308",
+                          cursor: "pointer",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          transition: "all 0.2s"
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "#eab308"; e.currentTarget.style.color = "#fff"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#eab308"; }}
+                      >
+                        ✏️ Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(user._id, user.name || user.email)}
+                        disabled={actionLoading === user._id}
+                        style={{
+                          padding: "6px 12px",
+                          borderRadius: "6px",
+                          border: "1px solid #dc2626",
+                          background: "transparent",
+                          color: "#dc2626",
+                          cursor: "pointer",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          transition: "all 0.2s"
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "#dc2626"; e.currentTarget.style.color = "#fff"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#dc2626"; }}
+                      >
+                        {actionLoading === user._id ? "..." : "🗑️ Delete"}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -207,6 +270,53 @@ export default function AllAdmins() {
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {/* View Modal */}
+      {viewAdmin && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 }}>
+          <div style={{ background: "#fff", padding: "24px", borderRadius: "12px", width: "400px", maxWidth: "90%" }}>
+            <h2 style={{ margin: "0 0 16px 0", fontSize: "20px", color: "#0f172a" }}>Admin Details</h2>
+            <div style={{ marginBottom: "12px" }}><strong>Name:</strong> {viewAdmin.name || "N/A"}</div>
+            <div style={{ marginBottom: "12px" }}><strong>Email:</strong> {viewAdmin.email}</div>
+            <div style={{ marginBottom: "12px" }}><strong>Role:</strong> {viewAdmin.role}</div>
+            <div style={{ marginBottom: "24px" }}><strong>Joined:</strong> {formatDate(viewAdmin.createdAt)}</div>
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button onClick={() => setViewAdmin(null)} style={{ padding: "8px 16px", background: "#cbd5e1", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editAdmin && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 }}>
+          <div style={{ background: "#fff", padding: "24px", borderRadius: "12px", width: "400px", maxWidth: "90%" }}>
+            <h2 style={{ margin: "0 0 16px 0", fontSize: "20px", color: "#0f172a" }}>Edit Admin Role</h2>
+            <div style={{ marginBottom: "12px" }}><strong>Name:</strong> {editAdmin.name || "N/A"}</div>
+            <div style={{ marginBottom: "12px" }}><strong>Email:</strong> {editAdmin.email}</div>
+            <div style={{ marginBottom: "24px" }}>
+              <strong>Role: </strong>
+              <select
+                value={editAdmin.role || "admin"}
+                onChange={(e) => setEditAdmin({ ...editAdmin, role: e.target.value })}
+                style={{ padding: "6px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
+              >
+                <option value="admin">Admin</option>
+                <option value="superadmin">Superadmin</option>
+              </select>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+              <button onClick={() => setEditAdmin(null)} style={{ padding: "8px 16px", background: "#f1f5f9", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600, color: "#475569" }}>Cancel</button>
+              <button onClick={async () => {
+                await handleRoleChange(editAdmin._id, editAdmin.role);
+                setEditAdmin(null);
+              }} style={{ padding: "8px 16px", background: "#2563eb", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600, color: "#fff" }}>
+                Save Changes
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

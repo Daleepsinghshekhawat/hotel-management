@@ -1,113 +1,276 @@
 import React from "react";
-import { Users, Globe, ShieldCheck, HeartHandshake } from "lucide-react";
+import { Triangle, Wifi, Key, ConciergeBell } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function AboutUs() {
-  const values = [
-    {
-      icon: <Globe size={32} color="var(--accent-color)" />,
-      title: "Global Reach, Local Feel",
-      description: "We connect you to thousands of premium hotels across the globe while maintaining a personalized touch."
-    },
-    {
-      icon: <ShieldCheck size={32} color="#16a34a" />,
-      title: "Trusted & Secure",
-      description: "Your safety and security are our top priorities. We vet every hotel to ensure quality and peace of mind."
-    },
-    {
-      icon: <HeartHandshake size={32} color="#e51d53" />,
-      title: "Exceptional Service",
-      description: "Our dedicated support team is available 24/7 to ensure your journey is seamless from booking to checkout."
-    },
-    {
-      icon: <Users size={32} color="#9333ea" />,
-      title: "Community Driven",
-      description: "Built by travelers for travelers. We listen to your feedback to constantly improve our platform."
-    }
-  ];
+  const navigate = useNavigate();
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-primary)", fontFamily: "'Inter', sans-serif" }}>
-      {/* Hero Section */}
+    <div style={{
+      minHeight: "100vh",
+      background: "#050505",
+      color: "#ffffff",
+      fontFamily: "'Inter', sans-serif",
+      padding: "20px 5% 80px", // Reduced top padding from 80px to 20px
+      display: "flex",
+      flexDirection: "column", // Stack children vertically
+      alignItems: "center",
+      justifyContent: "flex-start", // Start from the top to reduce the gap
+      position: "relative",
+      overflow: "hidden"
+    }}>
+      
+      {/* Subtle background glow */}
       <div style={{
-        background: "linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%)",
-        padding: "100px 5%",
-        color: "#fff",
-        textAlign: "center"
+        position: "absolute",
+        top: "20%",
+        left: "30%",
+        width: "600px",
+        height: "600px",
+        background: "radial-gradient(circle, rgba(234, 179, 8, 0.05) 0%, rgba(0,0,0,0) 70%)",
+        zIndex: 0,
+        pointerEvents: "none"
+      }} />
+
+      <div style={{
+        maxWidth: "1200px",
+        width: "100%",
+        display: "flex",
+        flexWrap: "wrap",
+        gap: "60px",
+        alignItems: "center",
+        justifyContent: "space-between",
+        zIndex: 10
       }}>
-        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-          <h1 style={{ fontSize: "clamp(36px, 5vw, 56px)", fontWeight: 800, margin: "0 0 24px", letterSpacing: "-1px" }}>
-            Reimagining the way you travel
-          </h1>
-          <p style={{ fontSize: "18px", lineHeight: "1.6", color: "#cbd5e1", margin: 0 }}>
-            StayEase was founded on a simple principle: finding the perfect accommodation should be as exciting as the trip itself. 
-            We provide a curated selection of world-class hotels combined with an effortless booking experience.
-          </p>
-        </div>
-      </div>
-
-      {/* Content Section */}
-      <div style={{ maxWidth: "1200px", margin: "-40px auto 80px", padding: "0 5%", position: "relative", zIndex: 10 }}>
         
-        {/* Stats Row */}
-        <div style={{
-          background: "var(--bg-secondary)",
-          borderRadius: "20px",
-          padding: "40px",
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: "32px",
-          boxShadow: "0 20px 40px rgba(0,0,0,0.08)",
-          marginBottom: "80px",
-          border: "1px solid var(--border-color)",
-          textAlign: "center"
-        }}>
-          <div>
-            <div style={{ fontSize: "36px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "8px" }}>10K+</div>
-            <div style={{ color: "var(--text-secondary)", fontWeight: 500 }}>Hotels Worldwide</div>
+        {/* Left Column */}
+        <div style={{ flex: "1 1 500px", display: "flex", flexDirection: "column", gap: "24px" }}>
+          
+          {/* Logo / Triangle */}
+          <div style={{ display: "flex", justifyContent: "flex-start" }}>
+            <Triangle fill="none" color="#eab308" size={32} strokeWidth={1} style={{ transform: "rotate(180deg)", opacity: 0.8 }} />
           </div>
-          <div>
-            <div style={{ fontSize: "36px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "8px" }}>2M+</div>
-            <div style={{ color: "var(--text-secondary)", fontWeight: 500 }}>Happy Travelers</div>
+
+          <h2 style={{
+            fontSize: "clamp(36px, 5vw, 54px)",
+            fontWeight: 300,
+            margin: 0,
+            letterSpacing: "1px",
+            color: "#ffffff",
+          }}>
+            About Us
+          </h2>
+
+          <p style={{
+            color: "#a1a1aa",
+            fontSize: "16px",
+            lineHeight: "1.9",
+            margin: 0,
+            maxWidth: "480px"
+          }}>
+            We offer the finest luxury hotel experiences tailored for the discerning traveler. 
+            From breathtaking cityscapes to serene retreats, our properties combine modern elegance 
+            with unparalleled hospitality to create truly unforgettable stays.
+          </p>
+
+          <div style={{ display: "flex", gap: "48px", marginTop: "24px", marginBottom: "24px" }}>
+            <div>
+              <div style={{ fontSize: "28px", color: "#eab308", fontWeight: "600", marginBottom: "4px" }}>20+</div>
+              <div style={{ fontSize: "11px", color: "#71717a", letterSpacing: "1.5px", textTransform: "uppercase", fontWeight: 600 }}>Properties</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "28px", color: "#eab308", fontWeight: "600", marginBottom: "4px" }}>4.9</div>
+              <div style={{ fontSize: "11px", color: "#71717a", letterSpacing: "1.5px", textTransform: "uppercase", fontWeight: 600 }}>Rating</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "28px", color: "#eab308", fontWeight: "600", marginBottom: "4px" }}>150+</div>
+              <div style={{ fontSize: "11px", color: "#71717a", letterSpacing: "1.5px", textTransform: "uppercase", fontWeight: 600 }}>Staff</div>
+            </div>
           </div>
-          <div>
-            <div style={{ fontSize: "36px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "8px" }}>98%</div>
-            <div style={{ color: "var(--text-secondary)", fontWeight: 500 }}>Satisfaction Rate</div>
-          </div>
-          <div>
-            <div style={{ fontSize: "36px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "8px" }}>24/7</div>
-            <div style={{ color: "var(--text-secondary)", fontWeight: 500 }}>Customer Support</div>
-          </div>
+
+          <button onClick={() => navigate('/user/hotels')} style={{
+            alignSelf: "flex-start",
+            padding: "16px 40px",
+            borderRadius: "50px",
+            background: "#eab308",
+            color: "#000",
+            fontWeight: "700",
+            fontSize: "14px",
+            letterSpacing: "1px",
+            textTransform: "uppercase",
+            border: "none",
+            cursor: "pointer",
+            transition: "transform 0.2s, background 0.2s",
+            marginTop: "16px",
+            boxShadow: "0 10px 20px rgba(234, 179, 8, 0.2)"
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.background = "#facc15";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.background = "#eab308";
+          }}
+          >
+            Explore
+          </button>
         </div>
 
-        {/* Our Mission */}
-        <div style={{ marginBottom: "80px", textAlign: "center" }}>
-          <h2 style={{ fontSize: "32px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "24px" }}>Our Mission</h2>
-          <p style={{ maxWidth: "800px", margin: "0 auto", color: "var(--text-secondary)", fontSize: "18px", lineHeight: "1.7" }}>
-            To empower global explorers by providing a trustworthy, seamless, and deeply personalized booking experience. 
-            We believe that where you stay sets the tone for your entire journey, and we are committed to making sure every stay is extraordinary.
+        {/* Right Column */}
+        <div style={{
+          flex: "1 1 500px",
+          display: "flex",
+          justifyContent: "center",
+          position: "relative",
+          minHeight: "600px"
+        }}>
+          
+          {/* Arched Image Container */}
+          <div style={{
+            width: "360px",
+            height: "580px",
+            borderRadius: "200px", // Complete pill shape
+            overflow: "hidden",
+            position: "relative",
+            boxShadow: "0 30px 60px rgba(0,0,0,0.6)", 
+            border: "1px solid rgba(234, 179, 8, 0.15)",
+            background: "#111" // Fallback color
+          }}>
+            <img 
+              src="https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg?auto=compress&cs=tinysrgb&w=800" 
+              alt=""
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+            {/* Dark gradient overlay at bottom of image for blending */}
+            <div style={{
+              position: "absolute", bottom: 0, left: 0, right: 0, height: "150px",
+              background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent)"
+            }} />
+          </div>
+
+          {/* Floating Amenities aligned on the right */}
+          <div style={{
+            position: "absolute",
+            right: "-20px", // push it slightly out of the box
+            top: "50%",
+            transform: "translateY(-50%)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "24px",
+            zIndex: 10
+          }}>
+            {[
+              { icon: <Wifi size={18} color="#eab308" />, label: "Free Wifi" },
+              { icon: <Key size={18} color="#eab308" />, label: "Smart Key" },
+              { icon: <ConciergeBell size={18} color="#eab308" />, label: "Room Service" }
+            ].map((item, idx) => (
+              <div key={idx} style={{
+                background: "rgba(10, 10, 12, 0.85)",
+                backdropFilter: "blur(12px)",
+                border: "1px solid rgba(234, 179, 8, 0.2)",
+                borderRadius: "16px",
+                padding: "16px 20px",
+                display: "flex",
+                alignItems: "center",
+                gap: "16px",
+                boxShadow: "0 15px 30px rgba(0,0,0,0.5)",
+                width: "200px",
+                transform: `translateX(${idx === 1 ? '20px' : '0px'})`, // stagger middle item
+                transition: "transform 0.3s ease",
+                cursor: "default"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = `translateX(${idx === 1 ? '25px' : '5px'}) scale(1.02)`;
+                e.currentTarget.style.borderColor = "rgba(234, 179, 8, 0.4)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = `translateX(${idx === 1 ? '20px' : '0px'}) scale(1)`;
+                e.currentTarget.style.borderColor = "rgba(234, 179, 8, 0.2)";
+              }}
+              >
+                <div style={{
+                  width: "40px", height: "40px", borderRadius: "50%",
+                  background: "rgba(234, 179, 8, 0.08)",
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  {item.icon}
+                </div>
+                <span style={{ color: "#e4e4e7", fontSize: "14px", fontWeight: "600", letterSpacing: "0.5px" }}>{item.label}</span>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </div>
+
+      {/* New Gallery Section */}
+      <div style={{
+        maxWidth: "1200px",
+        width: "100%",
+        marginTop: "120px",
+        zIndex: 10,
+        display: "flex",
+        flexDirection: "column",
+        gap: "40px"
+      }}>
+        
+        <div style={{ textAlign: "center", marginBottom: "20px" }}>
+          <h2 style={{ fontSize: "36px", fontWeight: 300, color: "#fff", margin: "0 0 16px", letterSpacing: "1px" }}>A Glimpse of Elegance</h2>
+          <p style={{ color: "#a1a1aa", margin: 0, maxWidth: "600px", marginInline: "auto", lineHeight: "1.8" }}>
+            Step inside our world-class suites and soak in breathtaking views. Every detail is meticulously crafted to surround you with absolute comfort and prestige.
           </p>
         </div>
 
-        {/* Values Grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px" }}>
-          {values.map((val, idx) => (
-            <div key={idx} style={{
-              background: "var(--bg-secondary)",
-              padding: "32px",
-              borderRadius: "16px",
-              border: "1px solid var(--border-color)",
-              boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)"
-            }}>
-              <div style={{ width: "64px", height: "64px", borderRadius: "16px", background: "var(--bg-tertiary)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "20px" }}>
-                {val.icon}
-              </div>
-              <h3 style={{ fontSize: "20px", fontWeight: 600, color: "var(--text-primary)", margin: "0 0 12px" }}>{val.title}</h3>
-              <p style={{ margin: 0, color: "var(--text-secondary)", lineHeight: "1.6" }}>{val.description}</p>
+        {/* Gallery Grid */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "24px", justifyContent: "center" }}>
+          
+          {/* Luxury Room 1 */}
+          <div style={{ flex: "1 1 350px", height: "400px", borderRadius: "24px", overflow: "hidden", position: "relative", boxShadow: "0 10px 30px rgba(0,0,0,0.5)" }}>
+            <img 
+              src="/luxury_room_1.jpg" 
+              alt="Luxury Room Interior"
+              style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s" }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"}
+              onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+            />
+            <div style={{ position: "absolute", bottom: "24px", left: "24px", background: "rgba(10,10,12,0.8)", backdropFilter: "blur(10px)", padding: "12px 20px", borderRadius: "12px", border: "1px solid rgba(234, 179, 8, 0.2)" }}>
+              <span style={{ color: "#eab308", fontWeight: 600, fontSize: "14px", letterSpacing: "1px", textTransform: "uppercase" }}>Executive Suite</span>
             </div>
-          ))}
-        </div>
+          </div>
 
+          {/* Luxury Room 2 */}
+          <div style={{ flex: "1 1 350px", height: "400px", borderRadius: "24px", overflow: "hidden", position: "relative", boxShadow: "0 10px 30px rgba(0,0,0,0.5)" }}>
+            <img 
+              src="/luxury_room_2.jpg" 
+              alt="Luxury Suite Living Room"
+              style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s" }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"}
+              onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+            />
+            <div style={{ position: "absolute", bottom: "24px", left: "24px", background: "rgba(10,10,12,0.8)", backdropFilter: "blur(10px)", padding: "12px 20px", borderRadius: "12px", border: "1px solid rgba(234, 179, 8, 0.2)" }}>
+              <span style={{ color: "#eab308", fontWeight: 600, fontSize: "14px", letterSpacing: "1px", textTransform: "uppercase" }}>Presidential Lounge</span>
+            </div>
+          </div>
+
+          {/* Hotel View */}
+          <div style={{ flex: "1 1 100%", height: "500px", borderRadius: "24px", overflow: "hidden", position: "relative", boxShadow: "0 10px 30px rgba(0,0,0,0.5)" }}>
+            <img 
+              src="/hotel_view_1.jpg" 
+              alt="Beautiful Sunset View from Balcony"
+              style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s" }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"}
+              onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+            />
+            <div style={{ position: "absolute", bottom: "32px", right: "32px", background: "rgba(10,10,12,0.8)", backdropFilter: "blur(10px)", padding: "16px 24px", borderRadius: "12px", border: "1px solid rgba(234, 179, 8, 0.2)", textAlign: "right" }}>
+              <div style={{ color: "#eab308", fontWeight: 700, fontSize: "18px", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "4px" }}>Breathtaking Views</div>
+              <div style={{ color: "#e4e4e7", fontSize: "13px" }}>Watch the city come alive from your private balcony.</div>
+            </div>
+          </div>
+
+        </div>
       </div>
+
     </div>
   );
 }

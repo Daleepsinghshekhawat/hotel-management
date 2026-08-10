@@ -29,7 +29,7 @@ exports.getUsersByRole = async (req, res) => {
 exports.getPaginatedUsersByRole = async (req, res) => {
   try {
     const { role } = req.params;
-    const { page = 1, limit = 10, excludeAdmins } = req.query;
+    const { page = 1, limit = 10, excludeAdmins, search } = req.query;
     
     let result = [];
     if (role === "all") {
@@ -48,6 +48,14 @@ exports.getPaginatedUsersByRole = async (req, res) => {
       result = await userModel.find({ role: "admin" });
     } else {
       result = await userModel.find({ role });
+    }
+
+    if (search) {
+      const searchLower = search.toLowerCase();
+      result = result.filter(user => 
+        (user.name && user.name.toLowerCase().includes(searchLower)) ||
+        (user.email && user.email.toLowerCase().includes(searchLower))
+      );
     }
 
     result.sort((a, b) => b.createdAt - a.createdAt);
@@ -101,6 +109,31 @@ exports.deleteUser = async (req, res) => {
       return res.status(404).json({ success: false, message: "User not found" });
     }
     return res.status(200).json({ success: true, message: "User deleted successfully" });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: "Server Error", error: err.message });
+  }
+};
+
+exports.updateUserRole = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+    
+    if (!["admin", "superadmin", "user", "hotelOwner"].includes(role)) {
+      return res.status(400).json({ success: false, message: "Invalid role" });
+    }
+
+    const user = await userModel.findByIdAndUpdate(id, { role }, { new: true });
+    
+    if (user) {
+      const AdminAccount = require("../model/adminAccountModel");
+      await AdminAccount.findOneAndUpdate({ email: user.email }, { role });
+    }
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    return res.status(200).json({ success: true, message: "User role updated successfully", user });
   } catch (err) {
     return res.status(500).json({ success: false, message: "Server Error", error: err.message });
   }
