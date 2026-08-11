@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const hotelModel = require("../model/hotelModel");
 const { uploadImage } = require("../utils/cloudinary");
 
@@ -104,82 +105,148 @@ exports.getHotelsByAdmin = async (req, res) => {
 };
 
 exports.softDeleteHotel = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { id } = req.params;
+    const Room = require("../model/roomModel");
+    const Booking = require("../model/bookingModel");
+    const hotelRequestModel = require("../model/hotelRequestModel");
+
     const result = await hotelModel.findByIdAndUpdate(
       id,
       { status: "inactive" },
-      { new: true }
+      { new: true, session }
     );
     if (!result) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({ message: "Hotel not found" });
     }
 
-    // Also mark the corresponding hotel request as inactive
-    const hotelRequestModel = require("../model/hotelRequestModel");
     if (result.requestId) {
-      await hotelRequestModel.findByIdAndUpdate(result.requestId, { status: "inactive" });
+      await hotelRequestModel.findByIdAndUpdate(result.requestId, { status: "inactive" }, { session });
     } else if (result.registrationId) {
       await hotelRequestModel.findOneAndUpdate(
         { registrationId: result.registrationId },
-        { status: "inactive" }
+        { status: "inactive" },
+        { session }
       );
     }
 
+    await Room.updateMany({ hotel: id }, { availability: false, bookingStatus: "Unavailable" }, { session });
+    await Booking.updateMany(
+      { hotel: id, status: { $nin: ["completed", "cancelled"] } },
+      { status: "cancelled" },
+      { session }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
     return res.status(200).json({ success: true, result });
   } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
     console.log(err);
     return res.status(500).json({ message: "Server Error" });
   }
 };
 
 exports.deleteHotel = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { id } = req.params;
+    const Room = require("../model/roomModel");
+    const Booking = require("../model/bookingModel");
+    const hotelRequestModel = require("../model/hotelRequestModel");
 
-    // Find and permanently delete from hotelModel
-    const deleted = await hotelModel.findByIdAndDelete(id);
-    if (!deleted) {
+    const result = await hotelModel.findByIdAndUpdate(
+      id,
+      { status: "inactive" },
+      { new: true, session }
+    );
+    if (!result) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({ success: false, message: "Hotel not found" });
     }
 
-    // Also permanently delete the linked hotelRequest record
-    const hotelRequestModel = require("../model/hotelRequestModel");
-    if (deleted.requestId) {
-      await hotelRequestModel.findByIdAndDelete(deleted.requestId);
-    } else if (deleted.registrationId) {
-      await hotelRequestModel.findOneAndDelete({ registrationId: deleted.registrationId });
+    if (result.requestId) {
+      await hotelRequestModel.findByIdAndUpdate(result.requestId, { status: "inactive" }, { session });
+    } else if (result.registrationId) {
+      await hotelRequestModel.findOneAndUpdate(
+        { registrationId: result.registrationId },
+        { status: "inactive" },
+        { session }
+      );
     }
 
+    await Room.updateMany({ hotel: id }, { availability: false, bookingStatus: "Unavailable" }, { session });
+    await Booking.updateMany(
+      { hotel: id, status: { $nin: ["completed", "cancelled"] } },
+      { status: "cancelled" },
+      { session }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
     return res.status(200).json({ success: true, message: "Hotel deleted successfully" });
   } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
     console.log(err);
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
 exports.deleteAllHotels = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const hotelRequestModel = require("../model/hotelRequestModel");
+    const Room = require("../model/roomModel");
+    const Booking = require("../model/bookingModel");
 
-    // Get all hotels to find linked request IDs
-    const allHotels = await hotelModel.find({});
+    const allHotels = await hotelModel.find({}).session(session);
+    const hotelIds = allHotels.map((h) => h._id);
     const registrationIds = allHotels.map((h) => h.registrationId).filter(Boolean);
     const requestIds = allHotels.map((h) => h.requestId).filter(Boolean);
 
-    // Delete all hotels
-    await hotelModel.deleteMany({});
+    await hotelModel.updateMany({}, { status: "inactive" }, { session });
 
-    // Delete all linked hotel requests by registrationId or requestId
     if (registrationIds.length > 0) {
-      await hotelRequestModel.deleteMany({ registrationId: { $in: registrationIds } });
+      await hotelRequestModel.updateMany(
+        { registrationId: { $in: registrationIds } },
+        { status: "inactive" },
+        { session }
+      );
     }
     if (requestIds.length > 0) {
-      await hotelRequestModel.deleteMany({ _id: { $in: requestIds } });
+      await hotelRequestModel.updateMany(
+        { _id: { $in: requestIds } },
+        { status: "inactive" },
+        { session }
+      );
     }
 
+    await Room.updateMany(
+      { hotel: { $in: hotelIds } },
+      { availability: false, bookingStatus: "Unavailable" },
+      { session }
+    );
+    await Booking.updateMany(
+      { hotel: { $in: hotelIds }, status: { $nin: ["completed", "cancelled"] } },
+      { status: "cancelled" },
+      { session }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
     return res.status(200).json({ success: true, message: "All hotels deleted successfully" });
   } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
     console.log(err);
     return res.status(500).json({ success: false, message: "Server Error" });
   }

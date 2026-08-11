@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const AdminRequest = require("../model/adminReqModel");
 const AdminAccount = require("../model/adminAccountModel");
 const userModel = require("../model/usermodel");
@@ -107,10 +108,13 @@ exports.approveAdminRequest = async (req, res) => {
 
   console.log("req.data:",req.params);
   
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  
   try {
     const { id } = req.params;
 
-    const request = await AdminRequest.findById(id);
+    const request = await AdminRequest.findById(id).session(session);
 
     if (!request) {
       return res.status(404).json({
@@ -133,7 +137,7 @@ exports.approveAdminRequest = async (req, res) => {
     request.verified = true;
     request.role = "admin";
     request.rejectionReason = "";
-    await request.save();
+    await request.save({ session });
 
     await AdminAccount.findOneAndUpdate(
       { email: request.email },
@@ -142,22 +146,24 @@ exports.approveAdminRequest = async (req, res) => {
         role: "admin",
         verified: true,
         status: "approved",
-      }
+      },
+      { session }
     );
 
-    let existingUser = await userModel.findOne({ email: request.email });
+    let existingUser = await userModel.findOne({ email: request.email }).session(session);
     if (!existingUser) {
-      existingUser = await userModel.create({
+      const userArr = await userModel.create([{
         name: request.name,
         email: request.email,
         password: hashPassword,
         role: "admin",
-      });
+      }], { session });
+      existingUser = userArr[0];
     } else {
       existingUser.name = request.name;
       existingUser.password = hashPassword;
       existingUser.role = "admin";
-      await existingUser.save();
+      await existingUser.save({ session });
     }
 
     try {
@@ -177,12 +183,16 @@ exports.approveAdminRequest = async (req, res) => {
       console.log("Approval email failed:", emailErr.message);
     }
 
+    await session.commitTransaction();
+    session.endSession();
     return res.status(200).json({
       success: true,
       message: "Admin request approved successfully",
       result: request,
     });
   } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
     return res.status(500).json({
       success: false,
       message: err.message || "Server Error",
@@ -191,6 +201,8 @@ exports.approveAdminRequest = async (req, res) => {
 };
 
 exports.rejectAdminRequest = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { id } = req.params;
     const { rejectionReason } = req.body;
@@ -202,7 +214,7 @@ exports.rejectAdminRequest = async (req, res) => {
       });
     }
 
-    const request = await AdminRequest.findById(id);
+    const request = await AdminRequest.findById(id).session(session);
 
     if (!request) {
       return res.status(404).json({
@@ -214,14 +226,15 @@ exports.rejectAdminRequest = async (req, res) => {
     request.status = "rejected";
     request.verified = false;
     request.rejectionReason = rejectionReason.trim();
-    await request.save();
+    await request.save({ session });
 
     await AdminAccount.findOneAndUpdate(
       { email: request.email },
       {
         verified: false,
         status: "rejected",
-      }
+      },
+      { session }
     );
 
     try {
@@ -240,12 +253,16 @@ exports.rejectAdminRequest = async (req, res) => {
       console.log("Rejection email failed:", emailErr.message);
     }
 
+    await session.commitTransaction();
+    session.endSession();
     return res.status(200).json({
       success: true,
       message: "Admin request rejected successfully",
       result: request,
     });
   } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
     return res.status(500).json({
       success: false,
       message: err.message || "Server Error",

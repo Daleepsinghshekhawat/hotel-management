@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const hotelRequest = require("../model/hotelRequestModel");
 const hotelModel = require("../model/hotelModel");
 const { v4: uuidv4 } = require("uuid");
@@ -264,10 +265,12 @@ exports.getRequestsByAdmin = async (req, res) => {
 };
 
 exports.approveRequest = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { id } = req.params;
 
-    const request = await hotelRequest.findById(id);
+    const request = await hotelRequest.findById(id).session(session);
 
     if (!request) {
       return res.status(404).json({
@@ -283,14 +286,14 @@ exports.approveRequest = async (req, res) => {
     request.role = "hotelOwner"
     request.status = "approved";
     request.rejectionReason = "";
-    await request.save();
+    await request.save({ session });
 
     const existingHotel = await hotelModel.findOne({
       registrationId: request.registrationId,
-    });
+    }).session(session);
 
     if (!existingHotel) {
-      await hotelModel.create({
+      await hotelModel.create([{
         hotelName: request.hotelName,
         ownerName: request.ownerName,
         email: request.email,
@@ -303,29 +306,30 @@ exports.approveRequest = async (req, res) => {
         status: "active",
         hotelType: request.hotelType || "Hotel",
         amenities: request.amenities || [],
-      });
+      }], { session });
     }
 
     // Find or Create in hotelowners collection
-    let user = await hotelOwnerModel.findOne({ email: request.email });
+    let user = await hotelOwnerModel.findOne({ email: request.email }).session(session);
     let tempPassword = "";
     if (!user) {
       tempPassword = uuidv4().replace(/-/g, "").slice(0, 10);
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hashSync(tempPassword, salt);
 
-      user = await hotelOwnerModel.create({
+      const userArr = await hotelOwnerModel.create([{
         name: request.ownerName,
         email: request.email,
         password: hashedPassword,
         role: "hotelOwner",
-      });
+      }], { session });
+      user = userArr[0];
       
       // Remove from normal users collection if they existed there, to avoid duplicate credentials
-      await userModel.deleteOne({ email: request.email });
+      await userModel.deleteOne({ email: request.email }, { session });
     } else {
       user.role = "hotelOwner";
-      await user.save();
+      await user.save({ session });
     }
 
     try {
@@ -370,11 +374,15 @@ exports.approveRequest = async (req, res) => {
       console.log("Approval email failed:", emailErr.message);
     }
 
+    await session.commitTransaction();
+    session.endSession();
     return res.status(200).json({
       message: "Hotel approved successfully",
       result: request,
     });
   } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
     console.log(err);
     return res.status(500).json({
       message: "Server Error",
@@ -464,6 +472,8 @@ exports.deleteRequest = async (req, res) => {
 };
 
 exports.addHotelDirect = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const {
       hotelName,
@@ -497,7 +507,7 @@ exports.addHotelDirect = async (req, res) => {
     const registrationId = uuidv4();
 
     // 1. Create approved hotel request
-    const hotelRequestData = await hotelRequest.create({
+    const hotelReqArr = await hotelRequest.create([{
       hotelName,
       ownerName,
       email,
@@ -509,10 +519,11 @@ exports.addHotelDirect = async (req, res) => {
       status: "approved",
       hotelType: hotelType || "Hotel",
       amenities: amenities ? JSON.parse(amenities) : [],
-    });
+    }], { session });
+    const hotelRequestData = hotelReqArr[0];
 
     // 2. Create active hotel entry
-    const hotelData = await hotelModel.create({
+    const hotelDataArr = await hotelModel.create([{
       hotelName,
       ownerName,
       email,
@@ -525,28 +536,30 @@ exports.addHotelDirect = async (req, res) => {
       status: "active",
       hotelType: hotelType || "Hotel",
       amenities: amenities ? JSON.parse(amenities) : [],
-    });
+    }], { session });
+    const hotelData = hotelDataArr[0];
 
     // 3. Find or Create in hotelowners collection
-    let user = await hotelOwnerModel.findOne({ email });
+    let user = await hotelOwnerModel.findOne({ email }).session(session);
     let tempPassword = "";
     if (!user) {
       tempPassword = uuidv4().replace(/-/g, "").slice(0, 10);
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hashSync(tempPassword, salt);
 
-      user = await hotelOwnerModel.create({
+      const userArr = await hotelOwnerModel.create([{
         name: ownerName,
         email,
         password: hashedPassword,
         role: "hotelOwner",
-      });
+      }], { session });
+      user = userArr[0];
       
       // Remove from normal users collection if they existed there, to avoid duplicate credentials
-      await userModel.deleteOne({ email });
+      await userModel.deleteOne({ email }, { session });
     } else {
       user.role = "hotelOwner";
-      await user.save();
+      await user.save({ session });
     }
 
     // 4. Send email notification
@@ -578,6 +591,8 @@ exports.addHotelDirect = async (req, res) => {
       console.log("Failed to send direct registration email:", emailErr.message);
     }
 
+    await session.commitTransaction();
+    session.endSession();
     return res.status(201).json({
       success: true,
       message: "Hotel added directly and approved successfully",
@@ -585,6 +600,8 @@ exports.addHotelDirect = async (req, res) => {
     });
 
   } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
     console.log(err);
     return res.status(500).json({
       success: false,

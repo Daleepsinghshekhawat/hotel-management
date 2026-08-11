@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Booking = require("../model/booking");
 const Room = require("../model/room");
 const Hotel = require("../model/hotelModel");
@@ -99,6 +100,9 @@ exports.createBooking = async (req, res) => {
   const lock = getRoomMutex(roomId);
   await lock.acquire();
 
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
@@ -178,11 +182,11 @@ exports.createBooking = async (req, res) => {
 
       // Update coupon usage
       coupon.usedCount += 1;
-      await coupon.save();
+      await coupon.save({ session });
     }
 
     // Create booking
-    const booking = await Booking.create({
+    const bookingArr = await Booking.create([{
       hotel: hotelId,
       room: roomId,
       guestName,
@@ -195,14 +199,18 @@ exports.createBooking = async (req, res) => {
       pricePerNight,
       totalAmount,
       status: "confirmed",
-    });
+    }], { session });
+    const booking = bookingArr[0];
 
     if (userId) {
-      await TempBooking.deleteMany({ room: roomId, user: userId });
+      await TempBooking.deleteMany({ room: roomId, user: userId }, { session });
     }
 
     // Mark room as Booked
-    await Room.findByIdAndUpdate(roomId, { bookingStatus: "Booked" });
+    await Room.findByIdAndUpdate(roomId, { bookingStatus: "Booked" }, { session });
+
+    await session.commitTransaction();
+    session.endSession();
 
     const populated = await Booking.findById(booking._id)
       .populate("hotel", "hotelName email location")
@@ -214,6 +222,8 @@ exports.createBooking = async (req, res) => {
       result: populated,
     });
   } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
     console.error(err);
     return res.status(500).json({ success: false, message: "Server error", error: err.message });
   } finally {
@@ -493,27 +503,33 @@ exports.getBookingsByGuest = async (req, res) => {
 // CANCEL BOOKING
 // ─────────────────────────────────────────────
 exports.cancelBooking = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { id } = req.params;
     const booking = await Booking.findById(id);
     if (!booking) return res.status(404).json({ success: false, message: "Booking not found" });
 
     booking.status = "cancelled";
-    await booking.save();
+    await booking.save({ session });
 
     // Check if room has any other active bookings
     const otherActive = await Booking.findOne({
       room: booking.room,
       status: { $in: ["confirmed", "pending"] },
       _id: { $ne: booking._id },
-    });
+    }).session(session);
 
     if (!otherActive) {
-      await Room.findByIdAndUpdate(booking.room, { bookingStatus: "Available" });
+      await Room.findByIdAndUpdate(booking.room, { bookingStatus: "Available" }, { session });
     }
 
+    await session.commitTransaction();
+    session.endSession();
     return res.status(200).json({ success: true, message: "Booking cancelled successfully" });
   } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };

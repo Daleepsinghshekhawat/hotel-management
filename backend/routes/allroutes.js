@@ -191,7 +191,7 @@ roomController.updateRoom
 
 
 
-console.log("adminController", adminController);
+
 
 router.post("/addState", stateController.createState);
 router.get("/getAllState", stateController.getAllState);
