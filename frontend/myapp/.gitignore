@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 .env
 api.js
+ Documentation.js
+  ER.png
+  Interview_Documentation.js
