@@ -89,6 +89,21 @@ export default function UserActiveBookings() {
     }
   };
 
+  const handleCancelBooking = async (bookingId) => {
+    if (!window.confirm("Are you sure you want to cancel this booking? This action cannot be undone.")) return;
+    try {
+      const res = await axios.patch(`${URL}/api/cancelBooking/${bookingId}`);
+      if (res.data.success) {
+        alert("Booking cancelled successfully!");
+        // Remove cancelled booking from list
+        setBookings(prev => prev.filter(b => b._id !== bookingId));
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Failed to cancel booking");
+    }
+  };
+
   return (
     <div style={{ fontFamily: "'Inter', sans-serif" }}>
       <h2 style={{ fontSize: "28px", fontWeight: 800, color: "#fff", marginBottom: "8px", display: "flex", alignItems: "center", gap: "10px" }}>
@@ -257,6 +272,18 @@ export default function UserActiveBookings() {
                       onMouseLeave={e => { e.currentTarget.style.background = "rgba(16, 185, 129, 0.1)"; }}
                     >
                       <Download size={18} /> Receipt
+                    </button>
+                    <button
+                      onClick={() => handleCancelBooking(b._id)}
+                      style={{
+                        padding: "10px 24px", borderRadius: "100px", background: "rgba(239, 68, 68, 0.1)", color: "#ef4444",
+                        border: "1px solid rgba(239, 68, 68, 0.3)", fontWeight: 600, fontSize: "14px", cursor: "pointer",
+                        display: "flex", alignItems: "center", transition: "all 0.2s"
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.2)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)"; }}
+                    >
+                      Cancel Booking
                     </button>
                     <button
                       onClick={() => navigate(`/user/hotel/${b.hotel?._id}`)}
