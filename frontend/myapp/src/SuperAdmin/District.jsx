@@ -26,7 +26,8 @@ const District = () => {
   useEffect(() => {
     const fetchStates = async () => {
       try {
-        const res = await axios.get(`${URL}/api/getAllState`);
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${URL}/api/getAllState`, { headers: { Authorization: `Bearer ${token}` } });
         const stateList = res.data?.result;
         setStates(stateList);
         if (stateList.length > 0) {
@@ -45,8 +46,9 @@ const District = () => {
     if (!selectedState) return;
 
     try {
+      const token = localStorage.getItem('token');
       const res = await axios.get(
-        `${URL}/api/getDistrictByState/${selectedState}`, { params: { search: debouncedSearch } }
+        `${URL}/api/getDistrictByState/${selectedState}`, { params: { search: debouncedSearch }, headers: { Authorization: `Bearer ${token}` } }
       );
     
       setDistricts(res.data.result );
@@ -66,7 +68,8 @@ const District = () => {
 
   const softDeleteDistrict = async (id) => {
     try {
-      const result = await axios.patch(`${URL}/api/softDeleteDistrict/${id}`);
+      const token = localStorage.getItem('token');
+      const result = await axios.patch(`${URL}/api/softDeleteDistrict/${id}`, {}, { headers: { Authorization: `Bearer ${token}` } });
       fetchDistricts();
     } catch (err) {
       console.log(err);
@@ -76,7 +79,8 @@ const District = () => {
 
   const restoreDistrict = async (id) => {
     try {
-      const res = await axios.patch(`${URL}/api/restoreDistrict/${id}`);
+      const token = localStorage.getItem('token');
+      const res = await axios.patch(`${URL}/api/restoreDistrict/${id}`, {}, { headers: { Authorization: `Bearer ${token}` } });
       fetchDistricts();
     } catch (err) {
       console.log(err);
@@ -87,7 +91,8 @@ const District = () => {
   const permanentDeleteDistrict = async (id) => {
     if (!window.confirm("Are you sure you want to permanently delete this district?")) return;
     try {
-      await axios.delete(`${URL}/api/deleteDistrict/${id}`);
+      const token = localStorage.getItem('token');
+      await axios.delete(`${URL}/api/deleteDistrict/${id}`, { headers: { Authorization: `Bearer ${token}` } });
       fetchDistricts();
     } catch (err) {
       console.log(err);
@@ -103,10 +108,11 @@ const District = () => {
     }
     setLoading(true);
     try {
+      const token = localStorage.getItem('token');
       await axios.post(`${URL}/api/createDistrict`, {
         districtname: newDistrictName.trim(),
         stateId: newDistrictState,
-      });
+      }, { headers: { Authorization: `Bearer ${token}` } });
       setNewDistrictName("");
       setShowAddModal(false);
       fetchDistricts();
@@ -133,10 +139,11 @@ const District = () => {
     }
     setLoading(true);
     try {
+      const token = localStorage.getItem('token');
       await axios.patch(`${URL}/api/updateDistrict/${editingDistrict._id}`, {
         districtname: newDistrictName,
         stateId: newDistrictState,
-      });
+      }, { headers: { Authorization: `Bearer ${token}` } });
       setNewDistrictName("");
       setEditingDistrict(null);
       setShowEditModal(false);

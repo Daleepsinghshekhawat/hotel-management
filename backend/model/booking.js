@@ -67,6 +67,21 @@ const bookingSchema = new mongoose.Schema(
       required: true,
     },
 
+    hotelEarnings: {
+      type: Number,
+      default: 0,
+    },
+
+    adminEarnings: {
+      type: Number,
+      default: 0,
+    },
+
+    superadminEarnings: {
+      type: Number,
+      default: 0,
+    },
+
     // Booking Status
     status: {
       type: String,

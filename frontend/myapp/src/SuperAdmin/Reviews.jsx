@@ -12,7 +12,8 @@ export default function Reviews() {
 
   const fetchReviews = async () => {
     try {
-      const response = await axios.get(`${URL}/api/reviews/getAllReviews`, { params: { search: debouncedSearch } });
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${URL}/api/reviews/getAllReviews`, { params: { search: debouncedSearch }, headers: { Authorization: `Bearer ${token}` } });
       if (response.data.success) {
         setReviews(response.data.result || []);
       }
@@ -31,7 +32,8 @@ export default function Reviews() {
     if (!window.confirm("Are you sure you want to delete this review?")) return;
 
     try {
-      const res = await axios.delete(`${URL}/api/reviews/deleteReview/${id}`);
+      const token = localStorage.getItem('token');
+      const res = await axios.delete(`${URL}/api/reviews/deleteReview/${id}`, { headers: { Authorization: `Bearer ${token}` } });
       if (res.data.success) {
         alert("Review deleted successfully");
         fetchReviews();

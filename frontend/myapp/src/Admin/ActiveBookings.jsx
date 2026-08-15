@@ -179,7 +179,7 @@ export default function ActiveBookings() {
                   </td>
                   <td style={{ padding: "14px 16px", color: isDark ? "#475569" : "#cbd5e1", whiteSpace: "nowrap" }}>{formatDate(b.checkIn)}</td>
                   <td style={{ padding: "14px 16px", color: isDark ? "#475569" : "#cbd5e1", whiteSpace: "nowrap" }}>{formatDate(b.checkOut)}</td>
-                  <td style={{ padding: "14px 16px", fontWeight: 700, color: isDark ? "#0f172a" : "#f8fafc", fontFamily: "monospace" }}>₹{(b.totalAmount || 0).toLocaleString("en-IN")}</td>
+                  <td style={{ padding: "14px 16px", fontWeight: 700, color: isDark ? "#0f172a" : "#f8fafc", fontFamily: "monospace" }}>₹{(b.adminEarnings != null ? b.adminEarnings : (b.totalAmount || 0)).toLocaleString("en-IN")}</td>
                   <td style={{ padding: "14px 16px", textAlign: "center" }}>{statusBadge(b.status)}</td>
                   <td style={{ padding: "14px 16px", textAlign: "center" }}>
                     {b.status === "confirmed" && (

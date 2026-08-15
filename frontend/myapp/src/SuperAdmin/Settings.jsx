@@ -19,10 +19,11 @@ export default function Settings() {
     }
     setLoading(true);
     try {
+      const token = localStorage.getItem('token');
       const response = await axios.post(`${URL}/users/resetPassword`, {
         email: user.email,
         password: passwordForm.newPassword,
-      });
+      }, { headers: { Authorization: `Bearer ${token}` } });
       if (response.data) {
         alert("Password updated successfully.");
         setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });

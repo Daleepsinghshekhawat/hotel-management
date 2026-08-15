@@ -106,7 +106,7 @@ export default function BookingHistory() {
     }
     hotelStats[name].total += 1;
     if (b.status === "confirmed" || b.status === "completed") {
-      hotelStats[name].revenue += b.totalAmount || 0;
+      hotelStats[name].revenue += (b.adminEarnings != null ? b.adminEarnings : (b.totalAmount || 0));
     }
   });
 
@@ -305,7 +305,7 @@ export default function BookingHistory() {
                     {b.nights || "—"}
                   </td>
                   <td style={{ padding: "14px 16px", fontWeight: 700, color: isDark ? "#0f172a" : "#f8fafc", fontFamily: "monospace" }}>
-                    ₹{(b.totalAmount || 0).toLocaleString("en-IN")}
+                    ₹{(b.adminEarnings != null ? b.adminEarnings : (b.totalAmount || 0)).toLocaleString("en-IN")}
                   </td>
                   <td style={{ padding: "14px 16px", textAlign: "center" }}>
                     {statusBadge(b.status)}

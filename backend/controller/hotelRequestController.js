@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const hotelRequest = require("../model/hotelRequestModel");
 const hotelModel = require("../model/hotelModel");
 const { v4: uuidv4 } = require("uuid");
 const { sendEmail } = require("../utils/helper");
@@ -61,7 +60,7 @@ exports.submitHotelRequest = async (req, res) => {
     const imageUrls = uploadResult.map(res => res.secure_url);
     const registrationId = uuidv4();
 
-    const hotel = await hotelRequest.create({
+    const hotel = await hotelModel.create({
       hotelName,
       ownerName,
       email,
@@ -71,6 +70,7 @@ exports.submitHotelRequest = async (req, res) => {
       registrationId,
       submittedBy: submittedBy || email,
       hotelType: hotelType || "Hotel",
+      status: "pending",
       amenities: amenities ? JSON.parse(amenities) : [],
     });
 
@@ -120,28 +120,12 @@ exports.getAllHotelRequests = async (req, res) => {
     else if (sort === "oldest") sortOption.createdAt = 1;
     else sortOption.createdAt = -1;
 
-    const result = await hotelRequest
+    const result = await hotelModel
       .find(filter)
       .populate(populateOptions)
       .sort(sortOption);
 
-    // Filter out approved requests where the hotel no longer exists in hotelModel
-    const activeRegistrationIds = new Set(
-      (await hotelModel.find({ status: "active" }).select("registrationId")).map(
-        (h) => h.registrationId
-      )
-    );
-
-    const filtered = result.filter((r) => {
-      // For approved requests, only show if hotel still exists and is active
-      if (r.status === "approved") {
-        return activeRegistrationIds.has(r.registrationId);
-      }
-      // For inactive requests, hide them
-      if (r.status === "inactive") return false;
-      // Show pending and rejected as normal
-      return true;
-    });
+    const filtered = result.filter((r) => r.status !== "inactive");
 
     return res.status(200).json({ result: filtered });
   } catch (err) {
@@ -171,34 +155,20 @@ exports.getPaginatedHotelRequests = async (req, res) => {
     else if (sort === "oldest") sortOption.createdAt = 1;
     else sortOption.createdAt = -1;
 
-    const result = await hotelRequest
+    const result = await hotelModel
       .find(filter)
       .populate(populateOptions)
       .sort(sortOption);
 
-    const activeRegistrationIds = new Set(
-      (await hotelModel.find({ status: "active" }).select("registrationId")).map(
-        (h) => h.registrationId
-      )
-    );
-
-    const filterFunc = (r) => {
-      if (r.status === "approved") {
-        return activeRegistrationIds.has(r.registrationId);
-      }
-      if (r.status === "inactive") return false;
-      return true;
-    };
-
-    const filtered = result.filter(filterFunc);
+    const filtered = result.filter(r => r.status !== "inactive");
 
     // Calculate counts ignoring the status tab
-    const allRequestsForCounts = await hotelRequest.find(search ? { $or: filter.$or } : {}).populate(populateOptions);
-    const activeForCounts = allRequestsForCounts.filter(filterFunc);
+    const allRequestsForCounts = await hotelModel.find(search ? { $or: filter.$or } : {}).populate(populateOptions);
+    const activeForCounts = allRequestsForCounts.filter(r => r.status !== "inactive");
     
     const counts = {
       pending: activeForCounts.filter(r => r.status === 'pending').length,
-      approved: activeForCounts.filter(r => r.status === 'approved').length,
+      approved: activeForCounts.filter(r => r.status === 'active').length,
       rejected: activeForCounts.filter(r => r.status === 'rejected').length
     };
 
@@ -230,7 +200,7 @@ exports.getRequestsByStatus = async (req, res) => {
     if (!status) {
       return res.status(400).json({ message: "Status query parameter is required" });
     }
-    const result = await hotelRequest
+    const result = await hotelModel
       .find({ status })
       .populate(populateOptions)
       .sort({ createdAt: -1 });
@@ -252,7 +222,7 @@ exports.getRequestsByAdmin = async (req, res) => {
       filter.status = status;
     }
 
-    const result = await hotelRequest
+    const result = await hotelModel
       .find(filter)
       .populate(populateOptions)
       .sort({ createdAt: -1 });
@@ -270,7 +240,7 @@ exports.approveRequest = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const request = await hotelRequest.findById(id).session(session);
+    const request = await hotelModel.findById(id).session(session);
 
     if (!request) {
       return res.status(404).json({
@@ -278,36 +248,15 @@ exports.approveRequest = async (req, res) => {
       });
     }
 
-    if (request.status === "approved") {
+    if (request.status === "active") {
       return res.status(400).json({
         message: "Hotel request is already approved",
       });
     }
-    request.role = "hotelOwner"
-    request.status = "approved";
+    request.role = "hotelOwner";
+    request.status = "active";
     request.rejectionReason = "";
     await request.save({ session });
-
-    const existingHotel = await hotelModel.findOne({
-      registrationId: request.registrationId,
-    }).session(session);
-
-    if (!existingHotel) {
-      await hotelModel.create([{
-        hotelName: request.hotelName,
-        ownerName: request.ownerName,
-        email: request.email,
-        location: request.location,
-        description: request.description,
-        images: request.images,
-        registrationId: request.registrationId,
-        submittedBy: request.submittedBy,
-        requestId: request._id,
-        status: "active",
-        hotelType: request.hotelType || "Hotel",
-        amenities: request.amenities || [],
-      }], { session });
-    }
 
     // Find or Create in hotelowners collection
     let user = await hotelOwnerModel.findOne({ email: request.email }).session(session);
@@ -401,7 +350,7 @@ exports.rejectRequest = async (req, res) => {
       });
     }
 
-    const request = await hotelRequest.findById(id);
+    const request = await hotelModel.findById(id);
 
     if (!request) {
       return res.status(404).json({
@@ -444,20 +393,12 @@ exports.deleteRequest = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deleted = await hotelRequest.findByIdAndDelete(id);
+    const deleted = await hotelModel.findByIdAndDelete(id);
 
     if (!deleted) {
       return res.status(404).json({
         message: "Hotel request not found",
       });
-    }
-
-    // Also deactivate the linked hotel in hotelModel (if it exists)
-    if (deleted.registrationId) {
-      await hotelModel.findOneAndUpdate(
-        { registrationId: deleted.registrationId },
-        { status: "inactive" }
-      );
     }
 
     return res.status(200).json({
@@ -506,23 +447,7 @@ exports.addHotelDirect = async (req, res) => {
     const imageUrls = uploadResult.map(res => res.secure_url);
     const registrationId = uuidv4();
 
-    // 1. Create approved hotel request
-    const hotelReqArr = await hotelRequest.create([{
-      hotelName,
-      ownerName,
-      email,
-      location,
-      description,
-      images: imageUrls,
-      registrationId,
-      submittedBy: "superadmin",
-      status: "approved",
-      hotelType: hotelType || "Hotel",
-      amenities: amenities ? JSON.parse(amenities) : [],
-    }], { session });
-    const hotelRequestData = hotelReqArr[0];
-
-    // 2. Create active hotel entry
+    // 1. Create active hotel entry
     const hotelDataArr = await hotelModel.create([{
       hotelName,
       ownerName,
@@ -532,7 +457,6 @@ exports.addHotelDirect = async (req, res) => {
       images: imageUrls,
       registrationId,
       submittedBy: "superadmin",
-      requestId: hotelRequestData._id,
       status: "active",
       hotelType: hotelType || "Hotel",
       amenities: amenities ? JSON.parse(amenities) : [],

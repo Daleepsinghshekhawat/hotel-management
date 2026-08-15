@@ -17,9 +17,11 @@ export default function AllAdmins() {
 
   const fetchAdmins = async () => {
     setLoading(true);
+    const token = localStorage.getItem("token");
     try {
       const res = await axios.get(`${URL}/api/getPaginatedUsersByRole/admin`, { 
-        params: { search: debouncedSearch, page, limit } 
+        params: { search: debouncedSearch, page, limit },
+        headers: { Authorization: `Bearer ${token}` }
       });
       setAdmins(res.data.result || []);
       setTotalPages(res.data.pagination?.totalPages || 1);
@@ -38,8 +40,11 @@ export default function AllAdmins() {
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Are you sure you want to permanently delete administrator account "${name}"?`)) return;
     setActionLoading(id);
+    const token = localStorage.getItem("token");
     try {
-      await axios.delete(`${URL}/api/deleteUser/${id}`);
+      await axios.delete(`${URL}/api/deleteUser/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       alert("Administrator deleted successfully.");
       fetchAdmins();
     } catch (err) {
@@ -51,8 +56,11 @@ export default function AllAdmins() {
 
   const handleRoleChange = async (id, newRole) => {
     setActionLoading(id);
+    const token = localStorage.getItem("token");
     try {
-      await axios.patch(`${URL}/api/updateUserRole/${id}`, { role: newRole });
+      await axios.patch(`${URL}/api/updateUserRole/${id}`, { role: newRole }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       alert("Role updated successfully.");
       fetchAdmins();
     } catch (err) {

@@ -48,8 +48,10 @@ export default function HotelRequests() {
   const fetchRequests = async () => {
     setLoading(true);
     try {
+      const token = localStorage.getItem('token');
       const res = await axios.get(`${URL}/api/getPaginatedHotelRequests`, { 
-        params: { search: debouncedSearch, page, limit, status: tab } 
+        params: { search: debouncedSearch, page, limit, status: tab },
+        headers: { Authorization: `Bearer ${token}` }
       });
       setRequests(res.data.result || []);
       setTotalPages(res.data.pagination?.totalPages || 1);
@@ -74,7 +76,8 @@ export default function HotelRequests() {
     if (!window.confirm("Approve this hotel listing request? The admin will be notified by email.")) return;
     setActionLoading(id);
     try {
-      await axios.patch(`${URL}/api/approveHotelRequest/${id}`);
+      const token = localStorage.getItem('token');
+      await axios.patch(`${URL}/api/approveHotelRequest/${id}`, {}, { headers: { Authorization: `Bearer ${token}` } });
       fetchRequests();
     } catch (err) {
       alert("Failed to approve request");
@@ -96,9 +99,10 @@ export default function HotelRequests() {
     if (!rejectionReason.trim()) { alert("Please provide a rejection reason"); return; }
     setRejectLoading(true);
     try {
+      const token = localStorage.getItem('token');
       await axios.patch(`${URL}/api/rejectHotelRequest/${rejectingId}`, {
         rejectionReason: rejectionReason.trim(),
-      });
+      }, { headers: { Authorization: `Bearer ${token}` } });
       setShowRejectModal(false);
       setRejectingId(null);
       setRejectionReason("");
@@ -115,7 +119,8 @@ export default function HotelRequests() {
     if (!window.confirm(`Permanently delete "${hotelName}"? This cannot be undone.`)) return;
     setActionLoading(id);
     try {
-      await axios.delete(`${URL}/api/deleteHotelRequest/${id}`);
+      const token = localStorage.getItem('token');
+      await axios.delete(`${URL}/api/deleteHotelRequest/${id}`, { headers: { Authorization: `Bearer ${token}` } });
       fetchRequests();
     } catch (err) {
       alert(err.response?.data?.message || "Failed to delete request");

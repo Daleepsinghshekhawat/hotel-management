@@ -21,15 +21,6 @@ exports.generateHotelPdf = async (req, res) => {
   try {
     const { id } = req.params;
     let hotel = await Hotel.findById(id).populate("location");
-    
-    if (!hotel) {
-      hotel = await Hotel.findOne({ requestId: id }).populate("location");
-    }
-    
-    if (!hotel) {
-      const HotelRequest = require("../model/hotelRequestModel");
-      hotel = await HotelRequest.findById(id).populate("location");
-    }
 
     if (!hotel) return res.status(404).json({ success: false, message: "Hotel not found" });
 

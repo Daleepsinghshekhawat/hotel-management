@@ -1,40 +1,42 @@
-
-const nodemailer = require("nodemailer");
-
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465, 
-  secure: true, 
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-
-transporter.verify((error, success) => {
-  if (error) {
-    console.log("❌ Email transporter FAILED:", error.message);
-    console.log("   → Check EMAIL_USER and EMAIL_PASS in your .env file");
-    console.log("   → Make sure you are using a Gmail App Password (not your account password)");
-    console.log("   → App Password: https://myaccount.google.com/apppasswords");
-  } else {
-    console.log("✅ Email server is ready to send messages");
-  }
-});
+// We have removed nodemailer to bypass Render's SMTP block.
+// Instead, we use the Brevo HTTP API (Port 443).
 
 const sendEmail = async ({ to, subject, html }) => {
   try {
-    const info = await transporter.sendMail({
-      from: `"Hotel Management" <${process.env.EMAIL_USER}>`,
-      to,
-      subject,
-      html,
+    if (!process.env.BREVO_API_KEY) {
+      console.warn(" BREVO_API_KEY is not set in .env. Email will not be sent.");
+      return { success: false, messageId: null };
+    }
+
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "api-key": process.env.BREVO_API_KEY,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        sender: { 
+          name: "Hotel Management", 
+          email: process.env.EMAIL_USER || "no-reply@hotelmanagement.com" 
+        },
+        to: [{ email: to }],
+        subject: subject,
+        htmlContent: html,
+      }),
     });
-    console.log("✅ Email sent to:", to, "| messageId:", info.messageId);
-    return { success: true, messageId: info.messageId };
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error(" Email FAILED via Brevo:", data);
+      throw new Error(data.message || "Failed to send email via Brevo");
+    }
+
+    console.log(" Email sent to:", to, "| messageId:", data.messageId);
+    return { success: true, messageId: data.messageId };
   } catch (err) {
-    console.log("❌ Email FAILED to send:", err.message);
+    console.log(" Email FAILED to send:", err.message);
     throw err; 
   }
 };
@@ -52,4 +54,4 @@ const generateOTP = (length) => {
   return otp;
 };
 
-module.exports = { transporter, sendEmail, generateOTP };
+module.exports = { sendEmail, generateOTP };

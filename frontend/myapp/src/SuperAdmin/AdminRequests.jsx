@@ -34,8 +34,10 @@ export default function AdminRequests() {
   const fetchRequests = async () => {
     setLoading(true);
     try {
+      const token = localStorage.getItem('token');
       const res = await axios.get(`${URL}/api/getPaginatedAdminRequests`, { 
-        params: { search: debouncedSearch, page, limit, status: tab } 
+        params: { search: debouncedSearch, page, limit, status: tab },
+        headers: { Authorization: `Bearer ${token}` }
       });
       setRequests(res.data.result || []);
       setTotalPages(res.data.pagination?.totalPages || 1);
@@ -65,7 +67,10 @@ export default function AdminRequests() {
 
     setActionLoading(id);
     try {
-      const res = await axios.patch(`${URL}/api/approveAdminRequest/${id}`);
+      const token = localStorage.getItem('token');
+      const res = await axios.patch(`${URL}/api/approveAdminRequest/${id}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       alert(
         res.data.message ||
           "Admin approved! Login credentials have been emailed. The user can log in without signing up."
@@ -94,8 +99,11 @@ export default function AdminRequests() {
 
     setRejectLoading(true);
     try {
+      const token = localStorage.getItem('token');
       await axios.patch(`${URL}/api/rejectAdminRequest/${rejectingId}`, {
         rejectionReason: rejectionReason.trim(),
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       setShowRejectModal(false);
       setRejectingId(null);
@@ -113,7 +121,10 @@ export default function AdminRequests() {
 
     setActionLoading(id);
     try {
-      await axios.delete(`${URL}/api/deleteAdminRequest/${id}`);
+      const token = localStorage.getItem('token');
+      await axios.delete(`${URL}/api/deleteAdminRequest/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       fetchRequests();
     } catch (err) {
       alert(err.response?.data?.message || "Failed to delete request");

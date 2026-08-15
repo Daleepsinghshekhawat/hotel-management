@@ -111,7 +111,6 @@ exports.softDeleteHotel = async (req, res) => {
     const { id } = req.params;
     const Room = require("../model/roomModel");
     const Booking = require("../model/bookingModel");
-    const hotelRequestModel = require("../model/hotelRequestModel");
 
     const result = await hotelModel.findByIdAndUpdate(
       id,
@@ -122,16 +121,6 @@ exports.softDeleteHotel = async (req, res) => {
       await session.abortTransaction();
       session.endSession();
       return res.status(404).json({ message: "Hotel not found" });
-    }
-
-    if (result.requestId) {
-      await hotelRequestModel.findByIdAndUpdate(result.requestId, { status: "inactive" }, { session });
-    } else if (result.registrationId) {
-      await hotelRequestModel.findOneAndUpdate(
-        { registrationId: result.registrationId },
-        { status: "inactive" },
-        { session }
-      );
     }
 
     await Room.updateMany({ hotel: id }, { availability: false, bookingStatus: "Unavailable" }, { session });
@@ -159,7 +148,6 @@ exports.deleteHotel = async (req, res) => {
     const { id } = req.params;
     const Room = require("../model/roomModel");
     const Booking = require("../model/bookingModel");
-    const hotelRequestModel = require("../model/hotelRequestModel");
 
     const result = await hotelModel.findByIdAndUpdate(
       id,
@@ -170,16 +158,6 @@ exports.deleteHotel = async (req, res) => {
       await session.abortTransaction();
       session.endSession();
       return res.status(404).json({ success: false, message: "Hotel not found" });
-    }
-
-    if (result.requestId) {
-      await hotelRequestModel.findByIdAndUpdate(result.requestId, { status: "inactive" }, { session });
-    } else if (result.registrationId) {
-      await hotelRequestModel.findOneAndUpdate(
-        { registrationId: result.registrationId },
-        { status: "inactive" },
-        { session }
-      );
     }
 
     await Room.updateMany({ hotel: id }, { availability: false, bookingStatus: "Unavailable" }, { session });
@@ -204,31 +182,13 @@ exports.deleteAllHotels = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const hotelRequestModel = require("../model/hotelRequestModel");
     const Room = require("../model/roomModel");
     const Booking = require("../model/bookingModel");
 
     const allHotels = await hotelModel.find({}).session(session);
     const hotelIds = allHotels.map((h) => h._id);
-    const registrationIds = allHotels.map((h) => h.registrationId).filter(Boolean);
-    const requestIds = allHotels.map((h) => h.requestId).filter(Boolean);
 
     await hotelModel.updateMany({}, { status: "inactive" }, { session });
-
-    if (registrationIds.length > 0) {
-      await hotelRequestModel.updateMany(
-        { registrationId: { $in: registrationIds } },
-        { status: "inactive" },
-        { session }
-      );
-    }
-    if (requestIds.length > 0) {
-      await hotelRequestModel.updateMany(
-        { _id: { $in: requestIds } },
-        { status: "inactive" },
-        { session }
-      );
-    }
 
     await Room.updateMany(
       { hotel: { $in: hotelIds } },
@@ -260,19 +220,6 @@ exports.getHotelById = async (req, res) => {
     let result = await hotelModel
       .findById(id)
       .populate(populateOptions);
-
-    if (!result) {
-      result = await hotelModel
-        .findOne({ requestId: id })
-        .populate(populateOptions);
-    }
-
-    if (!result) {
-      const hotelRequestModel = require("../model/hotelRequestModel");
-      result = await hotelRequestModel
-        .findById(id)
-        .populate(populateOptions);
-    }
 
     if (!result) {
       return res.status(404).json({ message: "Hotel not found" });
@@ -341,9 +288,6 @@ exports.updateHotel = async (req, res) => {
     const { hotelName, ownerName, email, location, description, hotelType, amenities } = req.body;
 
     let hotel = await hotelModel.findById(id);
-    if (!hotel) {
-      hotel = await hotelModel.findOne({ requestId: id });
-    }
 
     if (!hotel) {
       return res.status(404).json({ success: false, message: "Hotel not found" });
@@ -368,20 +312,6 @@ exports.updateHotel = async (req, res) => {
     if (amenities) hotel.amenities = JSON.parse(amenities);
 
     await hotel.save();
-
-    if (hotel.requestId) {
-      const hotelRequest = require("../model/hotelRequestModel");
-      await hotelRequest.findByIdAndUpdate(hotel.requestId, {
-        hotelName: hotel.hotelName,
-        ownerName: hotel.ownerName,
-        email: hotel.email,
-        location: hotel.location,
-        description: hotel.description,
-        images: hotel.images,
-        hotelType: hotel.hotelType,
-        amenities: hotel.amenities
-      });
-    }
 
     return res.status(200).json({ success: true, result: hotel });
   } catch (err) {

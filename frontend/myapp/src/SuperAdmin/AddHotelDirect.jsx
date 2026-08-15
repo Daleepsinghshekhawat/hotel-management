@@ -37,7 +37,8 @@ export default function AddHotelDirect() {
   useEffect(() => {
     const fetchStates = async () => {
       try {
-        const res = await axios.get(`${apiurl}/api/getAllState`);
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${apiurl}/api/getAllState`, { headers: { Authorization: `Bearer ${token}` } });
         const list = (res.data?.result || []).filter((s) => s.status === "active");
         setStates(list);
         if (list.length > 0) setSelectedState(list[0]._id);
@@ -52,7 +53,8 @@ export default function AddHotelDirect() {
     if (!selectedState) return;
     const fetchDistricts = async () => {
       try {
-        const res = await axios.get(`${apiurl}/api/getDistrictByState/${selectedState}`);
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${apiurl}/api/getDistrictByState/${selectedState}`, { headers: { Authorization: `Bearer ${token}` } });
         const list = (res.data?.result || []).filter((d) => d.status === "active");
         setDistricts(list);
         if (list.length > 0) {
@@ -73,7 +75,8 @@ export default function AddHotelDirect() {
     if (!selectedDistrict) return;
     const fetchCities = async () => {
       try {
-        const res = await axios.get(`${apiurl}/api/getCityByDistrict/${selectedDistrict}`);
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${apiurl}/api/getCityByDistrict/${selectedDistrict}`, { headers: { Authorization: `Bearer ${token}` } });
         const list = Array.isArray(res.data?.result) ? res.data.result : [];
         const active = list.filter((c) => c.status === "active");
         setCities(active);
@@ -127,7 +130,8 @@ export default function AddHotelDirect() {
         formData.append("images", img);
       });
 
-      await axios.post(`${apiurl}/api/addHotelDirect`, formData);
+      const token = localStorage.getItem('token');
+      await axios.post(`${apiurl}/api/addHotelDirect`, formData, { headers: { Authorization: `Bearer ${token}` } });
 
       alert("Hotel registered successfully and approved!");
       navigate("/superadmin/hotel-requests");

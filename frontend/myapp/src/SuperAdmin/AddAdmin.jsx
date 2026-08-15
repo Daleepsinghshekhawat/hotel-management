@@ -23,7 +23,10 @@ export default function AddAdmin() {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post(`${URL}/api/addAdminDirect`, form);
+      const token = localStorage.getItem('token');
+      await axios.post(`${URL}/api/addAdminDirect`, form, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       alert("Administrator created and approved successfully! Login credentials have been emailed.");
       navigate("/superadmin/admins/all");
     } catch (err) {

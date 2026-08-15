@@ -37,6 +37,30 @@ const adminAccountSchema = new mongoose.Schema(
       enum: ["pending", "approved", "rejected"],
       default: "pending",
     },
+    address: {
+      type: String,
+      default: "",
+    },
+    mobileNumber: {
+      type: String,
+      default: "",
+    },
+    occupation: {
+      type: String,
+      default: "",
+    },
+    criminalCase: {
+      type: Boolean,
+      default: false,
+    },
+    remarks: {
+      type: String,
+      default: "",
+    },
+    rejectionReason: {
+      type: String,
+      default: "",
+    },
     otp: {
       type: String,
       default: null,

@@ -28,7 +28,8 @@ export default function SuperAdminDashboard() {
   });
 
   const [sortConfig, setSortConfig] = useState({ key: 'revenue', direction: 'desc' });
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -75,7 +76,7 @@ export default function SuperAdminDashboard() {
         todaysBookings++;
       }
       if (["confirmed", "completed", "checked_in"].includes(b.status)) {
-        totalRevenue += (b.totalAmount || 0);
+        totalRevenue += (b.superadminEarnings != null ? b.superadminEarnings : (b.totalAmount || 0));
       }
     });
 
@@ -134,7 +135,7 @@ export default function SuperAdminDashboard() {
       if (bookingTrendMap[mName] !== undefined) {
         bookingTrendMap[mName]++;
         if (["confirmed", "completed", "checked_in"].includes(b.status)) {
-          revenueMap[mName] += (b.totalAmount || 0);
+          revenueMap[mName] += (b.superadminEarnings != null ? b.superadminEarnings : (b.totalAmount || 0));
         }
       }
     });
@@ -227,7 +228,7 @@ export default function SuperAdminDashboard() {
       if (hMap[hId]) {
         hMap[hId].bookings++;
         if (["confirmed", "completed", "checked_in"].includes(b.status)) {
-          hMap[hId].revenue += (b.totalAmount || 0);
+          hMap[hId].revenue += (b.superadminEarnings != null ? b.superadminEarnings : (b.totalAmount || 0));
         }
       }
     });
@@ -265,8 +266,15 @@ export default function SuperAdminDashboard() {
       if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
       return 0;
     });
-    return sortableItems.slice(0, 10);
+    return sortableItems;
   }, [topHotelsData, sortConfig]);
+
+  const paginatedHotels = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return sortedTopHotels.slice(startIndex, startIndex + itemsPerPage);
+  }, [sortedTopHotels, currentPage]);
+
+  const totalPages = Math.ceil(sortedTopHotels.length / itemsPerPage);
 
   const handleSort = (key) => {
     let direction = 'desc';
@@ -274,6 +282,7 @@ export default function SuperAdminDashboard() {
       direction = 'asc';
     }
     setSortConfig({ key, direction });
+    setCurrentPage(1); // Reset to first page on sort
   };
 
   if (loading) {
@@ -586,7 +595,7 @@ export default function SuperAdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {sortedTopHotels.map((h, i) => (
+              {paginatedHotels.map((h, i) => (
                 <tr key={h.id}>
                   <td className="table-td" style={{ fontWeight: 500 }}>{h.name}</td>
                   <td className="table-td">₹{h.revenue.toLocaleString()}</td>
@@ -610,6 +619,67 @@ export default function SuperAdminDashboard() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px", padding: "8px 16px" }}>
+            <div style={{ color: textSecondary, fontSize: "14px" }}>
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, sortedTopHotels.length)} of {sortedTopHotels.length} hotels
+            </div>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button 
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  border: `1px solid ${borderColor}`,
+                  background: currentPage === 1 ? "transparent" : (isDark ? "#334155" : "#f1f5f9"),
+                  color: currentPage === 1 ? textSecondary : textPrimary,
+                  cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                  fontSize: "14px"
+                }}
+              >
+                Previous
+              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setCurrentPage(i + 1)}
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "6px",
+                      border: currentPage === i + 1 ? "none" : `1px solid ${borderColor}`,
+                      background: currentPage === i + 1 ? "#3b82f6" : "transparent",
+                      color: currentPage === i + 1 ? "#fff" : textPrimary,
+                      cursor: "pointer",
+                      fontSize: "14px"
+                    }}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+              <button 
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  border: `1px solid ${borderColor}`,
+                  background: currentPage === totalPages ? "transparent" : (isDark ? "#334155" : "#f1f5f9"),
+                  color: currentPage === totalPages ? textSecondary : textPrimary,
+                  cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                  fontSize: "14px"
+                }}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
     </div>

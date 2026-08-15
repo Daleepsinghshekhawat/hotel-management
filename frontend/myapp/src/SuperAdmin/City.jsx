@@ -31,7 +31,8 @@ const City = () => {
   useEffect(() => {
     const fetchStates = async () => {
       try {
-        const res = await axios.get(`${URL}/api/getAllState`);
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${URL}/api/getAllState`, { headers: { Authorization: `Bearer ${token}` } });
         const stateList = res.data?.result || [];
         setStates(stateList);
         if (stateList.length > 0) setSelectedState(stateList[0]._id);
@@ -47,7 +48,8 @@ const City = () => {
     if (!selectedState) return;
     const fetchDistricts = async () => {
       try {
-        const res = await axios.get(`${URL}/api/getDistrictByState/${selectedState}`);
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${URL}/api/getDistrictByState/${selectedState}`, { headers: { Authorization: `Bearer ${token}` } });
         const list = res.data?.result || [];
         const activeOnly = list.filter((d) => d.status === "active");
         setDistricts(activeOnly);
@@ -70,7 +72,8 @@ const City = () => {
   const fetchCities = async () => {
     if (!selectedDistrict) { setCities([]); return; }
     try {
-      const res = await axios.get(`${URL}/api/getCityByDistrict/${selectedDistrict}`, { params: { search: debouncedSearch } });
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${URL}/api/getCityByDistrict/${selectedDistrict}`, { params: { search: debouncedSearch }, headers: { Authorization: `Bearer ${token}` } });
       const list = Array.isArray(res.data?.result) ? res.data.result : [];
       setCities(list);
     } catch (err) {
@@ -90,7 +93,8 @@ const City = () => {
 
   const softDeleteCity = async (id) => {
     try {
-      await axios.patch(`${URL}/api/softDeleteCity/${id}`);
+      const token = localStorage.getItem('token');
+      await axios.patch(`${URL}/api/softDeleteCity/${id}`, {}, { headers: { Authorization: `Bearer ${token}` } });
       fetchCities();
     } catch (err) {
       console.log(err);
@@ -100,7 +104,8 @@ const City = () => {
 
   const restoreCity = async (id) => {
     try {
-      await axios.patch(`${URL}/api/restoreCity/${id}`);
+      const token = localStorage.getItem('token');
+      await axios.patch(`${URL}/api/restoreCity/${id}`, {}, { headers: { Authorization: `Bearer ${token}` } });
       fetchCities();
     } catch (err) {
       console.log(err);
@@ -111,7 +116,8 @@ const City = () => {
   const permanentDeleteCity = async (id) => {
     if (!window.confirm("Are you sure you want to permanently delete this city?")) return;
     try {
-      await axios.delete(`${URL}/api/deleteCity/${id}`);
+      const token = localStorage.getItem('token');
+      await axios.delete(`${URL}/api/deleteCity/${id}`, { headers: { Authorization: `Bearer ${token}` } });
       fetchCities();
     } catch (err) {
       console.log(err);
@@ -127,11 +133,12 @@ const City = () => {
     }
     setLoading(true);
     try {
+      const token = localStorage.getItem('token');
       await axios.post(`${URL}/api/createCity`, {
         cityname: newCityName.trim(),
           state: selectedState,
         district: newCityDistrict,
-      });
+      }, { headers: { Authorization: `Bearer ${token}` } });
       setNewCityName("");
       setShowAddModal(false);
       fetchCities();
@@ -175,10 +182,11 @@ const City = () => {
     }
     setLoading(true);
     try {
+      const token = localStorage.getItem('token');
       await axios.patch(`${URL}/api/updateCity/${editingCity._id}`, {
         cityname: newCityName.trim(),
         district: newCityDistrict,
-      });
+      }, { headers: { Authorization: `Bearer ${token}` } });
       setNewCityName("");
       setEditingCity(null);
       setShowEditModal(false);

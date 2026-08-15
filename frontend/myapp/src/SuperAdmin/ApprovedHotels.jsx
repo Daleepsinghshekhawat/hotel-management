@@ -30,7 +30,11 @@ export default function ApprovedHotels() {
   const fetchHotels = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${URL}/api/getHotelsByStatus/active`, { params: { search: debouncedSearch } });
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${URL}/api/getHotelsByStatus/active`, { 
+        params: { search: debouncedSearch },
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setHotels(res.data.result || []);
     } catch (err) {
       console.error(err);
@@ -48,7 +52,10 @@ export default function ApprovedHotels() {
     if (!window.confirm("Are you sure you want to delete this hotel listing? This will remove it permanently.")) return;
     setActionLoading(id);
     try {
-      const res = await axios.delete(`${URL}/api/deleteHotel/${id}`);
+      const token = localStorage.getItem('token');
+      const res = await axios.delete(`${URL}/api/deleteHotel/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       if (res.data.success) {
         alert("Hotel deleted successfully.");
         fetchHotels();
@@ -67,7 +74,10 @@ export default function ApprovedHotels() {
     if (!window.confirm(`Are you sure you want to DELETE ALL ${hotels.length} hotels? This cannot be undone.`)) return;
     setActionLoading("all");
     try {
-      const res = await axios.delete(`${URL}/api/deleteAllHotels`);
+      const token = localStorage.getItem('token');
+      const res = await axios.delete(`${URL}/api/deleteAllHotels`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       if (res.data.success) {
         alert("All hotels deleted successfully.");
         fetchHotels();
@@ -86,7 +96,10 @@ export default function ApprovedHotels() {
     setSelectedHotel(hotel);
     setRoomsLoading(true);
     try {
-      const res = await axios.get(`${URL}/api/getRoomsByHotel/${hotel._id}`);
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${URL}/api/getRoomsByHotel/${hotel._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       if (res.data.success) {
         setHotelRooms(res.data.result || []);
       }

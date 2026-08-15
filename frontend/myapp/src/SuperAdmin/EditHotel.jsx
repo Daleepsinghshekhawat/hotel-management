@@ -41,7 +41,8 @@ export default function EditHotel() {
   useEffect(() => {
     const fetchStates = async () => {
       try {
-        const res = await axios.get(`${apiurl}/api/getAllState`);
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${apiurl}/api/getAllState`, { headers: { Authorization: `Bearer ${token}` } });
         const list = (res.data?.result || []).filter((s) => s.status === "active");
         setStates(list);
       } catch (err) {
@@ -56,7 +57,8 @@ export default function EditHotel() {
     const fetchHotel = async () => {
       setFetching(true);
       try {
-        const res = await axios.get(`${apiurl}/api/getHotelById/${id}`);
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${apiurl}/api/getHotelById/${id}`, { headers: { Authorization: `Bearer ${token}` } });
         if (res.data?.result) {
           const hotel = res.data.result;
           setForm({
@@ -92,7 +94,8 @@ export default function EditHotel() {
     if (!selectedState) return;
     const fetchDistricts = async () => {
       try {
-        const res = await axios.get(`${apiurl}/api/getDistrictByState/${selectedState}`);
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${apiurl}/api/getDistrictByState/${selectedState}`, { headers: { Authorization: `Bearer ${token}` } });
         const list = (res.data?.result || []).filter((d) => d.status === "active");
         setDistricts(list);
       } catch (err) {
@@ -107,7 +110,8 @@ export default function EditHotel() {
     if (!selectedDistrict) return;
     const fetchCities = async () => {
       try {
-        const res = await axios.get(`${apiurl}/api/getCityByDistrict/${selectedDistrict}`);
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${apiurl}/api/getCityByDistrict/${selectedDistrict}`, { headers: { Authorization: `Bearer ${token}` } });
         const list = Array.isArray(res.data?.result) ? res.data.result : [];
         const active = list.filter((c) => c.status === "active");
         setCities(active);
@@ -156,8 +160,12 @@ export default function EditHotel() {
         });
       }
 
+      const token = localStorage.getItem('token');
       await axios.patch(`${apiurl}/api/updateHotel/${id}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: { 
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`
+        },
       });
 
       alert("Hotel updated successfully!");

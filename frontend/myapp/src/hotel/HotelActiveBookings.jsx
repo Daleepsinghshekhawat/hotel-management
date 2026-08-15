@@ -186,7 +186,7 @@ export default function HotelActiveBookings() {
           <div style={{ background: "linear-gradient(135deg, #f0fdfa, #ccfbf1)", borderRadius: "12px", padding: "20px", border: "1px solid #99f6e4" }}>
             <div style={{ fontSize: "11px", fontWeight: 700, color: "#0d9488", textTransform: "uppercase", letterSpacing: "0.5px" }}>Pending Revenue</div>
             <div style={{ fontSize: "24px", fontWeight: 800, color: "#115e59", marginTop: "4px", fontFamily: "monospace" }}>
-              ₹{bookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0).toLocaleString("en-IN")}
+              ₹{bookings.reduce((sum, b) => sum + (b.hotelEarnings || b.totalAmount || 0), 0).toLocaleString("en-IN")}
             </div>
           </div>
         </div>
@@ -247,7 +247,7 @@ export default function HotelActiveBookings() {
                   <td style={{ padding: "14px 16px", color: "#475569", whiteSpace: "nowrap" }}>{formatDate(b.checkIn)}</td>
                   <td style={{ padding: "14px 16px", color: "#475569", whiteSpace: "nowrap" }}>{formatDate(b.checkOut)}</td>
                   <td style={{ padding: "14px 16px", fontWeight: 700, color: "#0f172a", fontFamily: "monospace" }}>
-                    ₹{(b.totalAmount || 0).toLocaleString("en-IN")}
+                    ₹{(b.hotelEarnings || b.totalAmount || 0).toLocaleString("en-IN")}
                   </td>
                   <td style={{ padding: "14px 16px", textAlign: "center" }}>{statusBadge(b.status)}</td>
                   <td style={{ padding: "14px 16px", textAlign: "center" }}>

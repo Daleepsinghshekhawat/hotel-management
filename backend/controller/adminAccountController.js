@@ -1,5 +1,4 @@
 const AdminAccount = require("../model/adminAccountModel");
-const AdminRequest = require("../model/adminReqModel");
 const bcrypt = require("bcrypt");
 const { sendEmail } = require("../utils/helper");
 
@@ -83,12 +82,6 @@ exports.approveAdmin = async (req, res) => {
     admin.status = "approved";
 
     await admin.save();
-
-    // Update request status
-    await AdminRequest.findOneAndUpdate(
-      { email: admin.email },
-      { status: "approved" }
-    );
       
      // Send email here using tempPassword
      await sendEmail({
@@ -176,8 +169,8 @@ exports.registerAdmin = async (req, res) => {
       });
     }
 
-    // Check pending request
-    const requestExists = await AdminRequest.findOne({
+    // Check pending request in AdminAccount instead of AdminRequest
+    const requestExists = await AdminAccount.findOne({
       email,
       status: "pending",
     });
@@ -195,6 +188,10 @@ exports.registerAdmin = async (req, res) => {
       adminExists.role = "user";
       adminExists.verified = false;
       adminExists.status = "pending";
+      adminExists.address = address;
+      adminExists.mobileNumber = mobileNumber;
+      adminExists.occupation = occupation;
+      adminExists.criminalCase = criminalCase;
       await adminExists.save();
     } else {
       await AdminAccount.create({
@@ -204,20 +201,12 @@ exports.registerAdmin = async (req, res) => {
         role: "user",
         verified: false,
         status: "pending",
+        address,
+        mobileNumber,
+        occupation,
+        criminalCase,
       });
     }
-
-    await AdminRequest.create({
-      name,
-      email,
-      address,
-      mobileNumber,
-      occupation,
-      criminalCase,
-      role: "user",
-      verified: false,
-      status: "pending",
-    });
 
     return res.status(201).json({
       success: true,

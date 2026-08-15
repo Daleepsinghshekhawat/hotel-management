@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const AdminRequest = require("../model/adminReqModel");
 const AdminAccount = require("../model/adminAccountModel");
 const userModel = require("../model/usermodel");
 const bcrypt = require("bcrypt");
@@ -23,7 +22,7 @@ exports.getAllAdminRequests = async (req, res) => {
     else if (sort === "oldest") sortOption.createdAt = 1;
     else sortOption.createdAt = -1;
 
-    const result = await AdminRequest.find(filter).sort(sortOption);
+    const result = await AdminAccount.find(filter).sort(sortOption);
     return res.status(200).json({ success: true, result });
   } catch (err) {
     return res.status(500).json({
@@ -54,15 +53,15 @@ exports.getPaginatedAdminRequests = async (req, res) => {
     else if (sort === "oldest") sortOption.createdAt = 1;
     else sortOption.createdAt = -1;
 
-    const allRequestsForCounts = await AdminRequest.find(search ? { $or: filter.$or } : {});
+    const allRequestsForCounts = await AdminAccount.find(search ? { $or: filter.$or } : {});
     
-    const allRequests = await AdminRequest.find(filter);
+    const allRequests = await AdminAccount.find(filter);
     const totalDocuments = allRequests.length;
     
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const totalPages = Math.ceil(totalDocuments / parseInt(limit));
 
-    const result = await AdminRequest.find(filter)
+    const result = await AdminAccount.find(filter)
       .sort(sortOption)
       .skip(skip)
       .limit(parseInt(limit));
@@ -94,7 +93,7 @@ exports.getPaginatedAdminRequests = async (req, res) => {
 exports.getAdminRequestsByStatus = async (req, res) => {
   try {
     const { status } = req.params;
-    const result = await AdminRequest.find({ status }).sort({ createdAt: -1 });
+    const result = await AdminAccount.find({ status }).sort({ createdAt: -1 });
     return res.status(200).json({ success: true, result });
   } catch (err) {
     return res.status(500).json({
@@ -114,7 +113,7 @@ exports.approveAdminRequest = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const request = await AdminRequest.findById(id).session(session);
+    const request = await AdminAccount.findById(id).session(session);
 
     if (!request) {
       return res.status(404).json({
@@ -136,19 +135,9 @@ exports.approveAdminRequest = async (req, res) => {
     request.status = "approved";
     request.verified = true;
     request.role = "admin";
+    request.password = hashPassword;
     request.rejectionReason = "";
     await request.save({ session });
-
-    await AdminAccount.findOneAndUpdate(
-      { email: request.email },
-      {
-        password: hashPassword,
-        role: "admin",
-        verified: true,
-        status: "approved",
-      },
-      { session }
-    );
 
     let existingUser = await userModel.findOne({ email: request.email }).session(session);
     if (!existingUser) {
@@ -214,7 +203,7 @@ exports.rejectAdminRequest = async (req, res) => {
       });
     }
 
-    const request = await AdminRequest.findById(id).session(session);
+    const request = await AdminAccount.findById(id).session(session);
 
     if (!request) {
       return res.status(404).json({
@@ -227,15 +216,6 @@ exports.rejectAdminRequest = async (req, res) => {
     request.verified = false;
     request.rejectionReason = rejectionReason.trim();
     await request.save({ session });
-
-    await AdminAccount.findOneAndUpdate(
-      { email: request.email },
-      {
-        verified: false,
-        status: "rejected",
-      },
-      { session }
-    );
 
     try {
       await sendEmail({
@@ -274,7 +254,7 @@ exports.deleteAdminRequest = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deleted = await AdminRequest.findByIdAndDelete(id);
+    const deleted = await AdminAccount.findByIdAndDelete(id);
 
     if (!deleted) {
       return res.status(404).json({
@@ -319,23 +299,14 @@ exports.addAdminDirect = async (req, res) => {
     const tempPassword = uuidv4().replace(/-/g, "").slice(0, 10);
     const hashPassword = await bcrypt.hash(tempPassword, 10);
 
-    // Create approved request
-    await AdminRequest.create({
+    // Create AdminAccount
+    await AdminAccount.create({
       name,
       email,
       address,
       mobileNumber,
       occupation,
       criminalCase: criminalCase === "Yes",
-      status: "approved",
-      verified: true,
-      role: "admin",
-    });
-
-    // Create AdminAccount
-    await AdminAccount.create({
-      name,
-      email,
       password: hashPassword,
       role: "admin",
       verified: true,
@@ -381,7 +352,7 @@ exports.addAdminDirect = async (req, res) => {
 
 exports.getSingleAdminRequest = async (req, res) => {
   try {
-    const request = await AdminRequest.findById(req.params.id);
+    const request = await AdminAccount.findById(req.params.id);
 
     if (!request) {
       return res.status(404).json({

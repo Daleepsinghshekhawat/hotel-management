@@ -146,6 +146,11 @@ exports.createBooking = async (req, res) => {
       await coupon.save({ session });
     }
 
+    // Calculate Revenue Split
+    const hotelEarnings = Math.round(totalAmount * 0.80);
+    const adminEarnings = Math.round(totalAmount * 0.10);
+    const superadminEarnings = totalAmount - hotelEarnings - adminEarnings;
+
     // Create booking
     const bookingArr = await Booking.create([{
       hotel: hotelId,
@@ -159,6 +164,9 @@ exports.createBooking = async (req, res) => {
       nights,
       pricePerNight,
       totalAmount,
+      hotelEarnings,
+      adminEarnings,
+      superadminEarnings,
       status: "confirmed",
     }], { session });
     const booking = bookingArr[0];

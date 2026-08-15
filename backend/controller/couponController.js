@@ -1,6 +1,5 @@
 const Coupon = require("../model/couponModel");
 const Hotel = require("../model/hotelModel");
-const HotelRequest = require("../model/hotelRequestModel");
 
 
 exports.createCoupon = async (req, res) => {
@@ -28,9 +27,6 @@ exports.createCoupon = async (req, res) => {
     // Check hotel exists if provided
     if (hotel) {
       let hotelExists = await Hotel.findById(hotel);
-      if (!hotelExists) {
-        hotelExists = await HotelRequest.findById(hotel);
-      }
       if (!hotelExists) {
         return res.status(404).json({
           success: false,
@@ -91,13 +87,10 @@ exports.createCoupon = async (req, res) => {
   
       const couponsRaw = await Coupon.find(query).sort({ createdAt: -1 }).lean();
 
-      // Manually populate hotel to support HotelRequest fallback
+      // Manually populate hotel
       for (let c of couponsRaw) {
         if (c.hotel) {
           let h = await Hotel.findById(c.hotel).select("hotelName ownerName").lean();
-          if (!h) {
-            h = await HotelRequest.findById(c.hotel).select("hotelName ownerName").lean();
-          }
           c.hotel = h || null;
         }
       }
@@ -132,13 +125,10 @@ exports.getCouponsByAdmin = async (req, res) => {
       ]
     }).sort({ createdAt: -1 }).lean();
 
-    // Manually populate hotel to support HotelRequest fallback
+    // Manually populate hotel
     for (let c of couponsRaw) {
       if (c.hotel) {
         let h = await Hotel.findById(c.hotel).select("hotelName ownerName").lean();
-        if (!h) {
-          h = await HotelRequest.findById(c.hotel).select("hotelName ownerName").lean();
-        }
         c.hotel = h || null;
       }
     }

@@ -28,11 +28,15 @@ const State = () => {
 
   const getStates = async () => {
     try {
+      const token = localStorage.getItem("token");
       const url =
         tab === "active"
           ? `${URL}/api/getAllState`
           : `${URL}/api/getInactiveState`;
-      const res = await axios.get(url, { params: { search: debouncedSearch } });
+      const res = await axios.get(url, { 
+        params: { search: debouncedSearch },
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setStates(res.data.result || []);
     } catch (err) {
       console.log(err);
@@ -46,7 +50,10 @@ const State = () => {
 
   const softDelete = async (id) => {
     try {
-      await axios.patch(`${URL}/api/softDeleteState/${id}`);
+      const token = localStorage.getItem("token");
+      await axios.patch(`${URL}/api/softDeleteState/${id}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       getStates();
     } catch (err) {
       console.log(err);
@@ -56,7 +63,10 @@ const State = () => {
 
   const restore = async (id) => {
     try {
-      await axios.patch(`${URL}/api/restoreState/${id}`);
+      const token = localStorage.getItem("token");
+      await axios.patch(`${URL}/api/restoreState/${id}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       getStates();
     } catch (err) {
       console.log(err);
@@ -67,7 +77,10 @@ const State = () => {
   const permanentDelete = async (id) => {
     if (!window.confirm("Are you sure you want to permanently delete this state?")) return;
     try {
-      await axios.delete(`${URL}/api/deleteState/${id}`);
+      const token = localStorage.getItem("token");
+      await axios.delete(`${URL}/api/deleteState/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       getStates();
     } catch (err) {
       console.log(err);
@@ -83,7 +96,10 @@ const State = () => {
     }
     setLoading(true);
     try {
-      await axios.post(`${URL}/api/addState`, { Statename: newState.trim() });
+      const token = localStorage.getItem("token");
+      await axios.post(`${URL}/api/addState`, { Statename: newState.trim() }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setNewState("");
       setShowAddModal(false);
       getStates();
@@ -114,8 +130,11 @@ const State = () => {
     }
     setLoading(true);
     try {
+      const token = localStorage.getItem("token");
       await axios.patch(`${URL}/api/updateState/${editingState._id}`, {
         Statename: newState.trim(),
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       setNewState("");
       setEditingState(null);

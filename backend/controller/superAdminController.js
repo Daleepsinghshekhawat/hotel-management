@@ -1,5 +1,8 @@
 const userModel = require("../model/usermodel");
 const hotelOwnerModel = require("../model/hotelOwnerModel");
+const superAdminModel = require("../model/superAdminModel");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 exports.getUsersByRole = async (req, res) => {
   try {
@@ -138,3 +141,5 @@ exports.updateUserRole = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server Error", error: err.message });
   }
 };
+
+

@@ -1,7 +1,7 @@
 const usermodel = require("../model/usermodel");
 const hotelOwnerModel = require("../model/hotelOwnerModel");
 const AdminAccount = require("../model/adminAccountModel");
-
+const superAdminModel = require("../model/superAdminModel");
 
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
@@ -125,7 +125,6 @@ exports.login = async (req, res) => {
     if (!user) {
       hotelUser = await hotelOwnerModel.findOne({ email });
     }
-
   
     if (!user && !hotelUser) {
       const adminAcc = await AdminAccount.findOne({ email, status: "approved" });
@@ -140,8 +139,12 @@ exports.login = async (req, res) => {
       }
     }
 
+    let superAdminUser = null;
+    if (!user && !hotelUser && !adminUser) {
+      superAdminUser = await superAdminModel.findOne({ email });
+    }
 
-    const finalUser = user || hotelUser || adminUser;
+    const finalUser = user || hotelUser || adminUser || superAdminUser;
 
     if (!finalUser) {
       return res.status(404).json({ message: "user must signup first" });

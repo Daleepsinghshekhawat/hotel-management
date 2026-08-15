@@ -96,12 +96,12 @@ export default function HotelDashboard() {
              statusCounts[status] = (statusCounts[status] || 0) + 1;
              
              if (status !== "cancelled") {
-                revenueSum += (b.totalAmount || 0);
+                revenueSum += (b.hotelEarnings || b.totalAmount || 0);
                 
                 const date = new Date(b.checkIn || b.createdAt);
                 if (!isNaN(date)) {
                   const month = date.toLocaleString('default', { month: 'short', year: 'numeric' });
-                  monthlyRevenue[month] = (monthlyRevenue[month] || 0) + (b.totalAmount || 0);
+                  monthlyRevenue[month] = (monthlyRevenue[month] || 0) + (b.hotelEarnings || b.totalAmount || 0);
                 }
              }
 
@@ -431,7 +431,7 @@ export default function HotelDashboard() {
                               {(b.status || "confirmed").toUpperCase()}
                             </span>
                           </td>
-                          <td style={{ ...tdStyle, fontWeight: 700 }}>₹{(b.totalAmount || 0).toLocaleString()}</td>
+                          <td style={{ ...tdStyle, fontWeight: 700 }}>₹{(b.hotelEarnings || b.totalAmount || 0).toLocaleString()}</td>
                         </tr>
                       ))
                     ) : (

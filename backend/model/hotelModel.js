@@ -56,8 +56,18 @@ const hotelSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["active", "inactive"],
-      default: "active",
+      enum: ["pending", "active", "rejected", "inactive"],
+      default: "pending",
+    },
+
+    review: {
+      type: String,
+      default: "",
+    },
+
+    rejectionReason: {
+      type: String,
+      default: "",
     },
 
     hotelType: {

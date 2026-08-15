@@ -23,7 +23,8 @@ export default function Coupons() {
   const handleUpdateCoupon = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.patch(`${URL}/api/updateCoupon/${editCoupon._id}`, editCoupon);
+      const token = localStorage.getItem('token');
+      const res = await axios.patch(`${URL}/api/updateCoupon/${editCoupon._id}`, editCoupon, { headers: { Authorization: `Bearer ${token}` } });
       if (res.data.success) {
         alert("Coupon updated successfully");
         setEditCoupon(null);
@@ -40,7 +41,8 @@ export default function Coupons() {
   const fetchCoupons = async () => {
     setLoading(true);
     try {
-      const couponRes = await axios.get(`${URL}/api/getCoupons`, { params: { search: debouncedSearch } });
+      const token = localStorage.getItem('token');
+      const couponRes = await axios.get(`${URL}/api/getCoupons`, { params: { search: debouncedSearch }, headers: { Authorization: `Bearer ${token}` } });
       if (couponRes.data.success) setCoupons(couponRes.data.coupons || []);
     } catch (err) {
       console.error(err);
@@ -56,8 +58,9 @@ export default function Coupons() {
   const handleCreateCoupon = async (e) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem('token');
       const payload = { ...form, hotel: "", adminEmail: "" }; // Global platform coupon
-      const res = await axios.post(`${URL}/api/createCoupon`, payload);
+      const res = await axios.post(`${URL}/api/createCoupon`, payload, { headers: { Authorization: `Bearer ${token}` } });
       if (res.data.success) {
         alert("Platform Coupon created successfully!");
         setShowModal(false);
@@ -74,7 +77,8 @@ export default function Coupons() {
     if (!window.confirm(`Are you sure you want to mark this coupon as ${newStatus}?`)) return;
 
     try {
-      const res = await axios.patch(`${URL}/api/changeCouponStatus/${id}`, { status: newStatus });
+      const token = localStorage.getItem('token');
+      const res = await axios.patch(`${URL}/api/changeCouponStatus/${id}`, { status: newStatus }, { headers: { Authorization: `Bearer ${token}` } });
       if (res.data.success) {
         alert("Coupon status updated successfully");
         fetchCoupons();

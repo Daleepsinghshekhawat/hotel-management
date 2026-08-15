@@ -137,10 +137,10 @@ export default function Dashboard() {
                 cancelled++;
               } else if (b.status === "pending") {
                 pending++;
-                pendingPay += (b.totalAmount || 0); // rough estimate
+                pendingPay += (b.adminEarnings != null ? b.adminEarnings : (b.totalAmount || 0)); // rough estimate
               } else {
                 confirmed++;
-                const amt = b.totalAmount || 0;
+                const amt = b.adminEarnings != null ? b.adminEarnings : (b.totalAmount || 0);
                 revenueSum += amt;
                 hotelMap[hotel._id].revenue += amt;
                 hotelMap[hotel._id].bookings += 1;
@@ -391,7 +391,7 @@ export default function Dashboard() {
                       <td style={{ padding: "14px 0" }}>{b.name}</td>
                       <td style={{ padding: "14px 0" }}>{b.hotelName}</td>
                       <td style={{ padding: "14px 0" }}>{b.checkInDate ? new Date(b.checkInDate).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'}) : "N/A"}</td>
-                      <td style={{ padding: "14px 0", fontWeight: 600 }}>₹{b.totalAmount}</td>
+                      <td style={{ padding: "14px 0", fontWeight: 600 }}>₹{b.adminEarnings != null ? b.adminEarnings : (b.totalAmount || 0)}</td>
                       <td style={{ padding: "14px 0" }}>
                         <span style={statusBadge(b.status)}>{b.status}</span>
                       </td>
