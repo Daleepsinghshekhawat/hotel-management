@@ -1,22 +1,38 @@
 const Review = require("../model/reviewModel");
 const Hotel = require("../model/hotelModel");
+const Booking = require("../model/booking");
 
 exports.addReview = async (req, res) => {
   try {
-    const { hotelId, userId, rating, reviewText } = req.body;
-    if (!hotelId || !userId || !rating || !reviewText) {
+    const { hotelId, userId, rating, reviewText, bookingId } = req.body;
+    if (!hotelId || !userId || !rating || !reviewText || !bookingId) {
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
     const hotel = await Hotel.findById(hotelId);
     if (!hotel) return res.status(404).json({ success: false, message: "Hotel not found" });
 
+    const booking = await Booking.findById(bookingId);
+    if (!booking) return res.status(404).json({ success: false, message: "Booking not found" });
+    
+    if (booking.status !== "completed") {
+      return res.status(400).json({ success: false, message: "You can only review a completed booking" });
+    }
+
+    if (booking.isReviewed) {
+      return res.status(400).json({ success: false, message: "You have already reviewed this booking" });
+    }
+
     const review = await Review.create({
       hotel: hotelId,
+      booking: bookingId,
       user: userId,
       rating,
       reviewText,
     });
+
+    booking.isReviewed = true;
+    await booking.save();
 
     return res.status(201).json({ success: true, message: "Review added successfully", result: review });
   } catch (err) {

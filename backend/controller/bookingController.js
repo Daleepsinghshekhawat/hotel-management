@@ -5,43 +5,6 @@ const Hotel = require("../model/hotelModel");
 const TempBooking = require("../model/tempBooking");
 const Coupon = require("../model/couponModel");
 
-// ------------------------------------------------------------------
-// IN-MEMORY ROOM LOCKING SYSTEM
-// Prevents race conditions when multiple users try to book the same room
-// at the exact same millisecond.
-// ------------------------------------------------------------------
-class RoomMutex {
-  constructor() {
-    this.locked = false;
-    this.queue = [];
-  }
-  async acquire() {
-    if (!this.locked) {
-      this.locked = true;
-      return;
-    }
-    return new Promise(resolve => this.queue.push(resolve));
-  }
-  release() {
-    if (this.queue.length > 0) {
-      const nextResolve = this.queue.shift();
-      nextResolve();
-    } else {
-      this.locked = false;
-    }
-  }
-}
-const roomLocks = new Map();
-const getRoomMutex = (roomId) => {
-  const idStr = String(roomId);
-  if (!roomLocks.has(idStr)) {
-    roomLocks.set(idStr, new RoomMutex());
-  }
-  return roomLocks.get(idStr);
-};
-// ------------------------------------------------------------------
-
-
 const isRoomBooked = async (roomId, checkIn, checkOut, excludeBookingId = null, userId = null) => {
   const query = {
     room: roomId,
@@ -97,8 +60,6 @@ exports.createBooking = async (req, res) => {
     return res.status(400).json({ success: false, message: "All fields are required" });
   }
 
-  const lock = getRoomMutex(roomId);
-  await lock.acquire();
 
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -226,8 +187,6 @@ exports.createBooking = async (req, res) => {
     session.endSession();
     console.error(err);
     return res.status(500).json({ success: false, message: "Server error", error: err.message });
-  } finally {
-    lock.release();
   }
 };
 
@@ -302,8 +261,6 @@ exports.acquireTempLock = async (req, res) => {
     return res.status(400).json({ success: false, message: "checkIn, checkOut, and userId are required" });
   }
 
-  const lock = getRoomMutex(roomId);
-  await lock.acquire();
 
   try {
     const checkInDate = new Date(checkIn);
@@ -338,8 +295,6 @@ exports.acquireTempLock = async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ success: false, message: "Server error" });
-  } finally {
-    lock.release();
   }
 };
 

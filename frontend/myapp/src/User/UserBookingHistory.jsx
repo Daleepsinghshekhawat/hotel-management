@@ -10,6 +10,13 @@ export default function UserBookingHistory() {
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   
+  // Review Modal State
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [rating, setRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+  
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const navigate = useNavigate();
 
@@ -67,6 +74,34 @@ export default function UserBookingHistory() {
         {status || "Unknown"}
       </span>
     );
+  };
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedBooking) return;
+    setSubmittingReview(true);
+    try {
+      await axios.post(`${URL}/api/reviews/addReview`, {
+        hotelId: selectedBooking.hotel?._id,
+        bookingId: selectedBooking._id,
+        userId: user._id,
+        rating,
+        reviewText,
+      });
+      // Mark as reviewed locally
+      setBookings((prev) =>
+        prev.map((b) => (b._id === selectedBooking._id ? { ...b, isReviewed: true } : b))
+      );
+      setReviewModalOpen(false);
+      setReviewText("");
+      setRating(5);
+      alert("Review submitted successfully!");
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Failed to submit review");
+    } finally {
+      setSubmittingReview(false);
+    }
   };
 
   return (
@@ -161,6 +196,31 @@ export default function UserBookingHistory() {
                     >
                       View Hotel
                     </button>
+                    {b.status === "completed" && !b.isReviewed && (
+                      <button
+                        onClick={() => {
+                          setSelectedBooking(b);
+                          setReviewModalOpen(true);
+                        }}
+                        style={{
+                          padding: "8px 16px",
+                          borderRadius: "8px",
+                          background: "#10b981",
+                          color: "#fff",
+                          border: "none",
+                          fontWeight: 600,
+                          fontSize: "14px",
+                          cursor: "pointer"
+                        }}
+                      >
+                        ⭐ Write a Review
+                      </button>
+                    )}
+                    {b.status === "completed" && b.isReviewed && (
+                       <span style={{ fontSize: "14px", color: "#64748b", fontWeight: 600 }}>
+                         ✅ Reviewed
+                       </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -199,6 +259,51 @@ export default function UserBookingHistory() {
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Review Modal */}
+      {reviewModalOpen && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+          <div style={{ background: "#fff", padding: "32px", borderRadius: "16px", width: "90%", maxWidth: "500px", boxShadow: "0 10px 25px rgba(0,0,0,0.2)" }}>
+            <h3 style={{ fontSize: "24px", fontWeight: 700, margin: "0 0 16px", color: "#1e293b" }}>Write a Review</h3>
+            <p style={{ color: "#64748b", marginBottom: "24px", fontSize: "14px" }}>
+              How was your stay at {selectedBooking?.hotel?.hotelName}?
+            </p>
+            <form onSubmit={handleReviewSubmit}>
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: 600, marginBottom: "8px", color: "#334155" }}>Rating</label>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <span 
+                      key={star} 
+                      onClick={() => setRating(star)}
+                      style={{ fontSize: "24px", cursor: "pointer", color: star <= rating ? "#eab308" : "#cbd5e1" }}
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div style={{ marginBottom: "24px" }}>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: 600, marginBottom: "8px", color: "#334155" }}>Your Review</label>
+                <textarea 
+                  value={reviewText}
+                  onChange={(e) => setReviewText(e.target.value)}
+                  required
+                  rows="4"
+                  style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", fontSize: "14px", fontFamily: "inherit" }}
+                  placeholder="Share details of your own experience at this hotel"
+                />
+              </div>
+              <div style={{ display: "flex", gap: "16px", justifyContent: "flex-end" }}>
+                <button type="button" onClick={() => setReviewModalOpen(false)} style={{ padding: "10px 20px", background: "#f1f5f9", border: "none", borderRadius: "8px", fontWeight: 600, color: "#475569", cursor: "pointer" }}>Cancel</button>
+                <button type="submit" disabled={submittingReview} style={{ padding: "10px 20px", background: "#6366f1", border: "none", borderRadius: "8px", fontWeight: 600, color: "#fff", cursor: submittingReview ? "not-allowed" : "pointer" }}>
+                  {submittingReview ? "Submitting..." : "Submit Review"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

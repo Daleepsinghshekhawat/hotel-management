@@ -24,7 +24,7 @@ const tempBookingSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
       // TTL index: automatically deletes document after 300 seconds (5 minutes)
-      expires: 180,
+      expires: 300,
     },
   }
 );

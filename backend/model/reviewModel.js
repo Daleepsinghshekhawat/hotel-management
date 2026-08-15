@@ -7,6 +7,11 @@ const reviewSchema = new mongoose.Schema(
       ref: "hotels",
       required: true,
     },
+    booking: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "bookings",
+      required: true,
+    },
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "users",

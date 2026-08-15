@@ -10,7 +10,7 @@ Traditional hotel management often relies on manual processes and disconnected s
 - Lack of a centralized dashboard for hotel owners and administrators
 - Inefficient handling of approvals, coupons, and customer feedback
 
-### 3. Solution Offered
+ 3. Solution Offered
 The proposed system solves these challenges by offering a centralized online platform where users can:
 - Browse hotels and room details
 - Check availability before booking
@@ -41,12 +41,6 @@ At the same time, hotel owners and administrators can:
 - Admins
 - Super Admins
 
-### 6. Main Modules
-- User Module: signup, login, forgot/reset password, hotel browsing, booking
-- Hotel Owner/Admin Module: hotel and room management, coupon management, booking history
-- Super Admin Module: location management, hotel approvals, admin approvals, review oversight
-- Booking Module: availability check, conflict prevention, booking confirmation
-
 ### 7. Technology Stack
 - Frontend: React, Vite, React Router
 - Backend: Node.js, Express.js
@@ -54,6 +48,7 @@ At the same time, hotel owners and administrators can:
 - Authentication: JWT, bcrypt, OTP verification
 - Media Storage: Cloudinary
 - Additional Tools: Nodemailer, PDFKit, node-cron
+
 
 ### 8. Benefits of the Project
 - Improves efficiency and reduces manual errors
@@ -71,7 +66,6 @@ At the same time, hotel owners and administrators can:
 
 ### 10. Conclusion
 The Hotel Management System is a practical and scalable solution for modern hospitality businesses. It simplifies operations, improves booking experience, and creates a digital environment that supports growth and efficiency.
-
 ---
 ## Short Presentation Speech
 Good morning everyone. Today I am presenting a Hotel Management System, a web-based application developed to simplify hotel operations and improve the booking experience for customers. The main objective of this project is to bring all important hotel functions into one digital platform.
