@@ -18,9 +18,9 @@ import Hotels from "./Admin/Hotels";
 import AdminUsersAndOwners from "./Admin/AdminUsersAndOwners";
 
 
-import AddRoom from "./admin/AddRoom";
-import EditRoom from "./admin/EditRoom";
-import RoomDetails from "./admin/RoomDetails";
+import AddRoom from "./Admin/AddRoom";
+import EditRoom from "./Admin/EditRoom";
+import RoomDetails from "./Admin/RoomDetails";
 import AdminCoupons from "./Admin/Coupons";
 
 
