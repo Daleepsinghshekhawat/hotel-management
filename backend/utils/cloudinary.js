@@ -39,7 +39,6 @@ const allowedTypes = [
                     `${file.name}: Only JPG, PNG and WEBP are allowed`
                 );
             }
-
             if (file.size > 5 * 1024 * 1024) {
                 throw new Error(
                     `${file.name}: Image must be less than 5 MB`
